@@ -40,4 +40,4 @@ Dúvidas? Abra uma [Issue](https://github.com/ryanvmorais/django-blog-culinario/
 
 ---
 Atenciosamente,
-**Ryan Morais**
+**Quem mantém o Blog Culinário**
