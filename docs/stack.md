@@ -29,7 +29,7 @@ educacional de Python/Django); não havia alternativa em avaliação.
 
 **Qual versão:** o piso é o 3.12, que é a versão do servidor no PythonAnywhere
 (a plataforma lista Python só até o 3.13) e o mínimo que o Django 6.1 aceita. O CI
-roda o projeto no 3.12 e no 3.14 (a versão estável mais atual), e o `ruff`, o
+roda o projeto no 3.12 e no 3.14 (o mais novo que o Django 6.1 aceita), e o `ruff`, o
 `black` e o `mypy` apontam para o 3.12, para o próprio lint barrar sintaxe que o
 piso não tem.
 
@@ -78,9 +78,8 @@ de servidor separado.
 **Por que este:** zero configuração para quem clona o repositório para estudar —
 não exige instalar/subir um Postgres só para rodar `manage.py runserver`. É
 também o banco suportado sem custo extra no plano gratuito do PythonAnywhere,
-o destino de deploy planejado para o projeto. Trocar por PostgreSQL mais
-adiante é só mudar `DATABASES` em `settings/` — o Django isola o código da
-engine de banco.
+o alvo de deploy do projeto. Trocar por PostgreSQL é só mudar `DATABASES` em
+`settings/` — o Django isola o código da engine de banco.
 
 **O que estudar:** migrations (`makemigrations`/`migrate`), o shell do Django
 (`manage.py shell`) para explorar o ORM interativamente.
