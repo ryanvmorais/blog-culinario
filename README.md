@@ -8,7 +8,7 @@
 ![Django](https://img.shields.io/badge/Django-6.1-092E20?logo=django&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-database-003B57?logo=sqlite&logoColor=white)
 ![deps](https://img.shields.io/badge/deps-uv-DE5FE9)
-[![CI](https://github.com/ryanvmorais/django-blog-culinario/actions/workflows/ci.yml/badge.svg)](https://github.com/ryanvmorais/django-blog-culinario/actions/workflows/ci.yml)
+[![CI](https://github.com/ryanvmorais/blog-culinario/actions/workflows/ci.yml/badge.svg)](https://github.com/ryanvmorais/blog-culinario/actions/workflows/ci.yml)
 ![Lint](https://img.shields.io/badge/lint-ruff-261230)
 ![Format](https://img.shields.io/badge/style-black-000000)
 ![Types](https://img.shields.io/badge/types-mypy-2A6DB2)
@@ -73,8 +73,8 @@ As ferramentas de qualidade (Ruff, Black, Mypy e Pytest) estão em [Qualidade e 
 
 1.  **Clone o repositório:**
     ```bash
-    git clone https://github.com/ryanvmorais/django-blog-culinario.git
-    cd django-blog-culinario
+    git clone https://github.com/ryanvmorais/blog-culinario.git
+    cd blog-culinario
     ```
 2.  **Instale as dependências:**
     ```bash
@@ -139,7 +139,7 @@ Para exercitar o que você aprendeu e dominar o Django, tente implementar estas 
 Este projeto faz parte de uma trilha de estudos em Python. Depois deste, experimente:
 
 - **[webvigil](https://github.com/ryanvmorais/webvigil):** um scanner de vulnerabilidades web (DAST) em Python, para ver a segurança do outro lado.
-- **[Portfólio Dinâmico com Django](https://github.com/ryanvmorais/django-fullstack-portfolio):** outro projeto Django, com foco em segurança avançada (honeypot, rate limit, CSP) e otimização de consultas.
+- **[Portfólio Dinâmico com Django](https://github.com/ryanvmorais/portfolio-dinamico):** outro projeto Django, com foco em segurança avançada (honeypot, rate limit, CSP) e otimização de consultas.
 
 Veja todos os projetos e vídeos do canal em [aprenda-com-ryan-morais](https://github.com/ryanvmorais/aprenda-com-ryan-morais).
 
@@ -149,7 +149,7 @@ Veja todos os projetos e vídeos do canal em [aprenda-com-ryan-morais](https://g
 
 Encontrou algo que poderia estar mais didático, teve dificuldade com alguma configuração, ou pensou numa melhoria que tornaria este projeto ainda mais útil como referência? Estou aqui para ajudar!
 
-- **Abra uma [Issue](https://github.com/ryanvmorais/django-blog-culinario/issues):** descreva sua dúvida ou sugestão. É a melhor forma de construirmos um material de referência sólido para a comunidade e ajudarmos outros desenvolvedores que possam ter a mesma dúvida.
+- **Abra uma [Issue](https://github.com/ryanvmorais/blog-culinario/issues):** descreva sua dúvida ou sugestão. É a melhor forma de construirmos um material de referência sólido para a comunidade e ajudarmos outros desenvolvedores que possam ter a mesma dúvida.
 - **Contribua com código:** quer propor uma melhoria? Veja o passo a passo no [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Me mande um e-mail:** se preferir algo mais privado, escreva para [**contato@ryanmorais.com.br**](mailto:contato@ryanmorais.com.br).
 

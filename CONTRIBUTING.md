@@ -36,7 +36,7 @@ uma spec em `specs/` primeiro — veja `specs/README.md` para o formato.
 - Mantenha a coerência com o restante do projeto — este é um material de
   estudo, e consistência importa mais que preferência pessoal.
 
-Dúvidas? Abra uma [Issue](https://github.com/ryanvmorais/django-blog-culinario/issues).
+Dúvidas? Abra uma [Issue](https://github.com/ryanvmorais/blog-culinario/issues).
 
 ---
 Atenciosamente,

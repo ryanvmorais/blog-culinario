@@ -110,14 +110,17 @@ Nenhum — a fundação não modela domínio (isso começa na spec 001).
 
 ## ADRs
 
-### ADR-1 — Nome do repositório com a tecnologia na frente
+### ADR-1 — Nome do repositório sem a tecnologia
 
-**Decisão.** `django-blog-culinario` (não `blog-culinario-django` nem só
-`blog-culinario`).
-**Alternativas.** Nome sem prefixo de tecnologia; tecnologia como sufixo.
-**Porquê.** Convenção de nomes do mantenedor: nome da tecnologia primeiro
-(correção feita durante o planejamento).
-**Trade-off.** Nenhum relevante.
+**Decisão.** `blog-culinario` (não `django-blog-culinario` nem
+`blog-culinario-django`).
+**Alternativas.** Tecnologia como prefixo ou como sufixo do nome.
+**Porquê.** O nome carrega o termo de busca do projeto (blog culinário). A
+tecnologia já aparece nos topics, na linguagem do repositório, na descrição e
+no título do README, e repeti-la no nome só gera divergência entre o nome do
+repositório e o da pasta local.
+**Trade-off.** Quem busca só pela tecnologia no nome do repositório depende
+dos topics e da descrição para encontrar o projeto.
 
 ### ADR-2 — SQLite como banco, mesmo sabendo do deploy no PythonAnywhere
 
