@@ -10,7 +10,7 @@ origem: engenharia reversa
 
 ## Visão geral da abordagem
 
-Uma sessão de planejamento formal (modo plan) precedeu qualquer código:
+Uma fase de planejamento formal precedeu qualquer código:
 arquitetura, stack e convenções foram decididas e escritas num plano antes
 da primeira linha. A execução seguiu o próprio plano, na ordem: repositório
 GitHub → projeto Django (uv, apps, settings) → design system → templates
@@ -55,12 +55,11 @@ blog-culinario/
 
 ## Componentes
 
-### Sessão de planejamento (modo plan)
+### Fase de planejamento
 
-Antes do código: `EnterPlanMode` seguido de perguntas diretas ao Ryan
-(`AskUserQuestion`) sobre idioma do código, abordagem de frontend, banco de
-dados e nome do repositório. O plano resultante foi aprovado
-explicitamente (`ExitPlanMode`) antes de qualquer comando `uv`/`django-admin`.
+Antes do código, idioma do código, abordagem de frontend, banco de dados e
+nome do repositório foram decididos explicitamente com o mantenedor. O plano
+resultante foi aprovado antes de qualquer comando `uv`/`django-admin`.
 
 ### `blog_culinario/settings/` (pacote, não um arquivo só)
 
@@ -88,14 +87,13 @@ totalmente responsivo, sem media query além do breakpoint mobile único.
 
 ### Documentação de projeto
 
-`README.md` no modelo "educacional" da convenção do Ryan (objetivo, guia de
-implementação, tecnologias, como rodar, atividades para praticar).
+`README.md` no modelo "educacional" (objetivo, guia de implementação,
+tecnologias, como rodar, atividades para praticar).
 `CONTRIBUTING.md` convida contribuição enquadrando o repo como laboratório
-de boas práticas. `CLAUDE.md` no modo "enxuto" (o projeto já nasceu sabendo
-que teria `specs/` e `docs/`) — aponta pras convenções (`/idioma`,
-`/estilo-arquivos`) em vez de duplicá-las. `docs/stack.md` documenta cada
-peça da stack com o porquê da escolha e o que estudar, gerado pela skill
-`/stack`.
+de boas práticas. `CLAUDE.md` resume visão geral, comandos, arquitetura e
+convenções (o projeto já nasceu sabendo que teria `specs/` e `docs/`, então
+aponta para eles em vez de duplicá-los). `docs/stack.md` documenta cada peça
+da stack com o porquê da escolha e o que estudar.
 
 ## Modelo de dados
 
@@ -117,9 +115,8 @@ Nenhum — a fundação não modela domínio (isso começa na spec 001).
 **Decisão.** `django-blog-culinario` (não `blog-culinario-django` nem só
 `blog-culinario`).
 **Alternativas.** Nome sem prefixo de tecnologia; tecnologia como sufixo.
-**Porquê.** Coerência com a convenção que o Ryan já usa nos demais
-repositórios (nome da tecnologia primeiro, correção feita pelo próprio
-Ryan durante a sessão).
+**Porquê.** Convenção de nomes do mantenedor: nome da tecnologia primeiro
+(correção feita durante o planejamento).
 **Trade-off.** Nenhum relevante.
 
 ### ADR-2 — SQLite como banco, mesmo sabendo do deploy no PythonAnywhere
@@ -132,7 +129,7 @@ duas motivações apontam pra mesma escolha.
 **Trade-off.** Não ensina a operar um banco cliente-servidor; aceitável
 dado que o foco pedagógico é Django, não administração de banco de dados.
 
-### ADR-3 — Claude constrói o frontend, sem V0 ou framework
+### ADR-3 — Frontend construído do zero, sem V0 ou framework
 
 **Decisão.** HTML + CSS puro com design system próprio, pesquisado e
 construído do zero, em vez de gerar via V0 da Vercel ou adotar
@@ -140,7 +137,7 @@ Tailwind/Bootstrap.
 **Alternativas.** V0 (design pronto, mas fora do fluxo 100% Django);
 Tailwind (produtividade, mas esconde a construção de um design system do
 zero, que é parte do valor didático).
-**Porquê.** Pedido explícito do Ryan: qualidade visual de estúdio, mas
+**Porquê.** Decisão do mantenedor: qualidade visual de estúdio, mas
 sem dependência externa ao ecossistema Django/Python.
 **Trade-off.** Mais trabalho manual de CSS do que um gerador ou framework
 utilitário resolveriam sozinhos.
@@ -164,7 +161,7 @@ aceitável justamente por ser o ponto zero do repositório.
 `*.pythonanywhere.com` e hardening HTTPS, mas nenhum deploy real
 aconteceu nesta fase.
 **Alternativas.** Deployar um esqueleto vazio só para validar o pipeline.
-**Porquê.** Ryan definiu que o deploy é a última etapa, só quando o blog
+**Porquê.** O mantenedor definiu que o deploy é a última etapa, só quando o blog
 estiver funcionalmente pronto — decidir a plataforma de deploy cedo
 (para já deixar `settings/prod.py` correto) sem executá-lo evita retrabalho
 depois sem gerar uma infraestrutura que ficaria ociosa por várias specs.

@@ -1,6 +1,6 @@
 # CI — espelha o portão de qualidade local (ruff -> black -> mypy -> pytest,
-# ver /qualidade-python). Roda em todo push/PR para pegar regressão antes do
-# merge.
+# ver "Qualidade e testes" no README). Roda em todo push/PR para pegar regressão
+# antes do merge.
 #
 # O piso do projeto e o 3.12 (a versao do servidor no PythonAnywhere, que lista
 # Python so ate o 3.13); o 3.14 e a versao estavel mais nova. A matriz testa as

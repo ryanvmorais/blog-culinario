@@ -25,9 +25,9 @@ Markdown puro — legíveis e úteis mesmo fora do Claude Code.
   linkável) por requisito funcional; `### RNF-NN` para não-funcionais.
 - **Rastreabilidade:** toda tarefa em `tasks.md` cita o(s) `RF-NN`/`ADR-N` que
   satisfaz; a última tarefa de cada etapa é o portão de qualidade
-  (`/qualidade-python`), com o resultado real anotado ao executar.
+  (ruff → black → mypy → pytest), com o resultado real anotado ao executar.
 - **Idioma:** português — nomes, prosa, valores de frontmatter (convenção do
-  projeto, ver `/idioma`).
+  projeto, ver "Convenções" no [CLAUDE.md](../CLAUDE.md)).
 
 ## Workflow
 
@@ -35,8 +35,7 @@ Markdown puro — legíveis e úteis mesmo fora do Claude Code.
 requirements.md ──(aprovação)──> design.md ──(aprovação)──> tasks.md ──(aprovação)──> implementação
 ```
 
-Nenhuma fase avança sem o "ok" explícito do Ryan. Comandos: `/spec nova <nome>`,
-`/spec design`, `/spec tasks`, `/spec implementar`, `/spec status`.
+Nenhuma fase avança sem o "ok" explícito do mantenedor.
 
 ## Índice / Roadmap
 

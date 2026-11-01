@@ -32,7 +32,7 @@ uv run python manage.py createsuperuser
 # Dados de demonstração (receitas, capas e comentários; só com DEBUG=True)
 uv run python manage.py semear_dados_demo
 
-# Portão de qualidade (ver skill /qualidade-python)
+# Portão de qualidade (nesta ordem)
 uv run ruff check .
 uv run black --check .
 uv run mypy .
@@ -73,10 +73,17 @@ simples primeiro, `urls.py` com `app_name` namespaced, templates em
 
 ## Convenções
 
-- **Idioma do código:** português (nomes, commits, specs, docs) — ver a regra
-  completa e as exceções em `/idioma`.
-- **Estilo de arquivo** (docstrings, type hints, seções, comentários): sempre
-  consulte `/estilo-arquivos` antes de criar ou editar um arquivo.
+- **Idioma do código:** português (classes, funções, variáveis, commits,
+  branches, docstrings, comentários, specs e docs). Exceções: strings visíveis
+  ao usuário (pt-BR); keywords da linguagem; termos técnicos universais (API,
+  HTTP, URL, JSON, SQL, HTML, CSS); nomes impostos por framework (`save`,
+  `clean`, `get_queryset`, dunder methods, prefixo `test_`); empréstimos
+  naturalizados (`link`, `card`, `layout`, `cache`, `token`, `deploy`); e as
+  seções PEP 257 das docstrings (`Args:`, `Returns:`, `Raises:`, `Attributes:`).
+- **Estilo de arquivo:** docstring de módulo em todo `.py` e em toda classe ou
+  função pública, com o tipo repetido em cada entrada de `Args:`/`Returns:`;
+  type hints completos (`mypy` strict); comentários explicam o *porquê*, não o
+  *quê*. Siga o estilo do arquivo vizinho.
 
 - **README bilíngue:** `README.md` (português) e `README.en.md` (inglês) têm as
   mesmas seções, na mesma ordem. Mudou um, muda o outro no mesmo PR; o
@@ -90,8 +97,8 @@ Regras que a auditoria de interface de 18/10/2026 deixou, guardadas por
 - **Botão:** `.botao` herda a fonte (`font: inherit`: o `<button>` do navegador
   não herda e saía em Arial 13 px), tem o rótulo no centro da caixa e 48 px de
   altura. Em formulário, largura dos campos no celular e tamanho do rótulo acima
-  de 720 px. Um botão novo passa por `auditar_proporcoes.py` (skill
-  `/auditoria-interface`).
+  de 720 px. Um botão novo segue essas medidas; o `nucleo/test_interface.py`
+  guarda as regras de CSS.
 - **Alinhamento:** o que é curto e isolado (aviso, formulário de acesso, botão de
   largura total) fica no centro; leitura (receita, comentários, rótulo de campo)
   à esquerda. Aviso que acompanha um título à esquerda segue o título.
@@ -107,28 +114,23 @@ Regras que a auditoria de interface de 18/10/2026 deixou, guardadas por
 
 ## Qualidade e automação
 
-Sequência do portão: `ruff check` → `black --check` → `mypy` → `pytest` (skill
-`/qualidade-python`). CI (`.github/workflows/ci.yml`) roda a mesma sequência
-em todo PR e em todo push na `main`. O `.github/workflows/pip-audit.yml` audita o `uv.lock` com `pip-audit`
-toda segunda, 09:00 de São Paulo (e à mão): o CI só roda em PR, e o Dependabot nem sempre
+Sequência do portão: `ruff check` → `black --check` → `mypy` → `pytest`.
+CI (`.github/workflows/ci.yml`) roda a mesma sequência em todo PR e em todo
+push na `main`. O `.github/workflows/pip-audit.yml` audita o `uv.lock` com
+`pip-audit` toda segunda, 09:00 de São Paulo (e à mão): o CI só roda em PR, e o Dependabot nem sempre
 abre PR de correção.
 
 **Lighthouse CI** (`.github/workflows/lighthouse.yml`): audita 5 páginas públicas (home, lista e detalhe de receita, entrar e cadastro), em mobile e desktop, com 3 medições e mediana. Roda em PR quando muda template, estático, view, model, o comando de dados ou a configuração, no push da `main` e à mão (`workflow_dispatch`); repo público, então sem teto de minutos. **Não é check obrigatório** (o Lighthouse varia em runner compartilhado). O servidor sobe com os dados de `manage.py semear_dados_demo` (idempotente, recusa `DEBUG=False`, capas geradas com o Pillow, sem rede). Limites em `.github/lighthouse/{mobile,desktop}.json`: **erro** para acessibilidade, boas práticas e SEO < 95, CLS > 0,1, peso por página, e `color-contrast`, `unsized-images`, `target-size` e `errors-in-console` como asserções próprias; **aviso** para a nota de Performance. `@lhci/cli` fixado em `LHCI_VERSION` (o Dependabot não vê um `npx`: ao subir, recalibre os limites). Os números são comparação relativa; os reais só existem em produção. Página nova importante entra nos dois JSON; o `receitas/test_semear_dados_demo.py` guarda que toda URL responde 200 e que mobile e desktop auditam o mesmo.
-
-## Skills deste projeto
-
-Nenhuma skill específica do repositório ainda — usa as skills globais do
-Ryan (`~/.claude/skills/`), listadas no `CLAUDE.md` global.
 
 ## Spec-driven development
 
 Toda funcionalidade nova (modelagem, views, autenticação, etc.) nasce como uma
 spec em `specs/NNN-nome/` antes do código — requisitos → design → tasks, cada
-fase com aprovação humana. Ver `specs/README.md` para o formato e o roadmap
-atual. Conduzido pela skill `/spec`.
+fase com a aprovação do mantenedor. Ver `specs/README.md` para o formato e o
+roadmap atual.
 
 ## Gestão de dependências
 
 `uv` gerencia o ambiente. Commite `pyproject.toml` **e** `uv.lock`. PRs do
-Dependabot (`.github/dependabot.yml`) são revisados com `/revisar-dependabot`,
-não mergeados automaticamente.
+Dependabot (`.github/dependabot.yml`) são revisados um a um (changelog da
+versão nova, CI verde), não mergeados automaticamente.

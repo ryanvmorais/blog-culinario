@@ -12,12 +12,12 @@ origem: concepcao
 
 ## Contexto e problema
 
-Em 18/10/2026 a `/auditoria-interface` mediu 14 telas em navegador real (390 e
+Em 18/10/2026 a auditoria de interface mediu 14 telas em navegador real (390 e
 1280 px, tema claro e escuro do sistema, axe-core 4.14.0, teclado, comentário,
 cadastro com erros e uma capa de receita atrasada). A base é sólida (todo texto
 passa de 4,5:1, nenhuma tela rola de lado, todas as paradas de Tab têm indicador de
 foco), mas apareceram 11 falhas objetivas, 5 escolhas de gosto e, numa segunda
-passada pedida pelo Ryan, dois defeitos de **proporção e alinhamento** que o axe não
+passada pedida pelo mantenedor, dois defeitos de **proporção e alinhamento** que o axe não
 vê: o rótulo dos botões de largura total fica colado à esquerda (24 px de folga de um
 lado e 239 a 355 px do outro) e os `<button>` saem em Arial 13 px, enquanto o resto do
 site usa Inter 16 px; e textos curtos (estados vazios, formulários de acesso) ficam à
@@ -232,7 +232,7 @@ hero, tema escuro) e a tabela de contraste inclui os pares do tema escuro.
 ## Decisões resolvidas
 
 1. **Favicon (RF-12):** desenho simples (tigela creme sobre quadrado terracota)
-   escolhido pelo Claude a pedido do Ryan; é fácil de trocar (um arquivo SVG).
+   escolhido a pedido do mantenedor; é fácil de trocar (um arquivo SVG).
 2. **Tema escuro (RF-15):** aplicado como o mockup da auditoria (só tokens), em
    commit separado para ser fácil de remover.
 3. **Botões de formulário (RF-10):** o rótulo fica sempre no centro da caixa. No

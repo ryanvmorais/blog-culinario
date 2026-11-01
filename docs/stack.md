@@ -45,7 +45,7 @@ compreensões de lista/dict, o módulo `pathlib`.
 
 **Por que esta:** substitui `pip` + `venv` + `pip-tools` por uma ferramenta só,
 muito mais rápida (escrita em Rust) e com lockfile determinístico — é o
-gerenciador padrão em todos os projetos do Ryan.
+gerenciador de dependências deste projeto.
 
 **O que estudar:** `uv sync`, `uv add`/`uv add --dev`, `uv run`, a diferença entre
 `pyproject.toml` (piso mínimo de versão) e `uv.lock` (versão exata resolvida).

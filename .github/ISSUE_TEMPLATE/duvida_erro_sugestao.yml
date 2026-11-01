@@ -1,7 +1,7 @@
 # Formulário de dúvida, erro ou sugestão — consumido pelo GitHub ao abrir uma
 # issue. É o canal que o README convida o aprendiz a usar.
 name: "Dúvida, erro ou sugestão"
-description: "Travou em algum passo, achou um erro ou teve uma ideia? Conta pra mim"
+description: "Travou em algum passo, achou um erro ou teve uma ideia? Conte aqui"
 body:
   - type: markdown
     attributes:

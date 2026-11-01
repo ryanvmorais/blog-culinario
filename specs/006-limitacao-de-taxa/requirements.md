@@ -12,7 +12,7 @@ origem: concepcao
 
 ## Contexto e problema
 
-A `/auditoria-seguranca` rodada em 2026-09-12 encontrou um achado MÉDIO
+A auditoria de segurança rodada em 2026-09-12 encontrou um achado MÉDIO
 (CWE-307, OWASP A07:2021): nem o login (`usuarios:entrar`) nem a criação de
 comentário (`receitas:comentar`) têm qualquer limite de tentativas. Um
 atacante pode tentar senhas indefinidamente contra uma conta conhecida
@@ -46,7 +46,7 @@ dependência nova, usando o backend de cache já disponível no projeto.
 
 - Como **um atacante** tentando adivinhar a senha de outra conta, devo ser
   barrado depois de poucas tentativas dentro de uma janela curta.
-- Como **o Ryan** mantendo o blog, quero que um script não consiga inundar
+- Como **o mantenedor** do blog, quero que um script não consiga inundar
   uma receita de comentários automatizados.
 - Como **um visitante legítimo** que errou a senha 2-3 vezes, não quero ser
   bloqueado incorretamente por um limite baixo demais.
