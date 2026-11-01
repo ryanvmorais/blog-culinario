@@ -1,8 +1,9 @@
 # Auditoria semanal de CVEs nas dependencias (pip-audit sobre o uv.lock).
 # Existe porque o CI so roda em PR e o Dependabot nem sempre abre PR de correcao
-# (o Pillow 13 nao saiu como PR no site): uma CVE publicada depois do ultimo PR
-# passaria despercebida. Run vermelho = vulnerabilidade conhecida no lock; o GitHub
-# avisa por e-mail quem editou o cron por ultimo. Rode `/atualizar-dependencias`.
+# (uma versao nova do Pillow pode nao virar PR): uma CVE publicada depois do ultimo
+# PR passaria despercebida. Run vermelho = vulnerabilidade conhecida no lock; o
+# GitHub avisa por e-mail quem editou o cron por ultimo. Para corrigir, suba a
+# dependencia afetada (`uv lock --upgrade-package <nome>`) e rode o portao de qualidade.
 #
 # Audita o lock inteiro (runtime, extras e grupos de dev), sem depender de o projeto
 # ter o pip-audit como dependencia. A ferramenta roda com o mesmo cooldown de 7 dias
