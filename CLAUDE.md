@@ -8,7 +8,7 @@ Blog culinário multipáginas em Django, com propósito educacional: servir de
 referência para quem está aprendendo a construir uma aplicação web completa
 em Python (modelagem, views, templates, autenticação, admin, segurança).
 Stack mínima de propósito — SQLite, CSS puro sem framework, sem build step —
-para manter o foco em Django. Deploy futuro: PythonAnywhere (ver
+para manter o foco em Django. Pensado para deploy no PythonAnywhere (ver
 `blog_culinario/settings/prod.py`).
 
 > **Python 3.12 é o piso (`requires-python = ">=3.12"`):** o PythonAnywhere lista Python só até o 3.13 e o servidor roda o 3.12, que também é o mínimo do Django 6.1. O `.python-version` fixa o 3.12 no desenvolvimento, o CI testa o 3.12 e o 3.14 (matriz) e `ruff`, `black` e `mypy` apontam para o 3.12: não use sintaxe exclusiva de versão mais nova (ex.: `except A, B:` sem parênteses, do 3.14).
@@ -54,13 +54,14 @@ defaults seguros. Ver `.env.example` para a lista completa e
 ```
 blog_culinario/settings/   # base.py (comum) + dev.py / prod.py (por ambiente)
 blog_culinario/limitacao.py # rate limit por IP via cache do Django (login e comentário — spec 006)
-nucleo/                    # páginas institucionais: hoje só a home (sobre e contato entram em specs futuras)
+nucleo/                    # a home e os testes transversais (interface, tema escuro, README em inglês, impessoalidade)
 receitas/                  # domínio principal: Receita, Categoria, Tag, Comentario; management/commands/semear_dados_demo.py (dados do Lighthouse CI) e seu teste
 usuarios/                  # autenticação (django.contrib.auth)
 templates/                 # base.html + includes/ (navbar, rodapé) + 404, 403 e 500
 static/css/                # design system: tokens.css (variáveis e tema escuro), fontes.css (@font-face) e base.css
 static/fonts/              # Inter e Fraunces (woff2 variável, subconjunto latin, licença OFL)
 static/js/, static/img/    # interacoes.js (JS puro, sem build) e favicon.svg
+assets/                    # imagens do README e do social preview
 specs/                     # spec-driven development — ver specs/README.md
 docs/stack.md              # o que compõe a stack, por que e o que estudar
 docs/design-system.html    # catálogo visual (tokens, tipografia, componentes); abra direto no navegador — usa o tokens.css e o base.css do site
