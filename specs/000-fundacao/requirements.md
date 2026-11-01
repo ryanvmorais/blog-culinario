@@ -10,14 +10,14 @@ origem: engenharia reversa
 
 ## Contexto e problema
 
-Antes de existir qualquer spec de feature, o projeto passou por uma sessão
-de planejamento (modo plan) para decidir arquitetura, stack e convenções, e
-por um bootstrap que deixou o repositório num estado "pronto para receber
+Antes de existir qualquer spec de feature, o projeto passou por uma fase de
+planejamento para decidir arquitetura, stack e convenções, e por um
+bootstrap que deixou o repositório num estado "pronto para receber
 specs": Django rodando localmente, design system próprio validado
 visualmente, repositório GitHub configurado com os serviços gratuitos
-padrão do Ryan, e toda a documentação de projeto (README, CONTRIBUTING,
+padrão do mantenedor, e toda a documentação de projeto (README, CONTRIBUTING,
 CLAUDE.md, `docs/stack.md`) no lugar. Esta spec registra retroativamente
-essa fase — por pedido explícito do Ryan, que trata as specs também como o
+essa fase — por decisão do mantenedor, que trata as specs também como o
 histórico de como o projeto foi construído, desde o início.
 
 Diferente das specs seguintes, aqui não há um "problema de domínio" a
@@ -30,8 +30,8 @@ qual as specs 001 em diante iriam construir.
   quem clona o repositório.
 - Design system próprio (HTML + CSS puro, sem framework de frontend),
   validado visualmente antes de qualquer feature de domínio existir.
-- Repositório GitHub público, com os serviços gratuitos padrão do Ryan
-  ativados por padrão.
+- Repositório GitHub público, com os serviços gratuitos padrão do
+  mantenedor ativados por padrão.
 - Documentação de projeto completa (README educacional, CONTRIBUTING,
   CLAUDE.md, LICENSE, `docs/stack.md`).
 - CI rodando o mesmo portão de qualidade usado localmente.
@@ -46,12 +46,12 @@ qual as specs 001 em diante iriam construir.
   fundação.
 - Deploy em produção — planejado para o PythonAnywhere, mas só quando o
   blog estiver funcionalmente pronto (decisão registrada nesta mesma
-  sessão, não executada aqui).
+  fase, não executada aqui).
 
 ## Personas
 
-- Como **Ryan**, quero um ponto de partida sólido e já no padrão dos meus
-  outros projetos (uv, Conventional Commits, Dependabot, CLAUDE.md) antes
+- Como **mantenedor**, quero um ponto de partida sólido e já com as boas
+  práticas do projeto (uv, Conventional Commits, Dependabot, CLAUDE.md) antes
   de começar a construir features.
 - Como **um estudante clonando o repositório** (o público-alvo do projeto),
   quero rodar `uv sync && python manage.py runserver` e ver o site
@@ -62,11 +62,11 @@ qual as specs 001 em diante iriam construir.
 ### RF-01 — Decisões de arquitetura registradas antes do código
 
 - **Given** o pedido inicial de criar um blog culinário educacional
-  **When** a sessão começa
-  **Then** um modo de planejamento formal precede qualquer código: idioma
+  **When** o trabalho começa
+  **Then** uma fase de planejamento formal precede qualquer código: idioma
   do projeto, abordagem de frontend, banco de dados e nome do
-  repositório são decididos explicitamente com o Ryan antes de escrever
-  a primeira linha.
+  repositório são decididos explicitamente com o mantenedor antes de
+  escrever a primeira linha.
 
 ### RF-02 — Projeto Django roda localmente sem configuração adicional
 
@@ -108,15 +108,15 @@ qual as specs 001 em diante iriam construir.
 - **Given** um push ou pull request no repositório
   **When** o workflow do GitHub Actions roda
   **Then** executa `ruff check`, `black --check`, `mypy` e `pytest`, na
-  mesma ordem usada localmente (`/qualidade-python`).
+  mesma ordem usada localmente.
 
 ### RF-07 — Documentação de projeto completa
 
 - **Given** um visitante abre o repositório pela primeira vez
   **When** lê o `README.md`
   **Then** encontra o objetivo educacional do projeto, a stack, como
-  rodar, e atividades sugeridas para praticar (modelo "educacional" da
-  convenção de README do Ryan) — com `CONTRIBUTING.md`, `LICENSE` (MIT) e
+  rodar, e atividades sugeridas para praticar (modelo "educacional" de
+  README adotado pelo projeto) — com `CONTRIBUTING.md`, `LICENSE` (MIT) e
   `CLAUDE.md` (convenções para quem/o que edita o repo) como
   complementos.
 
@@ -135,7 +135,7 @@ qual as specs 001 em diante iriam construir.
 
 Nomes de classes/funções/variáveis, commits, comentários técnicos e toda a
 documentação de projeto em português — projeto classificado como
-"Educacional PT-BR" (convenção `/idioma` do Ryan), exceto onde o próprio
+"Educacional PT-BR", exceto onde o próprio
 Django/pytest impõe nomes em inglês.
 
 ### RNF-02 — Zero framework de frontend

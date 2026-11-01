@@ -14,9 +14,9 @@ origem: engenharia reversa
 
 ## Etapa 1 — Planejamento
 
-- [x] Modo de planejamento formal (`EnterPlanMode`) antes de qualquer código. — RF-01
-- [x] Perguntas diretas ao Ryan (`AskUserQuestion`): idioma do código, abordagem de frontend, banco de dados, nome do repositório.
-- [x] Plano escrito e aprovado (`ExitPlanMode`) cobrindo stack, arquitetura, estrutura de pastas, segurança e fluxo de trabalho.
+- [x] Fase de planejamento formal antes de qualquer código. — RF-01
+- [x] Decisões tomadas com o mantenedor: idioma do código, abordagem de frontend, banco de dados, nome do repositório.
+- [x] Plano escrito e aprovado cobrindo stack, arquitetura, estrutura de pastas, segurança e fluxo de trabalho.
 - [x] Correção do nome do repositório para `django-blog-culinario` (tecnologia na frente) — ADR-1.
 - [x] Registro da decisão de deploy futuro no PythonAnywhere — ADR-5.
 
@@ -59,11 +59,11 @@ origem: engenharia reversa
 - [x] `README.md` (modelo educacional: objetivo, guia de implementação, tecnologias, como rodar, atividades). — RF-07
 - [x] `CONTRIBUTING.md` (modelo educacional, convite + diretrizes).
 - [x] `LICENSE` (MIT).
-- [x] `CLAUDE.md` (modo enxuto — aponta pra `/idioma` e `/estilo-arquivos`, não duplica).
+- [x] `CLAUDE.md` (visão geral, comandos, arquitetura e convenções; aponta para `docs/` e `specs/` sem duplicar).
 
 ## Etapa 6 — Stack documentada
 
-- [x] `docs/stack.md` gerado via skill `/stack`: cada peça com o que faz, por que foi escolhida, o que estudar, e a seção "o que não está na stack". — RF-08
+- [x] `docs/stack.md`: cada peça com o que faz, por que foi escolhida, o que estudar, e a seção "o que não está na stack". — RF-08
 
 ## Etapa 7 — Verificação e commit inicial
 

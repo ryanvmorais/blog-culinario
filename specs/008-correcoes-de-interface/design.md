@@ -109,7 +109,7 @@ formulário ocupa a largura dos campos no celular e tem o tamanho do rótulo no 
 (b) rótulo à esquerda como estava.
 **Porquê.** O defeito inicial era o rótulo fora do centro. A primeira correção deixou o
 botão de 420 px com 47 px de texto no `login`, e a medição (`caixa_esticada`, razão 9)
-mostrou a desproporção que o Ryan apontou. No celular a largura total é o alvo de toque
+mostrou a desproporção apontada na revisão. No celular a largura total é o alvo de toque
 mais fácil; no computador o clique não precisa dela.
 **Trade-off.** Duas larguras para o mesmo botão (uma regra `@media`).
 
