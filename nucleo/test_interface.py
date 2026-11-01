@@ -480,7 +480,7 @@ def test_home_fala_de_receitas_e_o_django_fica_por_dentro(client: Client) -> Non
     assert "Receitas simples para todos os dias." in h1.group(1)
     assert "Django" not in h1.group(1)
     assert "Por dentro, um projeto Django" in por_dentro
-    assert "github.com/ryanvmorais/django-blog-culinario" in por_dentro
+    assert "github.com/ryanvmorais/blog-culinario" in por_dentro
 
 
 def test_home_convida_o_anonimo_a_criar_conta_e_poupa_quem_ja_entrou(

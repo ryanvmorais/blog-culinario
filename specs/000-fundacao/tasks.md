@@ -17,12 +17,12 @@ origem: engenharia reversa
 - [x] Fase de planejamento formal antes de qualquer código. — RF-01
 - [x] Decisões tomadas com o mantenedor: idioma do código, abordagem de frontend, banco de dados, nome do repositório.
 - [x] Plano escrito e aprovado cobrindo stack, arquitetura, estrutura de pastas, segurança e fluxo de trabalho.
-- [x] Correção do nome do repositório para `django-blog-culinario` (tecnologia na frente) — ADR-1.
+- [x] Nome do repositório definido como `blog-culinario`, sem tecnologia — ADR-1.
 - [x] Registro da decisão de deploy futuro no PythonAnywhere — ADR-5.
 
 ## Etapa 2 — Repositório GitHub
 
-- [x] `gh repo create django-blog-culinario --public --source=. --remote=origin`.
+- [x] `gh repo create blog-culinario --public --source=. --remote=origin`.
 - [x] `gh repo edit --delete-branch-on-merge`.
 - [x] Secret scanning + secret scanning push protection ativados via API.
 - [x] Private Vulnerability Reporting ativado via API.

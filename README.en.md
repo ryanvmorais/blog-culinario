@@ -8,7 +8,7 @@
 ![Django](https://img.shields.io/badge/Django-6.1-092E20?logo=django&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-database-003B57?logo=sqlite&logoColor=white)
 ![deps](https://img.shields.io/badge/deps-uv-DE5FE9)
-[![CI](https://github.com/ryanvmorais/django-blog-culinario/actions/workflows/ci.yml/badge.svg)](https://github.com/ryanvmorais/django-blog-culinario/actions/workflows/ci.yml)
+[![CI](https://github.com/ryanvmorais/blog-culinario/actions/workflows/ci.yml/badge.svg)](https://github.com/ryanvmorais/blog-culinario/actions/workflows/ci.yml)
 ![Lint](https://img.shields.io/badge/lint-ruff-261230)
 ![Format](https://img.shields.io/badge/style-black-000000)
 ![Types](https://img.shields.io/badge/types-mypy-2A6DB2)
@@ -73,8 +73,8 @@ The quality tools (Ruff, Black, Mypy and Pytest) are in [Quality and tests](#qua
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/ryanvmorais/django-blog-culinario.git
-    cd django-blog-culinario
+    git clone https://github.com/ryanvmorais/blog-culinario.git
+    cd blog-culinario
     ```
 2.  **Install the dependencies:**
     ```bash
@@ -139,7 +139,7 @@ To exercise what you learned and master Django, try implementing these new featu
 This project is part of a Python study path. After this one, try:
 
 - **[webvigil](https://github.com/ryanvmorais/webvigil):** a web vulnerability scanner (DAST) in Python, to see security from the other side.
-- **[Dynamic Portfolio with Django](https://github.com/ryanvmorais/django-fullstack-portfolio):** another Django project, focused on advanced security (honeypot, rate limit, CSP) and query optimization.
+- **[Dynamic Portfolio with Django](https://github.com/ryanvmorais/portfolio-dinamico):** another Django project, focused on advanced security (honeypot, rate limit, CSP) and query optimization.
 
 See all the projects and videos on the channel at [aprenda-com-ryan-morais](https://github.com/ryanvmorais/aprenda-com-ryan-morais).
 
@@ -149,7 +149,7 @@ See all the projects and videos on the channel at [aprenda-com-ryan-morais](http
 
 Did you find something that could be more didactic, have trouble with a setup step, or think of an improvement that would make this project even more useful as a reference? I'm here to help!
 
-- **Open an [Issue](https://github.com/ryanvmorais/django-blog-culinario/issues):** describe your question or suggestion. It is the best way to build a solid reference for the community and to help other developers who may have the same question.
+- **Open an [Issue](https://github.com/ryanvmorais/blog-culinario/issues):** describe your question or suggestion. It is the best way to build a solid reference for the community and to help other developers who may have the same question.
 - **Contribute code:** want to propose an improvement? See the step-by-step in [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Send me an email:** if you prefer something more private, write to [**contato@ryanmorais.com.br**](mailto:contato@ryanmorais.com.br).
 
