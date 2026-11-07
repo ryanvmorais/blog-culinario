@@ -41,7 +41,8 @@ TEXTO_SOBRE_FUNDO = [
 
 
 def _bloco_escuro() -> str:
-    """Devolve o corpo do ``:root`` dentro de ``@media (prefers-color-scheme: dark)``.
+    """
+    Devolve o corpo do ``:root`` dentro de ``@media (prefers-color-scheme: dark)``.
 
     Returns:
         str: texto das variáveis do tema escuro.
@@ -59,7 +60,8 @@ def _bloco_escuro() -> str:
 
 
 def _paleta(corpo: str, base: dict[str, str] | None = None) -> dict[str, str]:
-    """Lê as variáveis de cor ``#rrggbb`` de um bloco de CSS.
+    """
+    Lê as variáveis de cor ``#rrggbb`` de um bloco de CSS.
 
     Args:
         corpo (str): texto com declarações ``--nome: #rrggbb;``.

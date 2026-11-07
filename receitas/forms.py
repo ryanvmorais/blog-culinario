@@ -23,7 +23,8 @@ _TEMPO_MINIMO_SEGUNDOS = 2
 
 
 def gerar_carimbo_de_tempo() -> str:
-    """Assina o instante atual, para detectar envios rápidos demais (RF-02).
+    """
+    Assina o instante atual, para detectar envios rápidos demais (RF-02).
 
     Chamada pela view no GET que renderiza o formulário -- o carimbo viaja
     como campo hidden e volta no POST correspondente.
@@ -36,7 +37,8 @@ def gerar_carimbo_de_tempo() -> str:
 
 
 def eh_envio_suspeito_de_bot(dados: QueryDict) -> bool:
-    """Detecta honeypot preenchido ou time-trap disparado (spec 007).
+    """
+    Detecta honeypot preenchido ou time-trap disparado (spec 007).
 
     Lê ``request.POST`` diretamente, antes de qualquer validação do
     ``FormularioComentario`` -- um honeypot preenchido deve ser rejeitado
@@ -65,7 +67,8 @@ def eh_envio_suspeito_de_bot(dados: QueryDict) -> bool:
 
 
 class FormularioComentario(forms.ModelForm):
-    """Comentário de uma linha só: o texto, mais dois campos antibot.
+    """
+    Comentário de uma linha só: o texto, mais dois campos antibot.
 
     ``receita`` e ``autor`` são preenchidos pela view a partir da URL e do
     usuário autenticado — não fazem parte do formulário. ``endereco_web``
@@ -97,7 +100,8 @@ class FormularioComentario(forms.ModelForm):
         labels = {"texto": "Comentário"}
 
     def clean_texto(self) -> str:
-        """Rejeita comentário vazio ou só com espaços em branco (RF-05).
+        """
+        Rejeita comentário vazio ou só com espaços em branco (RF-05).
 
         ``TextField`` sem ``blank=False`` já rejeita string vazia, mas uma
         string só de espaços passa pela validação padrão do Django (é

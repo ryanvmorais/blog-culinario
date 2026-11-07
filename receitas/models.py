@@ -23,7 +23,8 @@ _TAMANHO_MAXIMO_IMAGEM = 5 * 1024 * 1024  # 5 MB
 
 
 def validar_tamanho_imagem(arquivo: models.fields.files.FieldFile) -> None:
-    """Rejeita arquivos de imagem acima de ``_TAMANHO_MAXIMO_IMAGEM``.
+    """
+    Rejeita arquivos de imagem acima de ``_TAMANHO_MAXIMO_IMAGEM``.
 
     Args:
         arquivo (FieldFile): arquivo enviado ao campo ``imagem_capa``.
@@ -40,7 +41,8 @@ def validar_tamanho_imagem(arquivo: models.fields.files.FieldFile) -> None:
 
 
 class Categoria(models.Model):
-    """Agrupamento temático de receitas (ex.: Sobremesas, Massas, Veganas).
+    """
+    Agrupamento temático de receitas (ex.: Sobremesas, Massas, Veganas).
 
     Attributes:
         nome (str): Nome de exibição, não único (RF-01) — duas categorias
@@ -66,7 +68,8 @@ class Categoria(models.Model):
         return self.nome
 
     def save(self, *args: Any, **kwargs: Any) -> None:
-        """Salva a categoria, gerando um slug único a partir do nome quando vazio.
+        """
+        Salva a categoria, gerando um slug único a partir do nome quando vazio.
 
         Args:
             *args (Any): argumentos posicionais repassados ao ``super().save()``
@@ -82,7 +85,8 @@ class Categoria(models.Model):
 
 
 class Tag(models.Model):
-    """Rótulo livre para filtrar receitas por característica (ex.: "sem glúten").
+    """
+    Rótulo livre para filtrar receitas por característica (ex.: "sem glúten").
 
     Attributes:
         nome (str): Nome de exibição, não único — mesma razão de
@@ -106,7 +110,8 @@ class Tag(models.Model):
         return self.nome
 
     def save(self, *args: Any, **kwargs: Any) -> None:
-        """Salva a tag, gerando um slug único a partir do nome quando vazio.
+        """
+        Salva a tag, gerando um slug único a partir do nome quando vazio.
 
         Args:
             *args (Any): argumentos posicionais repassados ao ``super().save()``
@@ -122,7 +127,8 @@ class Tag(models.Model):
 
 
 class Receita(models.Model):
-    """Uma receita publicável: ingredientes, modo de preparo e metadados.
+    """
+    Uma receita publicável: ingredientes, modo de preparo e metadados.
 
     O slug é gerado automaticamente a partir do título no primeiro
     ``save()`` quando não fornecido.
@@ -193,7 +199,8 @@ class Receita(models.Model):
         return self.titulo
 
     def save(self, *args: Any, **kwargs: Any) -> None:
-        """Salva a receita, gerando um slug único a partir do título quando vazio.
+        """
+        Salva a receita, gerando um slug único a partir do título quando vazio.
 
         Args:
             *args (Any): argumentos posicionais repassados ao ``super().save()``
@@ -209,7 +216,8 @@ class Receita(models.Model):
 
 
 class Comentario(models.Model):
-    """Comentário de um usuário autenticado numa receita.
+    """
+    Comentário de um usuário autenticado numa receita.
 
     Attributes:
         receita (Receita): ``on_delete=CASCADE`` — comentário não

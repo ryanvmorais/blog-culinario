@@ -32,7 +32,8 @@ from .models import Categoria, Receita, Tag
 
 
 def _nome_do_filtro(modelo: type[Categoria] | type[Tag], slug: str) -> str:
-    """Devolve o nome de exibição de uma categoria ou tag a partir do slug.
+    """
+    Devolve o nome de exibição de uma categoria ou tag a partir do slug.
 
     Args:
         modelo (type[Categoria] | type[Tag]): modelo com ``slug`` e ``nome``.
@@ -47,7 +48,8 @@ def _nome_do_filtro(modelo: type[Categoria] | type[Tag], slug: str) -> str:
 
 
 class ReceitaListView(ListView):
-    """Lista as receitas publicadas, 9 por página, mais recentes primeiro.
+    """
+    Lista as receitas publicadas, 9 por página, mais recentes primeiro.
 
     Aceita três parâmetros GET opcionais e combináveis (spec 003, ADR-1):
     ``q`` (busca em título/ingredientes), ``categoria`` e ``tag`` (slugs).
@@ -59,7 +61,8 @@ class ReceitaListView(ListView):
     paginate_by = 9
 
     def get_queryset(self) -> QuerySet[Receita]:
-        """Restringe a listagem a receitas publicadas, filtradas e sem N+1.
+        """
+        Restringe a listagem a receitas publicadas, filtradas e sem N+1.
 
         Returns:
             QuerySet[Receita]: receitas com ``publicado=True``, com
@@ -90,7 +93,8 @@ class ReceitaListView(ListView):
         return queryset
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
-        """Expõe os filtros ativos e a querystring sem ``page`` (RF-06, RF-07, ADR-3).
+        """
+        Expõe os filtros ativos e a querystring sem ``page`` (RF-06, RF-07, ADR-3).
 
         Args:
             **kwargs (Any): argumentos repassados ao ``super().get_context_data()``.
@@ -129,7 +133,8 @@ class ReceitaListView(ListView):
 
 
 class ReceitaDetailView(DetailView):
-    """Exibe uma receita publicada pelo slug.
+    """
+    Exibe uma receita publicada pelo slug.
 
     O comportamento padrão do ``DetailView`` já cobre RF-04: como a
     queryset só contém receitas publicadas, um slug de rascunho ou
@@ -141,7 +146,8 @@ class ReceitaDetailView(DetailView):
     context_object_name = "receita"
 
     def get_queryset(self) -> QuerySet[Receita]:
-        """Restringe o detalhe a receitas publicadas, sem N+1 (RNF-01).
+        """
+        Restringe o detalhe a receitas publicadas, sem N+1 (RNF-01).
 
         Returns:
             QuerySet[Receita]: receitas com ``publicado=True``, com
@@ -154,7 +160,8 @@ class ReceitaDetailView(DetailView):
         )
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
-        """Acrescenta os comentários aprovados e o formulário de novo comentário.
+        """
+        Acrescenta os comentários aprovados e o formulário de novo comentário.
 
         Args:
             **kwargs (Any): argumentos repassados ao ``super().get_context_data()``.
@@ -177,7 +184,8 @@ class ReceitaDetailView(DetailView):
 
 
 class ComentarioCreateView(LoginRequiredMixin, View):
-    """Cria um comentário numa receita publicada; só aceita POST.
+    """
+    Cria um comentário numa receita publicada; só aceita POST.
 
     O formulário vive embutido em ``receitas/detalhe.html`` (spec 005) —
     não existe uma página própria para esta view, então ela nunca
@@ -187,7 +195,8 @@ class ComentarioCreateView(LoginRequiredMixin, View):
     http_method_names = ["post"]
 
     def handle_no_permission(self) -> HttpResponseRedirect:
-        """Redireciona ao login com ``next`` apontando para a receita (ADR-2).
+        """
+        Redireciona ao login com ``next`` apontando para a receita (ADR-2).
 
         O padrão do ``LoginRequiredMixin`` usaria a URL desta própria view
         como ``next`` — mas ela só aceita POST, então o ``GET`` que o
@@ -203,7 +212,8 @@ class ComentarioCreateView(LoginRequiredMixin, View):
         )
 
     def post(self, request: HttpRequest, slug: str) -> HttpResponse:
-        """Valida e salva o comentário, ou volta com uma mensagem de erro (ADR-3).
+        """
+        Valida e salva o comentário, ou volta com uma mensagem de erro (ADR-3).
 
         Também bloqueia o IP que já atingiu o limite de comentários na
         janela de tempo (spec 006, RF-02) e filtra bots via honeypot/

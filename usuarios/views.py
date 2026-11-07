@@ -30,7 +30,8 @@ class CadastroView(FormView):
     success_url = reverse_lazy("nucleo:home")
 
     def form_valid(self, form: FormularioCadastro) -> HttpResponse:
-        """Salva o usuário, autentica a sessão e mostra a mensagem de boas-vindas.
+        """
+        Salva o usuário, autentica a sessão e mostra a mensagem de boas-vindas.
 
         Args:
             form (FormularioCadastro): formulário já validado.
@@ -52,7 +53,8 @@ class EntrarView(LoginView):
     def post(
         self, request: HttpRequest, *args: object, **kwargs: object
     ) -> HttpResponse:
-        """Bloqueia a tentativa se o IP excedeu o limite de tentativas de login.
+        """
+        Bloqueia a tentativa se o IP excedeu o limite de tentativas de login.
 
         Chave por IP, não por username (RNF-02, ADR-3 da spec 006) — evita
         que um atacante contorne o limite variando o usuário testado a cada
@@ -77,7 +79,8 @@ class EntrarView(LoginView):
         return super().post(request, *args, **kwargs)
 
     def form_valid(self, form: AuthenticationForm) -> HttpResponse:
-        """Autentica via ``LoginView`` e acrescenta a mensagem de boas-vindas.
+        """
+        Autentica via ``LoginView`` e acrescenta a mensagem de boas-vindas.
 
         Args:
             form (AuthenticationForm): formulário já validado pelo ``LoginView``.
@@ -103,7 +106,8 @@ class SairView(LogoutView):
     def post(
         self, request: HttpRequest, *args: object, **kwargs: object
     ) -> HttpResponse:
-        """Registra a mensagem de despedida antes de encerrar a sessão.
+        """
+        Registra a mensagem de despedida antes de encerrar a sessão.
 
         Args:
             request (HttpRequest): requisição POST recebida.

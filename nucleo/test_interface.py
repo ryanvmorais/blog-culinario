@@ -41,7 +41,8 @@ JS_INTERACOES = (RAIZ / "static/js/interacoes.js").read_text(encoding="utf-8")
 def _receita_publicada(
     titulo: str = "Bolo de cenoura", categoria: Categoria | None = None
 ) -> Receita:
-    """Cria uma receita publicada mínima.
+    """
+    Cria uma receita publicada mínima.
 
     Args:
         titulo (str, optional): título da receita. Padrão: ``"Bolo de cenoura"``.
@@ -65,7 +66,8 @@ def _receita_publicada(
 
 
 def _bloco_css(css: str, seletor: str) -> str:
-    """Devolve o corpo da primeira regra cujo seletor abre uma linha.
+    """
+    Devolve o corpo da primeira regra cujo seletor abre uma linha.
 
     Args:
         css (str): texto da folha de estilo.
@@ -85,7 +87,8 @@ def _bloco_css(css: str, seletor: str) -> str:
 
 
 def _token(css: str, nome: str) -> str:
-    """Lê o valor de uma custom property do primeiro ``:root``.
+    """
+    Lê o valor de uma custom property do primeiro ``:root``.
 
     Args:
         css (str): texto de ``tokens.css``.
@@ -100,7 +103,8 @@ def _token(css: str, nome: str) -> str:
 
 
 def _luminancia(cor: str) -> float:
-    """Luminância relativa (WCAG) de uma cor ``#rrggbb``.
+    """
+    Luminância relativa (WCAG) de uma cor ``#rrggbb``.
 
     Args:
         cor (str): cor hexadecimal de 6 dígitos.
@@ -118,7 +122,8 @@ def _luminancia(cor: str) -> float:
 
 
 def _contraste(cor_a: str, cor_b: str) -> float:
-    """Razão de contraste WCAG entre duas cores ``#rrggbb``.
+    """
+    Razão de contraste WCAG entre duas cores ``#rrggbb``.
 
     Args:
         cor_a (str): primeira cor.
@@ -142,7 +147,8 @@ class _Ids(HTMLParser):
         self.descritos: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        """Guarda ``id`` e referências de ``aria-describedby`` da tag aberta.
+        """
+        Guarda ``id`` e referências de ``aria-describedby`` da tag aberta.
 
         Args:
             tag (str): nome da tag.

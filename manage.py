@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""Utilitário de linha de comando do Django para tarefas administrativas.
+"""
+Utilitário de linha de comando do Django para tarefas administrativas.
 
 Ponto de entrada para todos os management commands do projeto:
     python manage.py runserver
