@@ -38,13 +38,20 @@ target-version = "py312"
 exclude = ["**/migrations/*.py"]  # geradas pelo Django, não seguem o estilo do projeto
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM", "C4", "RUF"]  # pyflakes+pycodestyle, isort, pyupgrade, bugbear, simplify, comprehensions, ruff-native
+select = ["E", "F", "I", "UP", "B", "SIM", "C4", "RUF", "D", "D213"]  # pyflakes+pycodestyle, isort, pyupgrade, bugbear, simplify, comprehensions, ruff-native, pydocstyle (D213 pelo nome: a convenção Google o desliga)
 ignore = [
     "RUF012",  # list/dict em ModelAdmin e Model.Meta são a convenção do próprio Django, não um bug
+    "D1",  # docstring ausente (D100 a D107) fica fora do portão por enquanto; tire daqui conforme cada módulo for documentado
+    "D212",  # o estilo do projeto abre a docstring com `"""` sozinho e o resumo na linha seguinte (D213)
+    "D205",  # o resumo pode ser um parágrafo que quebra linha, seguido de linha em branco
 ]
 
 [tool.ruff.lint.isort]
 known-first-party = ["blog_culinario", "nucleo", "receitas", "usuarios"]
+
+[tool.ruff.lint.pydocstyle]
+# Seções no estilo Google (`Args:`, `Returns:`, `Raises:`), como nas docstrings.
+convention = "google"
 
 # --- Formatador (black) ------------------------------------------------------
 [tool.black]

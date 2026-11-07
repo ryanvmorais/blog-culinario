@@ -37,7 +37,8 @@ def _limpar_cache_de_limitacao() -> None:
 # Builders
 # -----------------------------------------------------------------------------
 def _dados_cadastro(**kwargs: Any) -> dict[str, Any]:
-    """Payload válido para o formulário de cadastro, sobrescrevível por teste.
+    """
+    Payload válido para o formulário de cadastro, sobrescrevível por teste.
 
     Args:
         **kwargs (Any): campos que sobrescrevem o default (``username``,
@@ -203,7 +204,8 @@ def test_login_dois_ips_nao_compartilham_o_limite(client: Client) -> None:
 
 
 def test_limite_excedido_expira_apos_a_janela(rf: RequestFactory) -> None:
-    """O contador zera sozinho ao fim da janela configurada (RF-03).
+    """
+    O contador zera sozinho ao fim da janela configurada (RF-03).
 
     Testa ``limite_excedido`` diretamente (não via view) -- a janela real do
     login é de 5 minutos, longa demais para esperar num teste.

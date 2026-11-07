@@ -18,7 +18,8 @@ def gerar_slug_unico(
     texto: str,
     campo_slug: str = "slug",
 ) -> str:
-    """Gera um slug único para ``modelo``, resolvendo colisão com sufixo numérico.
+    """
+    Gera um slug único para ``modelo``, resolvendo colisão com sufixo numérico.
 
     Args:
         modelo (type[models.Model]): classe do model onde a unicidade do

@@ -47,7 +47,8 @@ def _limpar_cache_de_limitacao() -> None:
 # Builders
 # -----------------------------------------------------------------------------
 def _categoria(**kwargs: Any) -> Categoria:
-    """Cria uma Categoria com defaults sensatos, sobrescrevíveis por teste.
+    """
+    Cria uma Categoria com defaults sensatos, sobrescrevíveis por teste.
 
     Args:
         **kwargs (Any): campos que sobrescrevem o default (``nome``, etc.).
@@ -61,7 +62,8 @@ def _categoria(**kwargs: Any) -> Categoria:
 
 
 def _tag(**kwargs: Any) -> Tag:
-    """Cria uma Tag com defaults sensatos, sobrescrevíveis por teste.
+    """
+    Cria uma Tag com defaults sensatos, sobrescrevíveis por teste.
 
     Args:
         **kwargs (Any): campos que sobrescrevem o default (``nome``, etc.).
@@ -75,7 +77,8 @@ def _tag(**kwargs: Any) -> Tag:
 
 
 def _receita(**kwargs: Any) -> Receita:
-    """Cria uma Receita mínima válida, sobrescrevível por teste.
+    """
+    Cria uma Receita mínima válida, sobrescrevível por teste.
 
     Args:
         **kwargs (Any): campos que sobrescrevem o default (``titulo``,
@@ -98,7 +101,8 @@ def _receita(**kwargs: Any) -> Receita:
 
 
 def _comentario(**kwargs: Any) -> Comentario:
-    """Cria um Comentario mínimo válido, sobrescrevível por teste.
+    """
+    Cria um Comentario mínimo válido, sobrescrevível por teste.
 
     Args:
         **kwargs (Any): campos que sobrescrevem o default (``receita``,
@@ -127,7 +131,8 @@ def _comentario(**kwargs: Any) -> Comentario:
 
 
 def _carimbo_valido(segundos_atras: float = 5) -> str:
-    """Gera um carimbo assinado como se tivesse sido renderizado há N segundos.
+    """
+    Gera um carimbo assinado como se tivesse sido renderizado há N segundos.
 
     Args:
         segundos_atras (float): há quantos segundos simular que o
@@ -338,7 +343,7 @@ def test_busca_por_titulo_encontra_receita(client: Client) -> None:
 
 
 def test_busca_por_ingrediente_encontra_receita(client: Client) -> None:
-    """ "cenoura" só aparece em ``ingredientes``, não no título (RF-01)."""
+    """O termo "cenoura" só aparece em ``ingredientes``, não no título (RF-01)."""
     receita = _receita(
         titulo="Bolo simples", ingredientes="2 cenouras\n1 ovo", publicado=True
     )

@@ -150,7 +150,8 @@ do ecossistema Python.
 
 **O que é/faz:** lint (erros de estilo, imports não usados, bugs comuns) e
 organização de imports — substitui flake8 + isort + pyupgrade numa ferramenta
-só.
+só. Também confere a forma das docstrings (regras `D`, convenção Google, resumo na
+segunda linha); docstring ausente ainda não barra o portão.
 
 **Por que esta:** é ordens de magnitude mais rápida que as alternativas
 tradicionais e cobre o mesmo conjunto de regras com uma configuração só.

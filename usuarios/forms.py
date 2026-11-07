@@ -8,7 +8,8 @@ from django.contrib.auth.models import User
 
 
 class FormularioCadastro(UserCreationForm):
-    """Cadastro de conta: username + senha (herdados) e email opcional.
+    """
+    Cadastro de conta: username + senha (herdados) e email opcional.
 
     Toda a validação de username único, força de senha
     (``AUTH_PASSWORD_VALIDATORS``) e confirmação de senha já vem da

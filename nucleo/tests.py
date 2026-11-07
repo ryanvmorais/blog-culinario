@@ -16,7 +16,8 @@ pytestmark = pytest.mark.django_db
 
 
 def _receita_publicada(titulo: str = "Bolo de cenoura") -> Receita:
-    """Cria uma receita publicada mínima, para os testes da home.
+    """
+    Cria uma receita publicada mínima, para os testes da home.
 
     Args:
         titulo (str, optional): título da receita. Padrão: ``"Bolo de cenoura"``.

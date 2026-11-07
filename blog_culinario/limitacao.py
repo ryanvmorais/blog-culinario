@@ -19,7 +19,8 @@ _PREFIXO_CACHE = "limite"
 def limite_excedido(
     request: HttpRequest, chave: str, limite: int, janela_segundos: int
 ) -> bool:
-    """Verifica se o IP da requisição excedeu o limite de tentativas na janela.
+    """
+    Verifica se o IP da requisição excedeu o limite de tentativas na janela.
 
     Incrementa o contador como efeito colateral — chamar esta função já
     conta como uma tentativa, então cada view chama exatamente uma vez por

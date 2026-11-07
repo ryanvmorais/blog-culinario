@@ -14,7 +14,8 @@ from receitas.models import Receita
 
 
 def home(request: HttpRequest) -> HttpResponse:
-    """Renderiza a página inicial do blog, com as receitas mais recentes.
+    """
+    Renderiza a página inicial do blog, com as receitas mais recentes.
 
     Args:
         request (HttpRequest): requisição recebida.

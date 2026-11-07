@@ -58,7 +58,8 @@ _ASSERCOES_PROPRIAS = (
 
 @pytest.fixture
 def _demo(settings: LazySettings, tmp_path: Path) -> None:
-    """Liga o ``DEBUG`` e isola a mídia num diretório temporário.
+    """
+    Liga o ``DEBUG`` e isola a mídia num diretório temporário.
 
     Args:
         settings (LazySettings): fixture do pytest-django.
@@ -72,7 +73,8 @@ def _demo(settings: LazySettings, tmp_path: Path) -> None:
 # Builders
 # -----------------------------------------------------------------------------
 def _configuracao(perfil: str) -> dict[str, Any]:
-    """Lê a configuração do Lighthouse CI de um perfil.
+    """
+    Lê a configuração do Lighthouse CI de um perfil.
 
     Args:
         perfil (str): ``"mobile"`` ou ``"desktop"``.
@@ -86,7 +88,8 @@ def _configuracao(perfil: str) -> dict[str, Any]:
 
 
 def _caminhos(perfil: str) -> list[str]:
-    """Lista os caminhos que o Lighthouse CI audita num perfil.
+    """
+    Lista os caminhos que o Lighthouse CI audita num perfil.
 
     Args:
         perfil (str): ``"mobile"`` ou ``"desktop"``.

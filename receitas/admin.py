@@ -28,7 +28,8 @@ class TagAdmin(admin.ModelAdmin):
 
 @admin.register(Receita)
 class ReceitaAdmin(admin.ModelAdmin):
-    """Listagem e formulário de receitas.
+    """
+    Listagem e formulário de receitas.
 
     ``autocomplete_fields`` + ``list_select_related`` evitam que a listagem
     dispare uma query de categoria/autor por linha à medida que o volume de
@@ -45,7 +46,8 @@ class ReceitaAdmin(admin.ModelAdmin):
 
 @admin.register(Comentario)
 class ComentarioAdmin(admin.ModelAdmin):
-    """Moderação de comentários: aprovar/reprovar sem precisar apagar.
+    """
+    Moderação de comentários: aprovar/reprovar sem precisar apagar.
 
     ``list_editable`` deixa alternar ``aprovado`` direto na listagem — a
     forma mais rápida de moderar em volume (spec 005, RF-07).
@@ -60,7 +62,8 @@ class ComentarioAdmin(admin.ModelAdmin):
 
     @admin.display(description="Comentário")
     def texto_curto(self, obj: Comentario) -> str:
-        """Trunca o texto do comentário para caber na coluna da listagem.
+        """
+        Trunca o texto do comentário para caber na coluna da listagem.
 
         Args:
             obj (Comentario): a linha sendo renderizada.
