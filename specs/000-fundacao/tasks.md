@@ -1,9 +1,9 @@
 ---
 feature: Fundação do projeto (bootstrap)
 status: concluído
-data: 2026-09-12
-relacionado: []
-origem: engenharia reversa
+date: 2026-09-12
+related: []
+origin: engenharia reversa
 ---
 
 # 000 — Fundação do projeto (bootstrap) — Tasks

@@ -1,9 +1,9 @@
 ---
 feature: Modelagem de domínio das receitas (Categoria, Receita, Tag)
 status: concluído
-data: 2026-09-12
-relacionado: []
-origem: concepcao
+date: 2026-09-12
+related: []
+origin: concepcao
 ---
 
 # 001 — Modelagem de domínio das receitas

@@ -1,11 +1,11 @@
 ---
 feature: Honeypot e time-trap no formulário de comentário
 status: concluído
-data: 2026-09-12
-relacionado:
+date: 2026-09-12
+related:
   - 005-comentarios/requirements.md
   - 006-limitacao-de-taxa/requirements.md
-origem: concepcao
+origin: concepcao
 ---
 
 # 007 — Honeypot e time-trap no formulário de comentário — design

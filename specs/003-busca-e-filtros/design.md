@@ -1,10 +1,10 @@
 ---
 feature: Busca textual e filtros por categoria/tag
 status: concluído
-data: 2026-09-12
-relacionado:
+date: 2026-09-12
+related:
   - 002-listagem-detalhe-receitas/requirements.md
-origem: concepcao
+origin: concepcao
 ---
 
 # 003 — Busca textual e filtros por categoria/tag — design

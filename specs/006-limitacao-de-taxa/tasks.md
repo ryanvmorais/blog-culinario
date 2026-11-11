@@ -1,11 +1,11 @@
 ---
 feature: Limitação de taxa em login e comentários
 status: concluído
-data: 2026-09-12
-relacionado:
+date: 2026-09-12
+related:
   - 004-autenticacao/requirements.md
   - 005-comentarios/requirements.md
-origem: concepcao
+origin: concepcao
 ---
 
 # 006 — Limitação de taxa em login e comentários — Tasks
@@ -40,9 +40,8 @@ para capturar a mensagem de erro no redirect) — corrigido em
 Também apareceu uma falha pré-existente e não relacionada a esta spec:
 `nucleo/tests.py::test_home_mostra_receitas_publicadas_recentes` quebrou
 porque o Prettier havia reformatado `nucleo/templates/nucleo/home.html`
-(edição em andamento) e partiu a tag `{% include "includes/cartao_receita.html" %}`
+e partido a tag `{% include "includes/cartao_receita.html" %}`
 em duas linhas — o lexer de template do Django não reconhece uma tag
 `{% ... %}` com quebra de linha no meio (regex sem `DOTALL`). Corrigido em
 duas partes: `.prettierignore` na raiz do projeto para o Prettier nunca mais
-tocar `templates/`, e a tag quebrada foi desfeita para uma linha só, sem
-alterar o texto/copy que estava em edição.
+tocar `templates/`, e a tag quebrada voltou para uma linha só.

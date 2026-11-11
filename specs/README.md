@@ -15,10 +15,10 @@ Markdown puro — legíveis e úteis mesmo fora do Claude Code.
   ---
   feature: <título legível>
   status: rascunho | aprovado | em andamento | concluído
-  data: AAAA-MM-DD
-  relacionado:
+  date: AAAA-MM-DD
+  related:
     - 000-outra/requirements.md
-  origem: concepcao | engenharia reversa
+  origin: concepcao | engenharia reversa
   ---
   ```
 - **Critério de aceite:** notação **Given/When/Then**, um `### RF-NN` (heading,

@@ -1,9 +1,9 @@
 ---
 feature: Autenticação de usuários (cadastro, login, logout)
 status: concluído
-data: 2026-09-12
-relacionado: []
-origem: concepcao
+date: 2026-09-12
+related: []
+origin: concepcao
 ---
 
 # 004 — Autenticação de usuários (cadastro, login, logout)

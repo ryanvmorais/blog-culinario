@@ -1,12 +1,12 @@
 ---
 feature: Comentários em receitas
 status: concluído
-data: 2026-09-12
-relacionado:
+date: 2026-09-12
+related:
   - 001-modelagem-receitas/requirements.md
   - 002-listagem-detalhe-receitas/requirements.md
   - 004-autenticacao/requirements.md
-origem: concepcao
+origin: concepcao
 ---
 
 # 005 — Comentários em receitas

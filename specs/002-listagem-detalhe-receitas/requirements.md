@@ -1,10 +1,10 @@
 ---
 feature: Listagem e detalhe público de receitas
 status: concluído
-data: 2026-09-12
-relacionado:
+date: 2026-09-12
+related:
   - 001-modelagem-receitas/requirements.md
-origem: concepcao
+origin: concepcao
 ---
 
 # 002 — Listagem e detalhe público de receitas
