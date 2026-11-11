@@ -1,10 +1,12 @@
 {% load static %}
-<!-- ============================================================
+{% comment %}
+     ============================================================
      SEÇÃO: NAVBAR
      Barra fixa no topo (position: sticky, ver static/css/base.css). O botão
      de menu só aparece no breakpoint mobile; o toggle é feito por
      inicializarMenuMobile() em static/js/interacoes.js.
-     ============================================================ -->
+     ============================================================
+{% endcomment %}
 <header class="navbar">
   <div class="container">
     <a class="navbar__marca" href="{% url 'nucleo:home' %}">Blog Culinário</a>
@@ -40,4 +42,4 @@
     </button>
   </div>
 </header>
-<!-- fim: NAVBAR -->
+{# fim: NAVBAR #}

@@ -7,11 +7,13 @@
 {% endcomment %}
 <!doctype html>
 <html lang="pt-br">
-  <!-- ============================================================
+  {% comment %}
+       ============================================================
        SEÇÃO: HEAD
        Meta tags, ícone, fontes locais e folhas de estilo. Os blocos
        abaixo podem ser sobrescritos por templates filhos.
-       ============================================================ -->
+       ============================================================
+  {% endcomment %}
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -36,19 +38,21 @@
     <link rel="stylesheet" href="{% static 'css/base.css' %}" />
     {% block css_extra %}{% endblock %}
   </head>
-  <!-- fim: HEAD -->
+  {# fim: HEAD #}
   <body>
     {% include "includes/navbar.html" %}
     {% block mensagens %}{% include "includes/mensagens.html" %}{% endblock %}
 
-    <!-- ============================================================
+    {% comment %}
+         ============================================================
          SEÇÃO: CONTEÚDO
          Injetado por cada template filho via o bloco "content".
-         ============================================================ -->
+         ============================================================
+    {% endcomment %}
     <main>
       {% block content %}{% endblock %}
     </main>
-    <!-- fim: CONTEÚDO -->
+    {# fim: CONTEÚDO #}
 
     {% include "includes/rodape.html" %}
 

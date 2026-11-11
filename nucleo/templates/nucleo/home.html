@@ -9,9 +9,11 @@
 {% endcomment %}
 
 {% block content %}
-  <!-- ============================================================
+  {% comment %}
+       ============================================================
        SEÇÃO: HERO
-       ============================================================ -->
+       ============================================================
+  {% endcomment %}
   <section class="hero container">
     <span class="hero__legenda">Blog culinário</span>
     <h1 class="hero__titulo">Receitas simples para todos os dias.</h1>
@@ -27,12 +29,14 @@
       {% endif %}
     </div>
   </section>
-  <!-- fim: HERO -->
+  {# fim: HERO #}
 
-  <!-- ============================================================
+  {% comment %}
+       ============================================================
        SEÇÃO: RECEITAS RECENTES
        Até 3 receitas publicadas mais recentes (spec 002, RF-06).
-       ============================================================ -->
+       ============================================================
+  {% endcomment %}
   <section class="container" id="receitas-recentes">
     <h2>Receitas recentes</h2>
 
@@ -46,13 +50,15 @@
       <p class="estado-vazio">Nenhuma receita publicada ainda.</p>
     {% endif %}
   </section>
-  <!-- fim: RECEITAS RECENTES -->
+  {# fim: RECEITAS RECENTES #}
 
-  <!-- ============================================================
+  {% comment %}
+       ============================================================
        SEÇÃO: POR DENTRO
        Onde o blog diz o que ele é por trás das receitas: um projeto Django
        educacional e aberto (spec 008, RF-01).
-       ============================================================ -->
+       ============================================================
+  {% endcomment %}
   <section class="container" id="por-dentro">
     <div class="painel-destaque">
       <h2>Por dentro, um projeto Django</h2>
@@ -71,5 +77,5 @@
       </a>
     </div>
   </section>
-  <!-- fim: POR DENTRO -->
+  {# fim: POR DENTRO #}
 {% endblock %}
