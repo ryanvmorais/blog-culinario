@@ -45,5 +45,6 @@ db.sqlite3-journal
 .DS_Store
 Thumbs.db
 
+# --- 9. RELATÓRIOS DO LIGHTHOUSE CI ---
 # Relatórios do Lighthouse CI gerados localmente (o CI os guarda como artefato).
 .lighthouseci/
