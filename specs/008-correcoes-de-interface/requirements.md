@@ -1,11 +1,11 @@
 ---
 feature: Correções da auditoria de interface
 status: concluído
-data: 2026-10-18
-relacionado:
+date: 2026-10-18
+related:
   - 000-fundacao/requirements.md
   - 005-comentarios/requirements.md
-origem: concepcao
+origin: concepcao
 ---
 
 # 008 — Correções da auditoria de interface

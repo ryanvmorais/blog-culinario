@@ -1,11 +1,11 @@
 ---
 feature: Limitação de taxa em login e comentários
 status: concluído
-data: 2026-09-12
-relacionado:
+date: 2026-09-12
+related:
   - 004-autenticacao/requirements.md
   - 005-comentarios/requirements.md
-origem: concepcao
+origin: concepcao
 ---
 
 # 006 — Limitação de taxa em login e comentários — design

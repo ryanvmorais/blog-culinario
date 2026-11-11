@@ -2,9 +2,9 @@
 # ver "Qualidade e testes" no README). Roda em todo push/PR para pegar regressão
 # antes do merge.
 #
-# O piso do projeto e o 3.12 (a versao do servidor no PythonAnywhere, que lista
-# Python so ate o 3.13); o 3.14 e a versao estavel mais nova. A matriz testa as
-# duas pontas, para o piso declarado no pyproject.toml nao ser so uma promessa.
+# O piso do projeto é o 3.12 (a versão do servidor no PythonAnywhere, que lista
+# Python só até o 3.13); o 3.14 é a versão estável mais nova. A matriz testa as
+# duas pontas, para o piso declarado no pyproject.toml não ser só uma promessa.
 name: CI
 
 on:
@@ -23,13 +23,15 @@ jobs:
   qualidade:
     name: Lint, tipos e testes (Python ${{ matrix.python-version }})
     runs-on: ubuntu-26.04
+    # A suíte roda em menos de 1 minuto; o teto só corta um run travado.
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.12", "3.14"]
     steps:
       - name: Baixar o código
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Nenhum passo seguinte precisa do token do GitHub; ele não fica no disco.
           persist-credentials: false
