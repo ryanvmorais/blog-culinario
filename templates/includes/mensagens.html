@@ -1,8 +1,10 @@
-<!-- ============================================================
+{% comment %}
+     ============================================================
      SEÇÃO: MENSAGENS
      Feedback de django.contrib.messages (spec 004, RF-06). Sobrevive a um
      redirect (login/logout/cadastro) porque o framework guarda na sessão.
-     ============================================================ -->
+     ============================================================
+{% endcomment %}
 {% if messages %}
   <div class="container mensagens" role="status">
     {% for message in messages %}
@@ -10,4 +12,4 @@
     {% endfor %}
   </div>
 {% endif %}
-<!-- fim: MENSAGENS -->
+{# fim: MENSAGENS #}

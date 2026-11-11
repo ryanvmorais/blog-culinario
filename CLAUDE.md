@@ -85,6 +85,12 @@ simples primeiro, `urls.py` com `app_name` namespaced, templates em
   função pública, com o tipo repetido em cada entrada de `Args:`/`Returns:`;
   type hints completos (`mypy` strict); comentários explicam o *porquê*, não o
   *quê*. Siga o estilo do arquivo vizinho.
+- **Comentários nos templates:** comentário do Django, `{# #}` numa linha e
+  `{% comment %}…{% endcomment %}` em várias (régua de seção e `{# fim: NOME #}`
+  inclusive). `<!-- -->` vai para o HTML de cada visitante e o Django executa as
+  tags dentro dele; `{# #}` quebrado em linhas aparece como texto. O
+  `nucleo/test_comentarios_templates.py` guarda a regra. Exceção: o
+  `docs/design-system.html`, que não passa pelo Django.
 
 - **README bilíngue:** `README.md` (português) e `README.en.md` (inglês) têm as
   mesmas seções, na mesma ordem. Mudou um, muda o outro no mesmo PR; o

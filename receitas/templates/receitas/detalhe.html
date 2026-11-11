@@ -47,11 +47,13 @@
     {{ receita.modo_de_preparo|linebreaks }}
   </article>
 
-  <!-- ============================================================
+  {% comment %}
+       ============================================================
        SEÇÃO: COMENTÁRIOS (spec 005)
        Formulário só aparece autenticado; anônimo vê convite de login
        com ?next= de volta pra esta mesma receita (ver ADR-2 da spec).
-       ============================================================ -->
+       ============================================================
+  {% endcomment %}
   <section class="container" id="comentarios">
     <h2>Comentários</h2>
     {% include "includes/mensagens.html" %}
@@ -89,5 +91,5 @@
       </p>
     {% endif %}
   </section>
-  <!-- fim: COMENTÁRIOS -->
+  {# fim: COMENTÁRIOS #}
 {% endblock %}

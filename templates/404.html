@@ -4,12 +4,14 @@
 {% block descricao %}A página que você procurou não existe ou saiu do ar.{% endblock %}
 
 {% block content %}
-  <!-- ============================================================
+  {% comment %}
+       ============================================================
        SEÇÃO: PÁGINA NÃO ENCONTRADA
        Mostrada pelo Django com DEBUG=False, no lugar da página padrão em
        inglês. Herda a navbar e o rodapé; reaproveita o componente .hero
        (spec 008, RF-04).
-       ============================================================ -->
+       ============================================================
+  {% endcomment %}
   <section class="hero container">
     <span class="hero__legenda">Erro 404</span>
     <h1 class="hero__titulo">Esta página não existe.</h1>
@@ -22,5 +24,5 @@
       <a class="botao botao--contorno" href="{% url 'nucleo:home' %}">Voltar ao início</a>
     </div>
   </section>
-  <!-- fim: PÁGINA NÃO ENCONTRADA -->
+  {# fim: PÁGINA NÃO ENCONTRADA #}
 {% endblock %}

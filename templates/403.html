@@ -4,11 +4,13 @@
 {% block descricao %}Você não tem permissão para abrir esta página.{% endblock %}
 
 {% block content %}
-  <!-- ============================================================
+  {% comment %}
+       ============================================================
        SEÇÃO: ACESSO NEGADO
        Mostrada pelo Django com DEBUG=False (PermissionDenied e falha de
        CSRF) no lugar da página padrão em inglês (spec 008, RF-04).
-       ============================================================ -->
+       ============================================================
+  {% endcomment %}
   <section class="hero container">
     <span class="hero__legenda">Erro 403</span>
     <h1 class="hero__titulo">Você não pode abrir esta página.</h1>
@@ -21,5 +23,5 @@
       <a class="botao botao--contorno" href="{% url 'nucleo:home' %}">Voltar ao início</a>
     </div>
   </section>
-  <!-- fim: ACESSO NEGADO -->
+  {# fim: ACESSO NEGADO #}
 {% endblock %}
