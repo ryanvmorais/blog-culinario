@@ -29,7 +29,7 @@ educacional de Python/Django); não havia alternativa em avaliação.
 
 **Qual versão:** o piso é o 3.12, que é a versão do servidor no PythonAnywhere
 (a plataforma lista Python só até o 3.13) e o mínimo que o Django 6.1 aceita. O CI
-roda o projeto no 3.12 e no 3.14 (o mais novo que o Django 6.1 aceita), e o `ruff`, o
+roda o projeto em todas as versões que o Django 6.1 aceita, do 3.12 ao 3.15, e o `ruff`, o
 `black` e o `mypy` apontam para o 3.12, para o próprio lint barrar sintaxe que o
 piso não tem.
 
@@ -197,7 +197,7 @@ faz, como ler um erro `[import-untyped]`/`[arg-type]`.
 | `django.contrib.humanize` | Filtros de template (`timesince`, `intcomma`) nas páginas de receita. |
 | WhiteNoise (dev) | Também ativo em desenvolvimento — evita duas configurações de estático divergentes. |
 | `static/js/interacoes.js` | JS puro, sem framework nem build, carregado com `defer` no `base.html`. Hoje cuida do menu mobile (teclado, `aria-expanded`, Esc e clique fora). |
-| GitHub Actions | `ci.yml` roda o portão de qualidade (ruff, black, mypy, pytest) em todo PR e em todo push na `main`, numa matriz com Python 3.12 (o piso) e 3.14. |
+| GitHub Actions | `ci.yml` roda o portão de qualidade (ruff, black, mypy, pytest) em todo PR e em todo push na `main`, numa matriz do Python 3.12 (o piso) ao 3.15. |
 | Dependabot | `.github/dependabot.yml` abre PRs de atualização para o `uv` e para as próprias Actions; os PRs são revisados, não mergeados sozinhos. |
 | pip-audit | `pip-audit.yml` audita o `uv.lock` atrás de CVEs toda segunda, 09:00 de São Paulo (e sob demanda): o CI só roda em PR e o Dependabot nem sempre abre PR de correção. |
 | Lighthouse CI | `lighthouse.yml` mede as 5 páginas públicas em mobile e desktop e falha se acessibilidade, SEO, contraste, alvo de toque, erro de console, CLS ou peso regredirem. Sobe o site com os dados de `manage.py semear_dados_demo`. Não é check obrigatório (varia em runner compartilhado). Estudar primeiro: `.github/lighthouse/*.json` (os limites) e o `semear_dados_demo.py`. |

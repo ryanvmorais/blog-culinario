@@ -2,9 +2,9 @@
 # ver "Qualidade e testes" no README). Roda em todo push/PR para pegar regressão
 # antes do merge.
 #
-# O piso do projeto é o 3.12 (a versão do servidor no PythonAnywhere, que lista
-# Python só até o 3.13); o 3.14 é a versão estável mais nova. A matriz testa as
-# duas pontas, para o piso declarado no pyproject.toml não ser só uma promessa.
+# O piso do projeto é o 3.12, o mínimo do Django 6.1. A matriz testa todas as
+# versões que o Django 6.1 suporta (3.12 a 3.15), para o piso declarado no
+# pyproject.toml não ser só uma promessa e o 3.15 não chegar sem teste.
 name: CI
 
 on:
@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12", "3.14"]
+        python-version: ["3.12", "3.13", "3.14", "3.15"]
     steps:
       - name: Baixar o código
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
