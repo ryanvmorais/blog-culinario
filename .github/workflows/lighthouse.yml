@@ -89,8 +89,11 @@ jobs:
       - name: Sobe o servidor e espera responder
         # Modo demonstração ligado, como na instância pública: login e cadastro
         # são auditados com o aviso e as credenciais na tela (spec 009).
+        # URL_PUBLICA no mesmo host que o Lighthouse abre: a auditoria de
+        # canonical reprova endereço de outro domínio (spec 010).
         env:
           MODO_DEMONSTRACAO: "True"
+          URL_PUBLICA: "http://127.0.0.1:8000"
         run: |
           nohup uv run python manage.py runserver 8000 --noreload > servidor.log 2>&1 &
           for i in $(seq 1 30); do
