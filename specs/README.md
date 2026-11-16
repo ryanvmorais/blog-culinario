@@ -50,6 +50,7 @@ Nenhuma fase avança sem o "ok" explícito do mantenedor.
 | [006-limitacao-de-taxa](006-limitacao-de-taxa/requirements.md) | Rate limiting em login e criação de comentários (achado da auditoria de segurança) | concluído |
 | [007-honeypot-e-time-trap](007-honeypot-e-time-trap/requirements.md) | Honeypot + time-trap no formulário de comentário (extensão da 006) | concluído |
 | [008-correcoes-de-interface](008-correcoes-de-interface/requirements.md) | Correções da auditoria de interface: botões, alinhamento, acessibilidade, fontes locais, tema escuro e a abertura da home | concluído |
+| [009-modo-demonstracao](009-modo-demonstracao/requirements.md) | Modo demonstração: cadastro e comentário validam sem gravar, conta pública no login | concluído |
 
 ## Notas de manutenção
 
