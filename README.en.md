@@ -61,7 +61,7 @@ To give you the best learning experience, the project uses the following technol
 | **SQLite** | Relational database: one file, zero configuration. |
 | **uv** | Dependency and virtual environment manager, with a reproducible lockfile. |
 | **Pillow** | Processes and validates the recipes' cover images. |
-| **django-environ** | Reads `SECRET_KEY` and `DEBUG` from the environment instead of leaving them in the code. |
+| **django-environ** | Reads `SECRET_KEY`, `ALLOWED_HOSTS` and the other settings from the environment instead of leaving them in the code. |
 | **WhiteNoise** | Serves static files in production without needing Nginx or a CDN. |
 | **Gunicorn** | Production WSGI server, installed only by the build recipe (`railpack.json`). |
 
@@ -128,7 +128,7 @@ uv run mypy .
 uv run pytest
 ```
 
-The same gate runs automatically in CI (`.github/workflows/ci.yml`) on every PR and every push to `main`, on Python 3.12 (the project's floor) and 3.14. Every Monday, `.github/workflows/pip-audit.yml` audits `uv.lock` for CVEs. The `.github/workflows/lighthouse.yml` audits the public pages (accessibility, SEO, contrast, touch targets, CLS and weight) on mobile and desktop on every PR that changes the interface and on every push to `main`; it does not block the merge, because Lighthouse varies on a shared server. For the map of each technology in the stack (what it is, why it was chosen, what to study), see [docs/stack.md](docs/stack.md). For the specification of each feature, see [specs/](specs/). For the details of architecture and conventions, see [CLAUDE.md](CLAUDE.md).
+The same gate runs automatically in CI (`.github/workflows/ci.yml`) on every PR and every push to `main`, from Python 3.12 (the project's floor) to 3.15. Every Monday, `.github/workflows/pip-audit.yml` audits `uv.lock` for CVEs. The `.github/workflows/lighthouse.yml` audits the public pages (accessibility, SEO, contrast, touch targets, CLS and weight) on mobile and desktop on every PR that changes the interface and on every push to `main`; it does not block the merge, because Lighthouse varies on a shared server. For the map of each technology in the stack (what it is, why it was chosen, what to study), see [docs/stack.md](docs/stack.md). For the specification of each feature, see [specs/](specs/). For the details of architecture and conventions, see [CLAUDE.md](CLAUDE.md).
 
 ---
 

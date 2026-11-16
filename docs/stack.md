@@ -105,8 +105,8 @@ validação de tipo/tamanho de upload.
 
 ### django-environ
 
-**O que é/faz:** lê `SECRET_KEY`, `DEBUG` e outras configurações de variáveis de
-ambiente (arquivo `.env`) em vez de deixá-las hardcoded no `settings.py`.
+**O que é/faz:** lê `SECRET_KEY`, `ALLOWED_HOSTS`, `ADMIN_URL`, `URL_PUBLICA` e
+outras configurações de variáveis de ambiente (arquivo `.env`) em vez de deixá-las hardcoded no `settings.py`.
 
 **Por que esta:** é a forma mais didática de mostrar "segredo fora do código" sem
 reinventar um parser de `.env` na mão; alternativa seria `python-decouple`
