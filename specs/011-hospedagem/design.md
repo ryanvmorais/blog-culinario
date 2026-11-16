@@ -1,6 +1,6 @@
 ---
 feature: Hospedagem da demonstração na Railway
-status: em andamento
+status: concluído
 date: 2026-11-16
 related:
   - 006-limitacao-de-taxa/requirements.md
@@ -521,6 +521,21 @@ sozinhas. (d) não acrescenta nada: o Admin não tem script inline, e sem o nonc
 com estilo inline precisa do `{% csp_nonce_attr %}`; com script inline, de um
 arquivo em `static/js/`.
 
+### ADR-12 — HSTS de 1 ano com preload, depois do HTTPS no ar
+
+**Decisão.** `SECURE_HSTS_SECONDS = 31_536_000` e `SECURE_HSTS_PRELOAD = True` no
+`prod.py`, com o `includeSubDomains` que já existia, só na Etapa 7, depois de conferir
+de fora que todo o site responde em HTTPS.
+**Alternativas.** (a) Manter 1 semana sem preload; (b) 1 ano desde o primeiro deploy.
+**Porquê.** O domínio principal já envia 1 ano com `includeSubDomains` e `preload`,
+então o subdomínio do blog já é só HTTPS para quem o visitou; (a) só deixaria o
+`security.W021` no `check --deploy` e o cabeçalho do blog mais fraco que o do
+domínio. (b) prenderia o navegador ao HTTPS por um ano antes de saber se o
+certificado e o redirect funcionam no ar.
+**Trade-off.** Voltar a servir HTTP no subdomínio deixa de ser possível por um ano
+para quem já recebeu o cabeçalho. O `preload` sozinho não inscreve nada: a lista
+dos navegadores é pedida pelo domínio principal.
+
 ## Impacto no código existente
 
 - **Dependências:** o extra `prod` ganha o `gunicorn`. A versão sai do lock com o
@@ -620,4 +635,35 @@ menos os cabeçalhos de segurança, em `nucleo/test_cabecalhos.py` (o último it
 5. **Comparação do segredo de origem (RNF-05, ADR-5):** o middleware compara o
    cabeçalho com todos os segredos aceitos, sem parar no primeiro acerto, para o tempo
    de resposta não variar com a posição do segredo.
+6. **Capa em WebP com o tipo certo (RF-07):** no ar, as capas saíam com
+   `Content-Type: application/octet-stream`. O Python 3.12 só conhece o `.webp` pelo
+   `mime.types` do sistema, que o contêiner da plataforma não tem (o tipo entrou no
+   `mimetypes` no 3.13), e o `serve` escolhe o tipo pela extensão. O `nucleo/views.py`
+   registra `image/webp` com `mimetypes.add_type`, e um teste guarda o tipo (PR #69).
+
+## Notas de implementação
+
+- **Suíte:** 322 testes ao fim da spec, com as Etapas 6b e 6c e a correção do WebP.
+- **`check --deploy`:** no ar, com o HSTS ainda de 7 dias, só o `security.W021`
+  (`SECURE_HSTS_PRELOAD` desligado) e o `mail.E001` silenciado (o blog não envia
+  e-mail); com o ADR-12, nenhum aviso.
+- **Console da plataforma:** o shell não carrega o ambiente do start, então o
+  `python` não está no `PATH`; o ambiente virtual do build fica em `/app/.venv`
+  (`export PATH="/app/.venv/bin:$PATH"`). A `DJANGO_SETTINGS_MODULE` também fica
+  nas variáveis do serviço, porque o Console não passa pelo `export` do start.
+- **Conteúdo inicial:** levado do ambiente local para o volume com `dumpdata
+  --natural-foreign --natural-primary` (os usuários entram pelo nome e não colidem
+  com o superusuário criado em produção) e `loaddata`; a autora das receitas entra
+  sem senha utilizável.
+- **Cache da Cloudflare:** a mídia sai com `Cache-Control: public, max-age=86400`, e a
+  Cloudflare guarda `.webp` por padrão. Uma resposta corrigida na origem só aparece
+  de fora depois de um purge das URLs (ou de um dia).
+- **No ar:** conferido de fora: redirect 301 de HTTP para HTTPS, HSTS, `nosniff`,
+  `X-Frame-Options`, `Content-Security-Policy`, `Permissions-Policy`, cookie CSRF
+  com `Secure`, `/admin/` padrão em 404, a capa em `image/webp`, `../` em 404, o
+  login com a conta de demonstração, o POST com `Origin` de outro site em 403, a
+  sexta senha errada recusada e o pedido direto à plataforma, sem passar pelo proxy,
+  sem resposta do site. No log do deploy, o `migrate` roda antes do gunicorn, que
+  escuta na `PORT` da plataforma (RF-01, RF-03, RF-04, RF-07, RF-08, RF-10, RF-16,
+  RF-17).
 

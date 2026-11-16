@@ -44,11 +44,13 @@ X_FRAME_OPTIONS = "DENY"
 # mandar o cabeçalho e pular o redirect (spec 011, RF-03).
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# 1 semana para começar; suba para 31536000 (1 ano) só depois de confirmar
-# que todo o site serve HTTPS sem exceção — HSTS não tem "desfazer" rápido.
-SECURE_HSTS_SECONDS = 604_800
+# HSTS: o navegador passa a usar só HTTPS por 1 ano. O valor começou em 1
+# semana e subiu depois de conferir o HTTPS no ar, porque o HSTS não tem
+# "desfazer" rápido: quem publicar num domínio novo pode começar menor
+# (spec 011, ADR-12).
+SECURE_HSTS_SECONDS = 31_536_000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = False
+SECURE_HSTS_PRELOAD = True
 
 # O LOGGING padrão do Django só manda o erro 500 por e-mail aos ADMINS, que o
 # projeto não define: sem isto, o erro não aparece no log do serviço, que a

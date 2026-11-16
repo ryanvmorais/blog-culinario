@@ -359,13 +359,14 @@ def test_log_de_producao_mostra_o_500_e_esconde_o_404() -> None:
     assert "pagina-nao-encontrada" not in resultado.stderr
 
 
-def test_check_deploy_sem_erro_e_so_o_aviso_de_hsts_preload(tmp_path: Path) -> None:
+def test_check_deploy_sem_erro_nem_aviso(tmp_path: Path) -> None:
     # A checagem de cache do Django cria a pasta do cache: fica no tmp_path.
     ambiente = {**AMBIENTE_PRODUCAO, "DIRETORIO_DADOS": str(tmp_path)}
     resultado = _rodar_python("", ambiente, "manage.py", "check", "--deploy")
     saida = resultado.stdout + resultado.stderr
     assert resultado.returncode == 0, saida
-    assert re.findall(r"\((\w+\.[EWCI]\d+)\)", saida) == ["security.W021"]
+    # O mail.E001 fica silenciado no prod.py: o blog não envia e-mail.
+    assert re.findall(r"\((\w+\.[EWCI]\d+)\)", saida) == []
 
 
 # ---------------------------------------------------------------------------

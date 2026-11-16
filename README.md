@@ -13,6 +13,8 @@
 ![types](https://img.shields.io/badge/types-mypy-2A6DB2)
 ![license](https://img.shields.io/badge/license-MIT-green?logo=opensourceinitiative&logoColor=white)
 
+🔗 **[Ver demo ao vivo](https://blog-culinario.ryanmorais.com.br/)**
+
 Este repositório contém um **Blog Culinário multipáginas em Django**, criado como material educacional. Não é (só) um site de receitas: é uma referência para quem está aprendendo a construir uma aplicação web completa em Python, com **modelagem de domínio**, **autenticação nativa** e **segurança aplicada**, indo além do CRUD básico de tutorial.
 
 ### 🎯 Objetivo do Projeto:
