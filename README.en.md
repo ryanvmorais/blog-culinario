@@ -80,16 +80,21 @@ The quality tools (Ruff, Black, Mypy and Pytest) are in [Quality and tests](#qua
     ```bash
     uv sync
     ```
-3.  **Create the database tables:**
+3.  **Create the `.env` and generate the secret key:** copy the template and paste the generated key into the `SECRET_KEY=` line of `.env`. It is the only required variable; without it, the site does not start.
+    ```bash
+    cp .env.example .env
+    uv run python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+    ```
+4.  **Create the database tables:**
     ```bash
     uv run python manage.py migrate
     ```
-4.  **Start the server:**
+5.  **Start the server:**
     ```bash
     uv run python manage.py runserver
     ```
 
-Open `http://127.0.0.1:8000/`. No environment variable is needed to run locally; see `.env.example` if you want to customize something.
+Open `http://127.0.0.1:8000/`. Apart from `SECRET_KEY`, no variable needs to be set to run locally; see `.env.example` if you want to customize something.
 
 Want to see the site with sample recipes without signing anyone up? Run `uv run python manage.py semear_dados_demo`: it creates fictional recipes, covers and comments (development only, and without duplicating them if you run it again).
 
@@ -99,7 +104,7 @@ Going to publish your own? Set `URL_PUBLICA` (scheme and host only, like `https:
 
 Hosting on Railway? The build recipe lives in `railpack.json`: it installs the dependencies from `uv.lock`, with gunicorn (the `prod` extra), runs `collectstatic` at build time and, at start, `migrate` before gunicorn, always with `blog_culinario.settings.prod`. Mount a volume and point `DIRETORIO_DADOS` at it (e.g. `/data`): the database, the cover images and the rate-limit cache live there and survive every deploy. With Cloudflare in front, create a transform rule that adds the `X-Origin-Verify` header with a secret and put the same value in `ORIGEM_SEGREDO`: the site then refuses any request that did not come through Cloudflare, and rate limiting uses the visitor's real IP (`CF-Connecting-IP`). Without that lock, behind a proxy, every visitor shares the same login and comment limit. The full list of variables is in `.env.example`.
 
-> ⚠️ **Note about the Admin:** want a user to access `/admin/`? Run `uv run python manage.py createsuperuser` and follow the instructions in the terminal.
+> ⚠️ **Note about the Admin:** want a user to access `/admin/`? Run `uv run python manage.py createsuperuser` and follow the instructions in the terminal. When publishing, you can move the panel off the default path by setting `ADMIN_URL` (e.g. `painel-secreto/`) in `.env`; `/robots.txt` does not mention the path.
 
 ---
 

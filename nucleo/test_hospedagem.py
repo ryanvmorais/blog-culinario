@@ -43,8 +43,9 @@ BASE_DIR: Path = settings.BASE_DIR
 # vazias por padrão, para o .env de quem roda os testes não entrar no resultado.
 VARIAVEIS_DO_PROJETO = (
     "DJANGO_SETTINGS_MODULE",
-    "DJANGO_SECRET_KEY",
-    "DJANGO_ALLOWED_HOSTS",
+    "SECRET_KEY",
+    "ALLOWED_HOSTS",
+    "ADMIN_URL",
     "MODO_DEMONSTRACAO",
     "URL_PUBLICA",
     "DIRETORIO_DADOS",
@@ -58,8 +59,8 @@ HOST_PUBLICO = "blog.exemplo.com.br"
 # Ambiente mínimo com que as configurações de produção sobem.
 AMBIENTE_PRODUCAO: dict[str, str | None] = {
     "DJANGO_SETTINGS_MODULE": "blog_culinario.settings.prod",
-    "DJANGO_SECRET_KEY": "chave-de-teste-" + "x" * 50,
-    "DJANGO_ALLOWED_HOSTS": "blog.exemplo.com.br",
+    "SECRET_KEY": "chave-de-teste-" + "x" * 50,
+    "ALLOWED_HOSTS": "blog.exemplo.com.br",
 }
 
 
@@ -235,33 +236,70 @@ def _env_local_define(nome: str) -> bool:
 def test_allowed_hosts_sem_espacos_nem_itens_vazios(
     valor: str, esperado: list[str]
 ) -> None:
-    ambiente = {**AMBIENTE_PRODUCAO, "DJANGO_ALLOWED_HOSTS": valor}
+    ambiente = {**AMBIENTE_PRODUCAO, "ALLOWED_HOSTS": valor}
     assert _configuracoes(ambiente, "ALLOWED_HOSTS")["ALLOWED_HOSTS"] == esperado
 
 
 def test_allowed_hosts_ausente_derruba_a_subida() -> None:
-    if _env_local_define("DJANGO_ALLOWED_HOSTS"):
-        pytest.skip("o .env local define DJANGO_ALLOWED_HOSTS")
-    ambiente = {**AMBIENTE_PRODUCAO, "DJANGO_ALLOWED_HOSTS": None}
+    if _env_local_define("ALLOWED_HOSTS"):
+        pytest.skip("o .env local define ALLOWED_HOSTS")
+    ambiente = {**AMBIENTE_PRODUCAO, "ALLOWED_HOSTS": None}
     codigo = "from django.conf import settings\nsettings.DEBUG\n"
     resultado = _rodar_python(codigo, ambiente)
     assert resultado.returncode != 0
     assert "ImproperlyConfigured" in resultado.stderr
-    assert "DJANGO_ALLOWED_HOSTS" in resultado.stderr
+    assert "ALLOWED_HOSTS" in resultado.stderr
 
 
+@pytest.mark.parametrize("modulo", ["prod", "dev"])
 @pytest.mark.parametrize("valor", [None, ""])
-def test_producao_sem_chave_secreta_nao_sobe(valor: str | None) -> None:
-    # O base.py tem uma chave insegura fixa para o desenvolvimento; produção não
-    # pode herdá-la.
-    if valor is None and _env_local_define("DJANGO_SECRET_KEY"):
-        pytest.skip("o .env local define DJANGO_SECRET_KEY")
-    ambiente = {**AMBIENTE_PRODUCAO, "DJANGO_SECRET_KEY": valor}
+def test_sem_chave_secreta_nenhum_ambiente_sobe(valor: str | None, modulo: str) -> None:
+    # Nem o desenvolvimento tem chave fixa: ela valeria em todo clone (RF-15).
+    if valor is None and _env_local_define("SECRET_KEY"):
+        pytest.skip("o .env local define SECRET_KEY")
+    ambiente = {
+        **AMBIENTE_PRODUCAO,
+        "DJANGO_SETTINGS_MODULE": f"blog_culinario.settings.{modulo}",
+        "SECRET_KEY": valor,
+    }
     codigo = "from django.conf import settings\nsettings.SECRET_KEY\n"
     resultado = _rodar_python(codigo, ambiente)
     assert resultado.returncode != 0
     assert "ImproperlyConfigured" in resultado.stderr
     assert "django-insecure" not in resultado.stdout
+
+
+@pytest.mark.parametrize(
+    ("valor", "esperado"),
+    [
+        (None, "admin/"),
+        ("", "admin/"),
+        ("/", "admin/"),
+        ("painel-secreto/", "painel-secreto/"),
+        (" /painel-secreto ", "painel-secreto/"),
+    ],
+)
+def test_admin_url_normaliza_e_nunca_fica_vazio(
+    valor: str | None, esperado: str
+) -> None:
+    # Vazio, o Admin tomaria a raiz no lugar da home (RF-14).
+    if valor is None and _env_local_define("ADMIN_URL"):
+        pytest.skip("o .env local define ADMIN_URL")
+    ambiente = {**AMBIENTE_PRODUCAO, "ADMIN_URL": valor}
+    assert _configuracoes(ambiente, "ADMIN_URL")["ADMIN_URL"] == esperado
+
+
+def test_admin_responde_no_caminho_do_admin_url() -> None:
+    codigo = (
+        "import django\n"
+        "django.setup()\n"
+        "from django.urls import reverse\n"
+        "print(reverse('admin:index'), reverse('nucleo:home'))\n"
+    )
+    ambiente = {**AMBIENTE_PRODUCAO, "ADMIN_URL": "painel-secreto/"}
+    resultado = _rodar_python(codigo, ambiente)
+    assert resultado.returncode == 0, resultado.stderr
+    assert resultado.stdout.split() == ["/painel-secreto/", "/"]
 
 
 def test_sem_diretorio_de_dados_banco_e_midia_ficam_na_raiz() -> None:

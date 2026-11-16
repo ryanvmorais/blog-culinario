@@ -52,7 +52,7 @@ origin: engenharia reversa
 ## Etapa 5 — Documentação e configuração de projeto
 
 - [x] `.gitignore` (Python, ambiente, caches, banco, estáticos/mídia gerados, segredos, editor/SO).
-- [x] `.env.example` documentando `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`.
+- [x] `.env.example` documentando `SECRET_KEY`, `DJANGO_DEBUG`, `ALLOWED_HOSTS`.
 - [x] `.github/dependabot.yml` (uv + github-actions).
 - [x] `.github/workflows/ci.yml` (ruff → black → mypy → pytest, mesma ordem local). — RF-06
 - [x] `pyproject.toml`: seções `[tool.ruff]`, `[tool.black]`, `[tool.mypy]`, `[tool.pytest.ini_options]`.

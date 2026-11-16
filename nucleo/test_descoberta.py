@@ -364,7 +364,7 @@ def _linhas(client: Client, caminho: str) -> list[str]:
 def test_robots_txt_com_url_publica(client: Client) -> None:
     assert _linhas(client, "/robots.txt") == [
         "User-agent: *",
-        "Disallow: /admin/",
+        "Allow: /",
         "",
         f"Sitemap: {URL_PUBLICA_TESTE}/sitemap.xml",
     ]
@@ -372,7 +372,21 @@ def test_robots_txt_com_url_publica(client: Client) -> None:
 
 @override_settings(URL_PUBLICA="")
 def test_robots_txt_sem_url_publica_nao_tem_sitemap(client: Client) -> None:
-    assert _linhas(client, "/robots.txt") == ["User-agent: *", "Disallow: /admin/"]
+    assert _linhas(client, "/robots.txt") == ["User-agent: *", "Allow: /"]
+
+
+def test_robots_txt_nao_cita_o_caminho_do_admin(client: Client) -> None:
+    # Um Disallow com o caminho entregaria o ADMIN_URL trocado (spec 011, RF-14).
+    corpo = client.get("/robots.txt", HTTP_HOST=HOST_DO_PEDIDO).content.decode()
+    assert "admin" not in corpo.lower()
+
+
+def test_login_do_admin_pede_para_nao_ser_indexado(client: Client) -> None:
+    # É o que deixa o robots.txt sem citar o Admin (decisão resolvida 6).
+    resposta = client.get(reverse("admin:login"), HTTP_HOST=HOST_DO_PEDIDO)
+    assert re.search(
+        r'<meta name="robots" content="[^"]*NONE', resposta.content.decode()
+    )
 
 
 # ---------------------------------------------------------------------------

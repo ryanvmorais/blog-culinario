@@ -29,6 +29,10 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.12", "3.13", "3.14", "3.15"]
+    env:
+      # O settings exige SECRET_KEY em todo ambiente (spec 011, RF-15); valor
+      # descartável, só para o settings importar no CI (não é produção).
+      SECRET_KEY: ci-placeholder-nao-usar-em-producao-MQ5e-SKRD_O0QqcJ
     steps:
       - name: Baixar o código
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

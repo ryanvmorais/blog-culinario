@@ -54,13 +54,22 @@ origin: concepcao
 
 ## Etapa 6 — Documentação e conferência local
 
-- [x] `.env.example`: `DIRETORIO_DADOS`, `ORIGEM_SEGREDO` e `ORIGEM_SEGREDO_ANTERIOR` (como gerar o valor com `secrets.token_urlsafe`, o cabeçalho `X-Origin-Verify` e o efeito no IP), `DJANGO_ALLOWED_HOSTS` com exemplo de domínio próprio e o aviso de que, atrás de proxy sem a trava, todos os visitantes dividem o limite de taxa. — RNF-06
+- [x] `.env.example`: `DIRETORIO_DADOS`, `ORIGEM_SEGREDO` e `ORIGEM_SEGREDO_ANTERIOR` (como gerar o valor com `secrets.token_urlsafe`, o cabeçalho `X-Origin-Verify` e o efeito no IP), `ALLOWED_HOSTS` com exemplo de domínio próprio e o aviso de que, atrás de proxy sem a trava, todos os visitantes dividem o limite de taxa. — RNF-06
 - [x] `README.md` e `README.en.md`: seção de deploy com a receita (`railpack.json`), as variáveis, o volume e a trava de origem, nas mesmas seções e na mesma ordem; o PythonAnywhere fora. — RNF-06
 - [x] `CLAUDE.md`: visão geral (destino de deploy), nota do piso do Python só pelo mínimo do Django 6.1, arquitetura (`railpack.json`, `cache.py`, `origem.py`) e a convenção de que view nova que limita por IP usa `limite_excedido()`, nunca o `REMOTE_ADDR` direto. — RNF-06
 - [x] `docs/stack.md`: Railway, Railpack e gunicorn; SQLite, WhiteNoise e cache revistos sem o PythonAnywhere. — RNF-06
 - [x] Busca por `PythonAnywhere` e `pythonanywhere` fora de `specs/` concluídas: nenhuma ocorrência. — RNF-06
 - [x] Conferência à mão: `check --deploy` com as configurações de produção; `runserver` com `settings.prod`, `--insecure`, `ORIGEM_SEGREDO` e `DIRETORIO_DADOS` numa pasta temporária, conferindo com `curl` o 403 sem o cabeçalho, o 200 com ele e com `X-Forwarded-Proto: https`, e uma capa em `/media/`. — RF-03, RF-06, RF-07, RF-09, RF-12
 - [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest` (o `nucleo/test_readme_en.py` confere a paridade dos READMEs). — 307 testes (2 novos da chave secreta): 305 passed e 2 skipped com um .env local (os de variável ausente; sem .env, passam); ruff/black/mypy verdes; conferência à mão com curl: 403 sem o segredo (com 403.html e aviso no log sem o valor), 301 para HTTPS, 200 com os dois cabeçalhos, capa image/jpeg com nosniff, max-age e HSTS, ../ em 404
+
+## Etapa 6b — Variáveis com o nome do Django, Admin configurável e chave obrigatória
+
+- [x] Renomear `DJANGO_SECRET_KEY` → `SECRET_KEY` e `DJANGO_ALLOWED_HOSTS` → `ALLOWED_HOSTS` em código, testes, `.env.example`, docs e specs (a 000 e a 010 só nos nomes). — decisão resolvida 10
+- [x] `base.py`: `SECRET_KEY` sem default e `ADMIN_URL` normalizado; `prod.py` sem a linha da chave; `urls.py` com `path(settings.ADMIN_URL, ...)`; `robots.txt` com `Allow: /`. — RF-14, RF-15, ADR-9, ADR-10
+- [x] `ci.yml` e `lighthouse.yml`: `SECRET_KEY` placeholder no `env` do job. — RF-15
+- [x] Testes: `ADMIN_URL` (leitura e rota), chave ausente ou vazia em dev e prod, `robots.txt` sem o Admin, `meta robots` no login do Admin, testes do Admin por `reverse`. — RF-13, RF-14, RF-15
+- [x] `.env.example`, `README.md`, `README.en.md` ("Como rodar": copiar o `.env.example` e gerar a chave) e `CLAUDE.md`. — RNF-06
+- [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. — 319 testes: 316 passed e 3 skipped com um .env local (os de variável ausente; sem o .env, passam); ruff/black/mypy verdes
 
 ## Etapa 7 — Com a demonstração publicada
 

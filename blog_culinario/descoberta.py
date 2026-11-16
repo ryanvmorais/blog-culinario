@@ -170,9 +170,9 @@ def robots_txt(request: HttpRequest) -> HttpResponse:
     """
     Serve o ``/robots.txt`` (RF-04).
 
-    O Admin fica de fora do rastreio; o caminho é o padrão do Django e não é
-    segredo (decisão resolvida 6). Login e cadastro continuam rastreáveis,
-    porque o Lighthouse CI os audita.
+    Libera o site inteiro e não cita o Admin: um ``Disallow`` entregaria o
+    caminho do ``ADMIN_URL`` (spec 011, RF-14), e a tela de login do Admin já
+    pede para não ser indexada (decisão resolvida 6).
 
     Args:
         request (HttpRequest): requisição atual.
@@ -180,7 +180,7 @@ def robots_txt(request: HttpRequest) -> HttpResponse:
     Returns:
         HttpResponse: o arquivo, com a linha ``Sitemap:`` só com ``URL_PUBLICA``.
     """
-    linhas = ["User-agent: *", "Disallow: /admin/"]
+    linhas = ["User-agent: *", "Allow: /"]
     url_sitemap = url_absoluta(reverse("sitemap"))
     if url_sitemap:
         linhas += ["", f"Sitemap: {url_sitemap}"]

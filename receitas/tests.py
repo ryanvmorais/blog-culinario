@@ -259,9 +259,9 @@ def test_listagens_do_admin_respondem_200(client: Client) -> None:
     client.force_login(staff)
 
     for url in [
-        "/admin/receitas/categoria/",
-        "/admin/receitas/tag/",
-        "/admin/receitas/receita/",
+        reverse("admin:receitas_categoria_changelist"),
+        reverse("admin:receitas_tag_changelist"),
+        reverse("admin:receitas_receita_changelist"),
     ]:
         resposta = client.get(url)
         assert resposta.status_code == 200
@@ -830,6 +830,6 @@ def test_listagem_do_admin_de_comentarios_responde_200(client: Client) -> None:
     client.force_login(staff)
     _comentario()
 
-    resposta = client.get("/admin/receitas/comentario/")
+    resposta = client.get(reverse("admin:receitas_comentario_changelist"))
 
     assert resposta.status_code == 200

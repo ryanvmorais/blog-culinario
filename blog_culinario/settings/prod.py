@@ -3,9 +3,8 @@ Configurações de produção — alvo de deploy: Railway, atrás da Cloudflare.
 
 Ativado via ``DJANGO_SETTINGS_MODULE=blog_culinario.settings.prod``, que a
 receita de build (``railpack.json``) define em cada comando e que o ``wsgi.py``
-usa como padrão (spec 011, ADR-2). Exige ``DJANGO_SECRET_KEY`` e
-``DJANGO_ALLOWED_HOSTS`` no ambiente (ver ``.env.example``); nunca reaproveita
-os defaults de desenvolvimento do ``base.py``.
+usa como padrão (spec 011, ADR-2). Exige ``SECRET_KEY`` (lida no ``base.py``,
+obrigatória em todo ambiente) e ``ALLOWED_HOSTS`` (ver ``.env.example``).
 """
 
 from __future__ import annotations
@@ -15,17 +14,10 @@ from .base import env
 
 DEBUG = False
 
-# Sem default: o base.py tem uma chave insegura fixa para quem clona rodar sem
-# configurar nada, e produção nunca pode herdá-la. Ausente, a subida falha;
-# vazia, o Django recusa a chave (spec 011, RF-02).
-SECRET_KEY = env.str("DJANGO_SECRET_KEY")
-
 # Ex.: "blog.exemplo.com.br" — obrigatório, sem default permissivo: ausente, a
 # subida falha; vazio, todo host é recusado. Espaços e vírgula sobrando não
 # viram host (spec 011, RF-05).
-ALLOWED_HOSTS = [
-    host.strip() for host in env.list("DJANGO_ALLOWED_HOSTS") if host.strip()
-]
+ALLOWED_HOSTS = [host.strip() for host in env.list("ALLOWED_HOSTS") if host.strip()]
 
 # Estáticos comprimidos e versionados por hash — o WhiteNoiseMiddleware (já
 # ativo via base.py) serve tudo direto do processo Django, sem servidor de
