@@ -7,6 +7,8 @@ receitas — são as páginas e os arquivos que sustentam o site como um todo.
 
 from __future__ import annotations
 
+import mimetypes
+
 from django.conf import settings
 from django.core.exceptions import SuspiciousFileOperation
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseBase
@@ -16,6 +18,12 @@ from django.views.decorators.http import require_safe
 from django.views.static import serve
 
 from receitas.models import Receita
+
+# O Python 3.12 só conhece o .webp pelo mime.types do sistema, que o contêiner
+# da plataforma não tem (o tipo entrou no mimetypes no 3.13). Sem ele, a
+# servir_midia responde application/octet-stream a toda capa convertida para
+# WebP, com o nosniff ligado (spec 011, RF-07).
+mimetypes.add_type("image/webp", ".webp")
 
 
 def home(request: HttpRequest) -> HttpResponse:
