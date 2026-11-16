@@ -5,7 +5,7 @@
 # Por que um workflow separado do ci.yml: o Lighthouse leva alguns minutos e tem
 # variância em runner compartilhado; o ci.yml (qualidade) precisa continuar rápido.
 # Ele NÃO é um check obrigatório da main de propósito: um check instável que bloqueia
-# merge ensina a ignorá-lo. Vira obrigatório depois de algumas semanas estável.
+# merge ensina a ignorá-lo.
 #
 # Gatilhos: o repositório é público, então os minutos de Actions e o armazenamento dos
 # artefatos não têm teto, e o workflow roda em PR (só quando algo que muda a página
@@ -87,6 +87,10 @@ jobs:
           uv run python manage.py semear_dados_demo
 
       - name: Sobe o servidor e espera responder
+        # Modo demonstração ligado, como na instância pública: login e cadastro
+        # são auditados com o aviso e as credenciais na tela (spec 009).
+        env:
+          MODO_DEMONSTRACAO: "True"
         run: |
           nohup uv run python manage.py runserver 8000 --noreload > servidor.log 2>&1 &
           for i in $(seq 1 30); do
