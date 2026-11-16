@@ -4,12 +4,14 @@ Views de autenticação: cadastro, login e logout (spec 004).
 Login e logout reaproveitam ``LoginView``/``LogoutView`` do Django (RNF-01)
 — só acrescentam a mensagem de feedback (ADR-3). Cadastro precisa de uma
 view própria porque o Django não fornece uma pronta. No modo demonstração
-(spec 009), o cadastro valida mas não cria a conta.
+(spec 009), o cadastro valida mas não cria a conta. O login do Admin passa
+pela ``entrar_no_admin``, que aplica o mesmo limite de tentativas do login do
+site, no mesmo contador.
 """
 
 from __future__ import annotations
 
-from django.contrib import messages
+from django.contrib import admin, messages
 from django.contrib.auth import login
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import LoginView, LogoutView
@@ -22,6 +24,14 @@ from blog_culinario.demonstracao import mensagem_cadastro, modo_demonstracao_lig
 from blog_culinario.limitacao import limite_excedido
 
 from .forms import FormularioCadastro
+
+# Limite de tentativas de login por IP (spec 006, RF-01), igual no login do
+# site e no do Admin. A chave é a mesma nos dois: alternar entre eles não
+# dobra as tentativas da janela.
+CHAVE_LIMITE_LOGIN = "login"
+LIMITE_LOGIN = 5
+JANELA_LOGIN_SEGUNDOS = 300
+MENSAGEM_LIMITE_LOGIN = "Muitas tentativas de login. Tente novamente em alguns minutos."
 
 
 class CadastroView(FormView):
@@ -80,11 +90,10 @@ class EntrarView(LoginView):
             erro se o limite foi atingido; caso contrário, segue o fluxo
             normal do ``LoginView``.
         """
-        if limite_excedido(request, "login", limite=5, janela_segundos=300):
-            messages.error(
-                request,
-                "Muitas tentativas de login. Tente novamente em alguns minutos.",
-            )
+        if limite_excedido(
+            request, CHAVE_LIMITE_LOGIN, LIMITE_LOGIN, JANELA_LOGIN_SEGUNDOS
+        ):
+            messages.error(request, MENSAGEM_LIMITE_LOGIN)
             return redirect("usuarios:entrar")
         return super().post(request, *args, **kwargs)
 
@@ -129,3 +138,29 @@ class SairView(LogoutView):
         """
         messages.info(request, "Você saiu da sua conta.")
         return super().post(request, *args, **kwargs)
+
+
+def entrar_no_admin(request: HttpRequest) -> HttpResponse:
+    """
+    Login do Admin com o mesmo limite de tentativas do login do site.
+
+    O ``/admin/login/`` é uma view do ``django.contrib.admin``, que o limite da
+    spec 006 não cobria. Esta função vem antes dela nas rotas: no envio do
+    formulário, conta a tentativa no contador do login do site e, passado o
+    limite, volta à tela de login com a mensagem, sem conferir a senha (conferir
+    diria a quem tenta se ela estava certa). Fora isso, o Admin responde como
+    sempre.
+
+    Args:
+        request (HttpRequest): requisição recebida em ``/admin/login/``.
+
+    Returns:
+        HttpResponse: a tela de login do Admin de novo (com o ``?next=`` do
+        pedido) se o limite foi atingido; senão, a resposta do próprio Admin.
+    """
+    if request.method == "POST" and limite_excedido(
+        request, CHAVE_LIMITE_LOGIN, LIMITE_LOGIN, JANELA_LOGIN_SEGUNDOS
+    ):
+        messages.error(request, MENSAGEM_LIMITE_LOGIN)
+        return redirect(request.get_full_path())
+    return admin.site.login(request)

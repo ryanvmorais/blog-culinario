@@ -121,6 +121,10 @@ simples primeiro, `urls.py` com `app_name` namespaced, templates em
   `prod.py` porque o blog não envia e-mail; funcionalidade que enviar tira a
   linha e configura o SMTP.
 
+- **Limite de login:** o login do site e o do Admin dividem um contador por IP
+  (`usuarios/views.py`). A rota `admin/login/` vem antes do `admin.site.urls` e
+  passa pela `entrar_no_admin`; não a remova nem a mova para depois.
+
 - **README bilíngue:** `README.md` (português) e `README.en.md` (inglês) têm as
   mesmas seções, na mesma ordem. Mudou um, muda o outro no mesmo PR; o
   `nucleo/test_readme_en.py` compara títulos, tabela e links.

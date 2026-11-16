@@ -17,9 +17,12 @@ from typing import Any
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.core.cache import cache
+from django.http import HttpResponseBase
 from django.test import Client, RequestFactory
 from django.urls import reverse
+from pytest_django.fixtures import Settings
 
 from blog_culinario.limitacao import limite_excedido
 
@@ -243,6 +246,121 @@ def test_limite_excedido_expira_apos_a_janela(rf: RequestFactory) -> None:
     time.sleep(1.1)
 
     assert limite_excedido(request, "teste-janela", 3, 1) is False
+
+
+# -----------------------------------------------------------------------------
+# Limite no login do Admin (mesmo contador do login do site)
+# -----------------------------------------------------------------------------
+URL_LOGIN_ADMIN = "/admin/login/"
+
+
+def _equipe() -> AbstractBaseUser:
+    """
+    Cria uma conta da equipe, que pode entrar no Admin.
+
+    Returns:
+        AbstractBaseUser: o usuário criado, com ``is_staff=True``.
+    """
+    return User.objects.create_user(
+        username="editor", password="uma-senha-bem-forte-123", is_staff=True
+    )
+
+
+def _post_admin(client: Client, senha: str, next_: str = "/admin/") -> HttpResponseBase:
+    """
+    Envia o formulário de login do Admin.
+
+    Args:
+        client (Client): cliente de teste.
+        senha (str): senha enviada para a conta ``editor``.
+        next_ (str, optional): destino depois do login. Padrão: ``"/admin/"``.
+
+    Returns:
+        HttpResponseBase: a resposta ao POST, sem seguir redirecionamentos.
+    """
+    return client.post(
+        f"{URL_LOGIN_ADMIN}?next={next_}",
+        {"username": "editor", "password": senha, "next": next_},
+    )
+
+
+def test_login_do_admin_bloqueia_a_sexta_tentativa_mesmo_com_a_senha_certa(
+    client: Client,
+) -> None:
+    _equipe()
+    for _ in range(5):
+        # Senha errada: o Admin volta a própria tela com o erro (200).
+        assert _post_admin(client, "senha-errada").status_code == 200
+
+    resposta = _post_admin(client, "uma-senha-bem-forte-123", next_="/admin/receitas/")
+
+    # Recusada antes de conferir a senha: ninguém entra, e o ?next= continua.
+    assert resposta.status_code == 302
+    assert resposta["Location"] == f"{URL_LOGIN_ADMIN}?next=/admin/receitas/"
+    pagina = client.get(resposta["Location"]).content.decode()
+    assert "Muitas tentativas de login" in pagina
+    assert "_auth_user_id" not in client.session
+
+
+def test_login_do_admin_abaixo_do_limite_entra_normalmente(client: Client) -> None:
+    _equipe()
+    resposta = _post_admin(client, "uma-senha-bem-forte-123")
+
+    assert resposta.status_code == 302
+    assert resposta["Location"] == "/admin/"
+    assert "_auth_user_id" in client.session
+
+
+def test_login_do_site_e_do_admin_dividem_o_contador(client: Client) -> None:
+    # Alternar entre os dois logins não dobra as tentativas da janela.
+    _equipe()
+    for _ in range(3):
+        client.post(
+            reverse("usuarios:entrar"), {"username": "editor", "password": "errada"}
+        )
+    for _ in range(2):
+        _post_admin(client, "senha-errada")
+
+    assert _post_admin(client, "uma-senha-bem-forte-123").status_code == 302
+    assert "_auth_user_id" not in client.session
+    resposta = client.post(
+        reverse("usuarios:entrar"),
+        {"username": "editor", "password": "uma-senha-bem-forte-123"},
+        follow=True,
+    )
+    assert "Muitas tentativas de login" in resposta.content.decode()
+
+
+def test_abrir_a_tela_de_login_do_admin_nao_conta_tentativa(client: Client) -> None:
+    _equipe()
+    for _ in range(10):
+        assert client.get(URL_LOGIN_ADMIN).status_code == 200
+
+    _post_admin(client, "uma-senha-bem-forte-123")
+    assert "_auth_user_id" in client.session
+
+
+def test_login_do_admin_conta_por_visitante_atras_da_cloudflare(
+    client: Client, settings: Settings
+) -> None:
+    # Com a trava de origem, dois visitantes atrás do mesmo proxy não dividem
+    # o limite: cada um conta pelo próprio CF-Connecting-IP (spec 011).
+    settings.ORIGEM_SEGREDOS = ("segredo-de-teste",)
+    _equipe()
+    cabecalhos = {"x-origin-verify": "segredo-de-teste"}
+    for _ in range(5):
+        client.post(
+            URL_LOGIN_ADMIN,
+            {"username": "editor", "password": "senha-errada"},
+            headers={**cabecalhos, "cf-connecting-ip": "198.51.100.1"},
+        )
+
+    client.post(
+        URL_LOGIN_ADMIN,
+        {"username": "editor", "password": "uma-senha-bem-forte-123"},
+        headers={**cabecalhos, "cf-connecting-ip": "198.51.100.2"},
+    )
+    assert "_auth_user_id" in client.session
 
 
 # -----------------------------------------------------------------------------

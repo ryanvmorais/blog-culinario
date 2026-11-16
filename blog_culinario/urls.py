@@ -21,12 +21,16 @@ from django.urls import URLPattern, URLResolver, include, path
 from blog_culinario import descoberta
 from nucleo.views import servir_midia
 from receitas.sitemaps import ReceitaSitemap
+from usuarios.views import entrar_no_admin
 
 # Montado aqui, e não em descoberta.py, para aquele módulo não importar de
 # receitas (o padrão da documentação do Django para o framework de sitemaps).
 SITEMAPS = {"paginas": descoberta.PaginasSitemap, "receitas": ReceitaSitemap}
 
 urlpatterns: list[URLPattern | URLResolver] = [
+    # Antes do admin.site.urls, para o login do Admin passar pelo limite de
+    # tentativas do login do site (usuarios.views.entrar_no_admin).
+    path("admin/login/", entrar_no_admin, name="admin_login_limitado"),
     path("admin/", admin.site.urls),
     path("robots.txt", descoberta.robots_txt, name="robots_txt"),
     path(
