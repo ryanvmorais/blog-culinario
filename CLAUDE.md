@@ -65,7 +65,8 @@ assets/                    # imagens do README e do social preview
 specs/                     # spec-driven development — ver specs/README.md
 docs/stack.md              # o que compõe a stack, por que e o que estudar
 docs/design-system.html    # catálogo visual (tokens, tipografia, componentes); abra direto no navegador — usa o tokens.css e o base.css do site
-.github/                   # CI (ci.yml), pip-audit semanal (pip-audit.yml), Lighthouse CI (lighthouse.yml + lighthouse/), Dependabot (uv + github-actions), formulário de issue e template de PR
+.github/                   # CI (ci.yml), pip-audit semanal (pip-audit.yml), Lighthouse CI (lighthouse.yml + lighthouse/), Dependabot (uv + github-actions), formulário de issue (com o atalho para o aviso privado de segurança) e template de PR
+SECURITY.md                # política de segurança: relato privado pelos avisos do GitHub, prazos e escopo
 ```
 
 Cada app novo do domínio segue o padrão de `nucleo`: `views.py` com funções
