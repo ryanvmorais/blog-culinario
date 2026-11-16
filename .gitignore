@@ -28,15 +28,21 @@ db.sqlite3
 db.sqlite3-journal
 
 # --- 6. ARQUIVOS ESTÁTICOS E DE MÍDIA GERADOS ---
-# staticfiles/ é saída do collectstatic; media/ são uploads de usuário.
+# staticfiles/ é saída do collectstatic; media/ são uploads de usuário;
+# django_cache/ é o cache em arquivo da limitação de taxa (spec 011).
 # .gitkeep mantém a pasta versionada mesmo vazia.
 /staticfiles/
 /media/*
 !/media/.gitkeep
+/django_cache/
 
 # --- 7. SEGREDOS E CONFIGURAÇÃO LOCAL ---
-# .env carrega SECRET_KEY/credenciais reais; .env.example é o modelo versionado.
+# .env carrega SECRET_KEY/credenciais reais, e .env.* cobre as variações
+# (.env.local, .env.prod). O .env.example é o modelo versionado: a exceção
+# abaixo o traz de volta.
 .env
+.env.*
+!.env.example
 
 # --- 8. EDITOR E SISTEMA OPERACIONAL ---
 # Configuração pessoal de editor e arquivos gerados pelo sistema operacional.
