@@ -1,3 +1,8 @@
 # Configuração dos formulários de issue — consumido pelo GitHub.
 # Sem issue em branco: o formulário de dúvida, erro ou sugestão cobre o convite do README.
 blank_issues_enabled: false
+# Vulnerabilidade não vai por issue pública: o atalho leva ao aviso privado (SECURITY.md).
+contact_links:
+  - name: Vulnerabilidade de segurança
+    url: https://github.com/ryanvmorais/blog-culinario/security/advisories/new
+    about: Relate em privado, pelos avisos de segurança do GitHub, e não por issue pública.
