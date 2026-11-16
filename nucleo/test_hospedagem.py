@@ -710,6 +710,15 @@ def test_capa_servida_com_debug_desligado(midia: Path) -> None:
 
 
 @pytest.mark.django_db
+def test_capa_webp_sai_como_image_webp(midia: Path) -> None:
+    # O Python 3.12 sem o mime.types do sistema não conhece o .webp.
+    Image.new("RGB", (4, 4), "orange").save(midia / "capas" / "bolo.webp", "WEBP")
+    resposta = Client().get("/media/capas/bolo.webp")
+    assert resposta.status_code == 200
+    assert resposta["Content-Type"] == "image/webp"
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize(
     "caminho",
     [
