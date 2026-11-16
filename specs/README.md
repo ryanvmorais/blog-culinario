@@ -52,6 +52,7 @@ Nenhuma fase avança sem o "ok" explícito do mantenedor.
 | [008-correcoes-de-interface](008-correcoes-de-interface/requirements.md) | Correções da auditoria de interface: botões, alinhamento, acessibilidade, fontes locais, tema escuro e a abertura da home | concluído |
 | [009-modo-demonstracao](009-modo-demonstracao/requirements.md) | Modo demonstração: cadastro e comentário validam sem gravar, conta pública no login | concluído |
 | [010-descoberta](010-descoberta/requirements.md) | Descoberta: `URL_PUBLICA`, canonical e Open Graph, `robots.txt`, `sitemap.xml` e `security.txt` na demonstração | concluído |
+| [011-hospedagem](011-hospedagem/requirements.md) | Hospedagem na Railway: receita de build, HTTPS atrás do proxy, dados num volume, mídia com `DEBUG=False`, limitação de taxa entre workers e trava de origem | em andamento |
 
 ## Notas de manutenção
 

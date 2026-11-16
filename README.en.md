@@ -61,6 +61,7 @@ To give you the best learning experience, the project uses the following technol
 | **Pillow** | Processes and validates the recipes' cover images. |
 | **django-environ** | Reads `SECRET_KEY` and `DEBUG` from the environment instead of leaving them in the code. |
 | **WhiteNoise** | Serves static files in production without needing Nginx or a CDN. |
+| **Gunicorn** | Production WSGI server, installed only by the build recipe (`railpack.json`). |
 
 The quality tools (Ruff, Black, Mypy and Pytest) are in [Quality and tests](#quality-and-tests). For the reasoning behind each choice (and the alternatives that were discarded), see [docs/stack.md](docs/stack.md).
 
@@ -95,6 +96,8 @@ Want to see the site with sample recipes without signing anyone up? Run `uv run 
 Want to see how the public demo behaves? Start the server with `MODO_DEMONSTRACAO=True` (in `.env`) and run `uv run python manage.py criar_conta_demonstracao`: sign-up and comments are validated but nothing is saved, the login page shows the demo account, and `/.well-known/security.txt` starts answering with the repository's security contact.
 
 Going to publish your own? Set `URL_PUBLICA` (scheme and host only, like `https://blog.example.com`) in `.env`: pages get a `<link rel="canonical">` and an `og:url` with that address, and `/sitemap.xml` lists the home page, the recipe list and every published recipe. `/robots.txt` always answers and, with the variable set, points to the sitemap.
+
+Hosting on Railway? The build recipe lives in `railpack.json`: it installs the dependencies from `uv.lock`, with gunicorn (the `prod` extra), runs `collectstatic` at build time and, at start, `migrate` before gunicorn, always with `blog_culinario.settings.prod`. Mount a volume and point `DIRETORIO_DADOS` at it (e.g. `/data`): the database, the cover images and the rate-limit cache live there and survive every deploy. With Cloudflare in front, create a transform rule that adds the `X-Origin-Verify` header with a secret and put the same value in `ORIGEM_SEGREDO`: the site then refuses any request that did not come through Cloudflare, and rate limiting uses the visitor's real IP (`CF-Connecting-IP`). Without that lock, behind a proxy, every visitor shares the same login and comment limit. The full list of variables is in `.env.example`.
 
 > ⚠️ **Note about the Admin:** want a user to access `/admin/`? Run `uv run python manage.py createsuperuser` and follow the instructions in the terminal.
 
