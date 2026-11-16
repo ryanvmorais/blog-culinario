@@ -11,6 +11,7 @@ teste para o outro.
 
 from __future__ import annotations
 
+import re
 import time
 from typing import Any
 
@@ -91,6 +92,28 @@ def test_cadastro_com_senhas_divergentes_nao_cria_conta(client: Client) -> None:
     )
 
     assert not User.objects.filter(username="chef-teste").exists()
+
+
+def test_cadastro_nao_mostra_ajuda_no_campo_de_usuario(client: Client) -> None:
+    # A ajuda padrão do Django ("150 caracteres ou menos...") saiu da tela.
+    pagina = client.get(reverse("usuarios:cadastro")).content.decode()
+
+    campo = re.search(r'<input[^>]*name="username"[^>]*>', pagina)
+    assert campo is not None
+    assert "aria-describedby" not in campo.group(0)
+    assert "id_username_helptext" not in pagina
+    assert "150 caracteres" not in pagina
+
+
+def test_cadastro_com_username_invalido_segue_recusado(client: Client) -> None:
+    # Sem a ajuda, a regra do nome continua: o erro aparece no envio.
+    resposta = client.post(
+        reverse("usuarios:cadastro"), _dados_cadastro(username="chef com espaço")
+    )
+
+    assert not User.objects.filter(username="chef com espaço").exists()
+    assert resposta.context["form"].errors["username"]
+    assert "formulario__erro" in resposta.content.decode()
 
 
 # -----------------------------------------------------------------------------
