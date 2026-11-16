@@ -2,6 +2,8 @@
 
 {% block titulo %}Página não encontrada — Blog Culinário{% endblock %}
 {% block descricao %}A página que você procurou não existe ou saiu do ar.{% endblock %}
+{# Página de erro não tem endereço canônico (spec 010, RF-02). #}
+{% block endereco_canonico %}{% endblock %}
 
 {% block content %}
   {% comment %}

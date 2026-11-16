@@ -1,27 +1,42 @@
-{% load static %}
+{% load static metadados %}
 {% comment %}
   Layout raiz do Blog Culinário. Toda página estende este template e só
   sobrescreve os blocos nomeados (titulo, descricao, content, css_extra,
-  js_extra, mensagens) -- estrutura de <head>, navbar, mensagens e rodapé ficam aqui,
-  compartilhadas por todas as páginas (spec 000).
+  js_extra, mensagens, endereco_canonico, og_tipo) -- estrutura de <head>, navbar,
+  mensagens e rodapé ficam aqui, compartilhadas por todas as páginas (spec 000).
 {% endcomment %}
 <!doctype html>
 <html lang="pt-br">
   {% comment %}
        ============================================================
        SEÇÃO: HEAD
-       Meta tags, ícone, fontes locais e folhas de estilo. Os blocos
-       abaixo podem ser sobrescritos por templates filhos.
+       Meta tags, endereço canônico, Open Graph, ícone, fontes locais e
+       folhas de estilo. Os blocos abaixo podem ser sobrescritos por
+       templates filhos.
        ============================================================
   {% endcomment %}
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{% block titulo %}Blog Culinário{% endblock %}</title>
-    <meta
-      name="description"
-      content="{% block descricao %}Receitas simples para todos os dias, com comentários da comunidade. Por dentro, um projeto Django educacional e aberto.{% endblock %}"
-    />
+    {# O mesmo título e a mesma descrição vão ao <title> e ao Open Graph (spec 010, ADR-2). #}
+    {% capturar titulo_pagina %}{% block titulo %}Blog Culinário{% endblock %}{% endcapturar %}
+    {% capturar descricao_pagina %}{% block descricao %}Receitas simples para todos os dias, com comentários da comunidade. Por dentro, um projeto Django educacional e aberto.{% endblock %}{% endcapturar %}
+    <title>{{ titulo_pagina }}</title>
+    <meta name="description" content="{{ descricao_pagina }}" />
+
+    {# Endereço vindo só de URL_PUBLICA; 403 e 404 esvaziam o bloco (spec 010, RF-02). #}
+    {% block endereco_canonico %}
+      {% if url_canonica %}
+        <link rel="canonical" href="{{ url_canonica }}" />
+        <meta property="og:url" content="{{ url_canonica }}" />
+      {% endif %}
+    {% endblock %}
+    {# Open Graph sem imagem (spec 010, RF-03). #}
+    <meta property="og:type" content="{% block og_tipo %}website{% endblock %}" />
+    <meta property="og:title" content="{{ titulo_pagina }}" />
+    <meta property="og:description" content="{{ descricao_pagina }}" />
+    <meta property="og:site_name" content="Blog Culinário" />
+    <meta property="og:locale" content="pt_BR" />
 
     <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml" />
 

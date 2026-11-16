@@ -92,7 +92,9 @@ Open `http://127.0.0.1:8000/`. No environment variable is needed to run locally;
 
 Want to see the site with sample recipes without signing anyone up? Run `uv run python manage.py semear_dados_demo`: it creates fictional recipes, covers and comments (development only, and without duplicating them if you run it again).
 
-Want to see how the public demo behaves? Start the server with `MODO_DEMONSTRACAO=True` (in `.env`) and run `uv run python manage.py criar_conta_demonstracao`: sign-up and comments are validated but nothing is saved, and the login page shows the demo account.
+Want to see how the public demo behaves? Start the server with `MODO_DEMONSTRACAO=True` (in `.env`) and run `uv run python manage.py criar_conta_demonstracao`: sign-up and comments are validated but nothing is saved, the login page shows the demo account, and `/.well-known/security.txt` starts answering with the repository's security contact.
+
+Going to publish your own? Set `URL_PUBLICA` (scheme and host only, like `https://blog.example.com`) in `.env`: pages get a `<link rel="canonical">` and an `og:url` with that address, and `/sitemap.xml` lists the home page, the recipe list and every published recipe. `/robots.txt` always answers and, with the variable set, points to the sitemap.
 
 > ⚠️ **Note about the Admin:** want a user to access `/admin/`? Run `uv run python manage.py createsuperuser` and follow the instructions in the terminal.
 
