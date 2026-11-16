@@ -92,7 +92,9 @@ Acesse `http://127.0.0.1:8000/`. Não é preciso configurar nenhuma variável de
 
 Quer ver o site com receitas de exemplo sem cadastrar nada? Rode `uv run python manage.py semear_dados_demo`: ele cria receitas, capas e comentários fictícios (só em desenvolvimento, e sem duplicar se rodar de novo).
 
-Quer ver como a demonstração pública se comporta? Suba o servidor com `MODO_DEMONSTRACAO=True` (no `.env`) e rode `uv run python manage.py criar_conta_demonstracao`: cadastro e comentário passam a validar sem gravar nada, e a tela de login mostra a conta de demonstração.
+Quer ver como a demonstração pública se comporta? Suba o servidor com `MODO_DEMONSTRACAO=True` (no `.env`) e rode `uv run python manage.py criar_conta_demonstracao`: cadastro e comentário passam a validar sem gravar nada, a tela de login mostra a conta de demonstração e o `/.well-known/security.txt` passa a responder com o contato de segurança do repositório.
+
+Vai publicar o seu? Defina `URL_PUBLICA` (só esquema e host, como `https://blog.exemplo.com.br`) no `.env`: as páginas ganham `<link rel="canonical">` e `og:url` com esse endereço, e o `/sitemap.xml` passa a listar a home, a lista e cada receita publicada. O `/robots.txt` responde sempre e, com a variável, aponta o sitemap.
 
 > ⚠️ **Nota sobre o Admin:** quer um usuário para acessar `/admin/`? Rode `uv run python manage.py createsuperuser` e siga as instruções no terminal.
 

@@ -51,6 +51,7 @@ Nenhuma fase avança sem o "ok" explícito do mantenedor.
 | [007-honeypot-e-time-trap](007-honeypot-e-time-trap/requirements.md) | Honeypot + time-trap no formulário de comentário (extensão da 006) | concluído |
 | [008-correcoes-de-interface](008-correcoes-de-interface/requirements.md) | Correções da auditoria de interface: botões, alinhamento, acessibilidade, fontes locais, tema escuro e a abertura da home | concluído |
 | [009-modo-demonstracao](009-modo-demonstracao/requirements.md) | Modo demonstração: cadastro e comentário validam sem gravar, conta pública no login | concluído |
+| [010-descoberta](010-descoberta/requirements.md) | Descoberta: `URL_PUBLICA`, canonical e Open Graph, `robots.txt`, `sitemap.xml` e `security.txt` na demonstração | concluído |
 
 ## Notas de manutenção
 

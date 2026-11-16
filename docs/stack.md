@@ -66,7 +66,10 @@ uma dezena de libs separadas, como seria necessário com Flask/FastAPI.
 
 **O que estudar:** o ciclo requisição -> `urls.py` -> view -> template ->
 resposta; `QuerySet` e migrations; herança de template (`{% extends %}` +
-`{% block %}`); o `django.contrib.admin`.
+`{% block %}`); o `django.contrib.admin`; o `django.contrib.sitemaps` e os
+context processors, que o projeto usa para o canonical e o `sitemap.xml`
+(spec 010); tag de template própria (`{% capturar %}`, em
+`nucleo/templatetags/metadados.py`).
 
 **Docs:** [Documentação oficial](https://docs.djangoproject.com/)
 

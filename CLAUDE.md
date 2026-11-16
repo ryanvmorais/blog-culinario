@@ -58,7 +58,9 @@ defaults seguros. Ver `.env.example` para a lista completa e
 blog_culinario/settings/   # base.py (comum) + dev.py / prod.py (por ambiente)
 blog_culinario/limitacao.py # rate limit por IP via cache do Django (login e comentário — spec 006)
 blog_culinario/demonstracao.py # modo demonstração: conta pública, mensagens e context processor (spec 009)
-nucleo/                    # a home e os testes transversais (interface, tema escuro, README em inglês, impessoalidade)
+blog_culinario/endereco.py # URL_PUBLICA: validação na subida e url_absoluta() (spec 010)
+blog_culinario/descoberta.py # canonical (context processor), sitemaps, robots.txt, sitemap.xml e security.txt (spec 010)
+nucleo/                    # a home, a tag {% capturar %} (templatetags/metadados.py) e os testes transversais (interface, tema escuro, descoberta, README em inglês, impessoalidade)
 receitas/                  # domínio principal: Receita, Categoria, Tag, Comentario; management/commands/semear_dados_demo.py (dados do Lighthouse CI) e seu teste
 usuarios/                  # autenticação (django.contrib.auth); management/commands/criar_conta_demonstracao.py
 templates/                 # base.html + includes/ (navbar, rodapé) + 404, 403 e 500
@@ -101,6 +103,12 @@ simples primeiro, `urls.py` com `app_name` namespaced, templates em
   validam mas não gravam. View nova que grave dado de visitante consulta
   `modo_demonstracao_ligado()` antes do `save()` (spec 009, ADR-1).
 
+- **Endereço absoluto só por `url_absoluta()`** (`blog_culinario/endereco.py`),
+  que lê `URL_PUBLICA`; nunca do `Host` do pedido (spec 010, RNF-03). Página nova
+  que estende o `base.html` ganha canonical e Open Graph sozinha; página de erro
+  esvazia o bloco `endereco_canonico`. O `Expires` do `security.txt` é fixo: o
+  `nucleo/test_descoberta.py` falha 30 dias antes, e aí se move a data.
+
 - **README bilíngue:** `README.md` (português) e `README.en.md` (inglês) têm as
   mesmas seções, na mesma ordem. Mudou um, muda o outro no mesmo PR; o
   `nucleo/test_readme_en.py` compara títulos, tabela e links.
@@ -136,7 +144,7 @@ push na `main`. O `.github/workflows/pip-audit.yml` audita o `uv.lock` com
 `pip-audit` toda segunda, 09:00 de São Paulo (e à mão): o CI só roda em PR, e o Dependabot nem sempre
 abre PR de correção.
 
-**Lighthouse CI** (`.github/workflows/lighthouse.yml`): audita 5 páginas públicas (home, lista e detalhe de receita, entrar e cadastro), em mobile e desktop, com 3 medições e mediana. Roda em PR quando muda template, estático, view, model, o comando de dados ou a configuração, no push da `main` e à mão (`workflow_dispatch`); repo público, então sem teto de minutos. **Não é check obrigatório** (o Lighthouse varia em runner compartilhado). O servidor sobe com os dados de `manage.py semear_dados_demo` (idempotente, recusa `DEBUG=False`, capas geradas com o Pillow, sem rede) e com `MODO_DEMONSTRACAO=True`, como a instância pública. Limites em `.github/lighthouse/{mobile,desktop}.json`: **erro** para acessibilidade, boas práticas e SEO < 95, CLS > 0,1, peso por página, e `color-contrast`, `unsized-images`, `target-size` e `errors-in-console` como asserções próprias; **aviso** para a nota de Performance. `@lhci/cli` fixado em `LHCI_VERSION` (o Dependabot não vê um `npx`: ao subir, recalibre os limites). Os números são comparação relativa; os reais só existem em produção. Página nova importante entra nos dois JSON; o `receitas/test_semear_dados_demo.py` guarda que toda URL responde 200 e que mobile e desktop auditam o mesmo.
+**Lighthouse CI** (`.github/workflows/lighthouse.yml`): audita 5 páginas públicas (home, lista e detalhe de receita, entrar e cadastro), em mobile e desktop, com 3 medições e mediana. Roda em PR quando muda template, estático, view, model, o comando de dados ou a configuração, no push da `main` e à mão (`workflow_dispatch`); repo público, então sem teto de minutos. **Não é check obrigatório** (o Lighthouse varia em runner compartilhado). O servidor sobe com os dados de `manage.py semear_dados_demo` (idempotente, recusa `DEBUG=False`, capas geradas com o Pillow, sem rede) e com `MODO_DEMONSTRACAO=True`, como a instância pública, e `URL_PUBLICA` no host do próprio runner (a auditoria de canonical reprova outro domínio). Limites em `.github/lighthouse/{mobile,desktop}.json`: **erro** para acessibilidade, boas práticas e SEO < 95, CLS > 0,1, peso por página, e `color-contrast`, `unsized-images`, `target-size` e `errors-in-console` como asserções próprias; **aviso** para a nota de Performance. `@lhci/cli` fixado em `LHCI_VERSION` (o Dependabot não vê um `npx`: ao subir, recalibre os limites). Os números são comparação relativa; os reais só existem em produção. Página nova importante entra nos dois JSON; o `receitas/test_semear_dados_demo.py` guarda que toda URL responde 200 e que mobile e desktop auditam o mesmo.
 
 ## Spec-driven development
 
