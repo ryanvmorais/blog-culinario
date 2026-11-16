@@ -1,6 +1,6 @@
 ---
 feature: Hospedagem da demonstração na Railway
-status: em andamento
+status: concluído
 date: 2026-11-16
 related:
   - 006-limitacao-de-taxa/requirements.md

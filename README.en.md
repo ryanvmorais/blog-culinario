@@ -13,6 +13,8 @@
 ![types](https://img.shields.io/badge/types-mypy-2A6DB2)
 ![license](https://img.shields.io/badge/license-MIT-green?logo=opensourceinitiative&logoColor=white)
 
+🔗 **[See the live demo](https://blog-culinario.ryanmorais.com.br/)** (the site itself is in Portuguese)
+
 This repository contains a **multi-page recipe blog in Django** (Blog Culinário), built as educational material. It is not (just) a recipe site: it is a reference for anyone learning to build a complete web application in Python, with **domain modeling**, **built-in authentication** and **applied security**, going beyond the basic tutorial CRUD. The site itself and the code names (`Receita`, `Categoria`, `Comentario`) are in Brazilian Portuguese, the language of the course this project belongs to.
 
 ### 🎯 Project Goal:
