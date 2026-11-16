@@ -69,7 +69,8 @@ resposta; `QuerySet` e migrations; herança de template (`{% extends %}` +
 `{% block %}`); o `django.contrib.admin`; o `django.contrib.sitemaps` e os
 context processors, que o projeto usa para o canonical e o `sitemap.xml`
 (spec 010); tag de template própria (`{% capturar %}`, em
-`nucleo/templatetags/metadados.py`).
+`nucleo/templatetags/metadados.py`); a Content-Security-Policy nativa do
+Django 6 (`SECURE_CSP` e o nonce do `{% csp_nonce_attr %}`, spec 011, ADR-11).
 
 **Docs:** [Documentação oficial](https://docs.djangoproject.com/)
 
@@ -254,6 +255,9 @@ faz, como ler um erro `[import-untyped]`/`[arg-type]`.
 - **Tailwind CSS** — um design system pequeno em CSS puro (custom properties)
   é mais didático para quem nunca montou uma identidade visual do zero; um
   framework utilitário esconderia essa aprendizagem.
+- **django-csp** — o Django 6 já envia a Content-Security-Policy pelo
+  `SECURE_CSP`, e o Admin marca as próprias tags com o nonce dela; o pacote
+  seria uma dependência a mais para o mesmo cabeçalho.
 - **django-allauth** (ou outra lib de autenticação) — o `django.contrib.auth`
   nativo é suficiente para o escopo do projeto e mais transparente para
   quem está aprendendo como autenticação funciona por baixo dos panos.

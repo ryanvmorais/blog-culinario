@@ -63,6 +63,7 @@ blog_culinario/settings/   # base.py (comum) + dev.py / prod.py (por ambiente)
 blog_culinario/limitacao.py # rate limit por IP via cache do Django (login e comentário — spec 006)
 blog_culinario/cache.py    # CacheArquivoAtomico: cache em arquivo com add() e incr() atômicos entre workers (spec 011)
 blog_culinario/origem.py   # trava de origem (X-Origin-Verify + ORIGEM_SEGREDO) e ip_do_visitante() (spec 011)
+blog_culinario/cabecalhos.py # middleware do Permissions-Policy; a CSP é o SECURE_CSP nativo do base.py (spec 011)
 blog_culinario/demonstracao.py # modo demonstração: conta pública, mensagens e context processor (spec 009)
 blog_culinario/endereco.py # URL_PUBLICA: validação na subida e url_absoluta() (spec 010)
 blog_culinario/descoberta.py # canonical (context processor), sitemaps, robots.txt, sitemap.xml e security.txt (spec 010)
@@ -123,6 +124,11 @@ simples primeiro, `urls.py` com `app_name` namespaced, templates em
   trava de origem ligada (`ORIGEM_SEGREDO`). O `mail.E001` fica silenciado no
   `prod.py` porque o blog não envia e-mail; funcionalidade que enviar tira a
   linha e configura o SMTP.
+
+- **CSP (spec 011, ADR-11):** nada inline nos templates (`<script>` sem `src`,
+  `<style>`, `style=`, `onclick=`): o `SECURE_CSP` do `base.py` bloquearia, e o
+  `nucleo/test_cabecalhos.py` confere o HTML. Script vai para `static/js/`;
+  recurso de fora do site pede a origem na diretiva certa do `SECURE_CSP`.
 
 - **README bilíngue:** `README.md` (português) e `README.en.md` (inglês) têm as
   mesmas seções, na mesma ordem. Mudou um, muda o outro no mesmo PR; o

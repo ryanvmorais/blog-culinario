@@ -284,6 +284,31 @@ as dependências. E o `wsgi.py` cai nas configurações de desenvolvimento quand
   **When** a suíte ou o servidor sobem
   **Then** usam uma `SECRET_KEY` descartável definida no workflow.
 
+### Cabeçalhos de segurança
+
+### RF-16 — Content-Security-Policy em toda resposta
+
+- **Given** qualquer página pública (home, receitas, entrar, cadastro, 404)
+  **When** a resposta sai
+  **Then** traz o `Content-Security-Policy` com script, estilo, imagem e fonte só do
+  próprio site, `base-uri` e `object-src` em `'none'`, `form-action` em `'self'` e
+  `frame-ancestors` em `'none'`; sem nonce, porque nada é inline.
+- **Given** uma página do Admin
+  **When** a resposta sai
+  **Then** o `style-src` aceita também o nonce do pedido, que o Admin põe no `<style>`
+  inline dele; o `script-src` segue só `'self'`.
+- **Given** as configurações de desenvolvimento ou de produção
+  **When** o site sobe
+  **Then** a política é a mesma; as páginas de depuração do Django (`DEBUG=True`)
+  ficam de fora sozinhas.
+
+### RF-17 — Permissions-Policy em toda resposta
+
+- **Given** qualquer resposta
+  **When** ela sai
+  **Then** traz o `Permissions-Policy` com acelerômetro, câmera, localização,
+  giroscópio, magnetômetro, microfone, pagamento e USB negados; uma view que defina o cabeçalho mantém o valor dela.
+
 ## Requisitos não-funcionais
 
 ### RNF-01 — Só o gunicorn de dependência nova
@@ -294,7 +319,8 @@ de runtime. A trava de origem, a escolha do IP, a mídia e o cache usam só o Dj
 ### RNF-02 — Postura de segurança mantida
 
 O HSTS, o `X-Frame-Options`, o `nosniff` e os cookies seguros de `settings/prod.py`
-seguem iguais. Nenhum template ganha `<script>` ou estilo inline.
+seguem iguais. Nenhum template ganha `<script>` ou estilo inline: a CSP do RF-16
+bloquearia, e a suíte confere o HTML das páginas públicas.
 
 ### RNF-03 — Uma instância
 
@@ -372,6 +398,13 @@ Nenhuma.
     `base.py` valia em todo clone e podia chegar a um deploy que não usasse o
     `prod.py`. Gerar a chave vira um passo do "Como rodar", e o CI define um
     placeholder (RF-15).
+12. **CSP nativa do Django e Permissions-Policy por middleware** (2026-11-16). A CSP
+    vem do `SECURE_CSP` do Django 6, sem o pacote `django-csp`: uma
+    dependência a menos, e o Admin já traz o nonce para a política nativa. A política
+    é a mais estrita que o blog permite: sem `'unsafe-inline'` no
+    estilo (nenhum template do blog tem estilo inline) e imagem só do próprio site
+    (as capas vêm da mídia). O `Permissions-Policy` não tem configuração no Django e
+    usa um middleware pequeno do próprio projeto.
 
 ## Testes
 
@@ -404,4 +437,7 @@ A suíte (`uv run pytest`, sem rede, sem tocar a pasta de dados real) cobre:
 - o IP: `CF-Connecting-IP` só com a trava ligada, ignorado com ela desligada (RF-10);
 - o log: erro 500 registrado, 404 sem registro, 403 da trava registrado sem o valor
   do cabeçalho (RF-11, RNF-05);
-- `check --deploy` sem erro com as configurações de produção (RF-12).
+- `check --deploy` sem erro com as configurações de produção (RF-12);
+- a CSP e o `Permissions-Policy` lidos na resposta das páginas públicas e do Admin,
+  o HTML público sem script, estilo nem atributo de evento inline, e o `<style>`
+  inline do Admin com o nonce do pedido (RF-16, RF-17, RNF-02).
