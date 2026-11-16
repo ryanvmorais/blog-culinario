@@ -71,9 +71,17 @@ origin: concepcao
 - [x] `.env.example`, `README.md`, `README.en.md` ("Como rodar": copiar o `.env.example` e gerar a chave) e `CLAUDE.md`. — RNF-06
 - [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. — 319 testes: 316 passed e 3 skipped com um .env local (os de variável ausente; sem o .env, passam); ruff/black/mypy verdes
 
+## Etapa 6c — Content-Security-Policy e Permissions-Policy
+
+- [x] `base.py`: `SECURE_CSP`, o `ContentSecurityPolicyMiddleware` e o context processor `csp`; `blog_culinario/cabecalhos.py` com o `PermissionsPolicyMiddleware` no fim do `MIDDLEWARE`. — RF-16, RF-17, ADR-11
+- [x] Testes em `nucleo/test_cabecalhos.py`: a política nas páginas públicas e no Admin, o HTML público sem nada inline, o nonce no `<style>` do Admin e o `Permissions-Policy`. — RF-13, RF-16, RF-17, RNF-02
+- [x] Conferência à mão no Chrome: páginas públicas e dez telas do Admin (lista, inclusão, edição e exclusão de receita, usuários, troca de senha) sem violação de CSP no console. — RF-16
+- [x] `CLAUDE.md`: `cabecalhos.py` na arquitetura e a convenção de que nada é inline. — RNF-06
+- [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. — 324 testes: 321 passed e 3 skipped com um .env local (os de variável ausente); ruff/black/mypy verdes
+
 ## Etapa 7 — Com a demonstração publicada
 
-- [ ] Conferência de fora, no endereço público: redirect 301 de HTTP para HTTPS, HSTS, `nosniff`, `X-Frame-Options`, cookie CSRF com `Secure`, uma capa em `/media/` e `../` em 404, login com a conta de demonstração, POST com `Origin` de outro site em 403, a sexta senha errada recusada e o `migrate` antes do gunicorn no log do deploy. — RF-01, RF-03, RF-04, RF-07, RF-08, RF-10
+- [ ] Conferência de fora, no endereço público: redirect 301 de HTTP para HTTPS, HSTS, `nosniff`, `X-Frame-Options`, `Content-Security-Policy` e `Permissions-Policy`, cookie CSRF com `Secure`, uma capa em `/media/` e `../` em 404, login com a conta de demonstração, POST com `Origin` de outro site em 403, a sexta senha errada recusada e o `migrate` antes do gunicorn no log do deploy. — RF-01, RF-03, RF-04, RF-07, RF-08, RF-10, RF-16, RF-17
 - [ ] `README.md` e `README.en.md`: link da demonstração, com o endereço já respondendo com o conteúdo carregado. — RNF-06
 - [ ] `specs/011-hospedagem/` (os três arquivos) e `specs/README.md`: status `concluído`; `design.md` com `## Desvios` e `## Notas de implementação` (suíte antes e depois, `check --deploy`, o que foi conferido no ar). —
 - [ ] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. —

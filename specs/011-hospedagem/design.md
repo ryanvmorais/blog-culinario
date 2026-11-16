@@ -48,6 +48,9 @@ fina sobre o `django.views.static.serve`, com e sem `DEBUG`.
 | `blog_culinario/urls.py` | muda | rota de mídia sempre ligada, no lugar do `static()` só com `DEBUG` (RF-07) |
 | `conftest.py` | novo | fixture automática que põe o cache de cada teste numa pasta temporária (RNF-04) |
 | `nucleo/test_hospedagem.py` | novo | a suíte do RF-13 |
+| `blog_culinario/settings/base.py` (CSP) | muda | `SECURE_CSP`, os dois middlewares e o context processor `csp` (RF-16, RF-17, ADR-11) |
+| `blog_culinario/cabecalhos.py` | novo | `PermissionsPolicyMiddleware` e `PERMISSIONS_POLICY` (RF-17) |
+| `nucleo/test_cabecalhos.py` | novo | a parte do RF-13 que cobre a CSP e o `Permissions-Policy` |
 | `.gitignore` | muda | `django_cache/` |
 | `.env.example`, `README.md`, `README.en.md`, `CLAUDE.md`, `docs/stack.md` | muda | variáveis, receita de build, trava de origem, PythonAnywhere fora (RNF-06) |
 
@@ -132,6 +135,36 @@ ORIGEM_SEGREDOS = tuple(
 O `"blog_culinario.origem.OrigemCloudflareMiddleware"` entra no topo do `MIDDLEWARE`,
 antes do `SecurityMiddleware`: o que não veio pelo proxy não chega a nenhuma outra
 camada, nem ao redirect de HTTPS (RF-09).
+
+A CSP (RF-16, ADR-11) fica no `base.py`, igual nos dois ambientes:
+
+```python
+SECURE_CSP = {
+    "default-src": [CSP.SELF],
+    "script-src": [CSP.SELF],
+    "style-src": [CSP.SELF, CSP.NONCE],
+    "img-src": [CSP.SELF],
+    "font-src": [CSP.SELF],
+    "base-uri": [CSP.NONE],
+    "form-action": [CSP.SELF],
+    "object-src": [CSP.NONE],
+    "frame-ancestors": [CSP.NONE],
+}
+```
+
+O `django.middleware.csp.ContentSecurityPolicyMiddleware` e o
+`blog_culinario.cabecalhos.PermissionsPolicyMiddleware` entram no fim do
+`MIDDLEWARE`, e o `django.template.context_processors.csp` entra nos
+`context_processors`: é ele que entrega o nonce ao `{% csp_nonce_attr %}` dos
+templates do Admin. O nonce só é gerado quando um template o usa, então nas páginas
+públicas o `CSP.NONCE` some do cabeçalho e a política é a mesma a cada pedido.
+
+### `blog_culinario/cabecalhos.py`
+
+`PermissionsPolicyMiddleware` acrescenta `PERMISSIONS_POLICY` a toda resposta com
+`response.setdefault(...)`. Os nomes são só os que o Chrome
+reconhece: um desconhecido vira erro no console, e o Lighthouse CI reprova erro de
+console (RF-17).
 
 ### `blog_culinario/settings/prod.py`
 
@@ -311,6 +344,16 @@ A demonstração roda com `MODO_DEMONSTRACAO=True`, `URL_PUBLICA` e
 | `X-Origin-Verify` | regra de transformação do proxy da Cloudflare, que sobrescreve o valor do cliente | trava de origem (RF-09) |
 | `CF-Connecting-IP` | Cloudflare, a cada pedido | IP do visitante, só com a trava ligada (RF-10) |
 
+### Cabeçalhos enviados (novos)
+
+| Cabeçalho | Quem envia | Valor |
+|---|---|---|
+| `Content-Security-Policy` | `ContentSecurityPolicyMiddleware` do Django, pelo `SECURE_CSP` | a política do `base.py`; no Admin, o `style-src` ganha o nonce do pedido (RF-16) |
+| `Permissions-Policy` | `PermissionsPolicyMiddleware` | os oito recursos negados de `PERMISSIONS_POLICY` (RF-17) |
+
+O 403 da trava de origem sai antes dos dois middlewares e vai sem eles: o pedido não
+veio pela Cloudflare e não recebe página do blog.
+
 ### Rotas
 
 | Rota | Antes | Depois |
@@ -459,6 +502,25 @@ cada reinício do `runserver`. Gerar uma vez no `.env` é um passo só e não de
 chave fixa no código.
 **Trade-off.** Quem clona tem um passo a mais antes do `runserver` (README).
 
+### ADR-11 — CSP nativa do Django, com nonce só no estilo
+
+**Decisão.** `SECURE_CSP` no `base.py`, com o middleware e o context processor do
+próprio Django 6; `CSP.NONCE` só no `style-src`. O `Permissions-Policy` sai de um
+middleware do projeto (`cabecalhos.py`).
+**Alternativas.** (a) O pacote `django-csp`; (b) `'unsafe-inline'` no
+`style-src`; (c) a CSP só no `prod.py`; (d) nonce também no
+`script-src`.
+**Porquê.** (a) é uma dependência a mais para o que o Django já faz, e o Admin do
+Django 6 marca as próprias tags com o nonce da política nativa. (b) abriria o estilo
+inline para todo o site por causa de um `<style>` do Admin, que o nonce já resolve.
+(c) deixaria o desenvolvimento e o Lighthouse CI sem a política, e um template com
+script inline só falharia no ar; as páginas de depuração já saem da política
+sozinhas. (d) não acrescenta nada: o Admin não tem script inline, e sem o nonce no
+`script-src` um script injetado não roda nem copiando o nonce de uma tag vizinha.
+**Trade-off.** No Admin, o cabeçalho muda a cada pedido (o nonce). Uma página nova
+com estilo inline precisa do `{% csp_nonce_attr %}`; com script inline, de um
+arquivo em `static/js/`.
+
 ## Impacto no código existente
 
 - **Dependências:** o extra `prod` ganha o `gunicorn`. A versão sai do lock com o
@@ -478,10 +540,14 @@ chave fixa no código.
   nada muda. O Lighthouse CI sobe o `runserver` com as
   configurações de desenvolvimento e sem `ORIGEM_SEGREDO`.
 - **Specs concluídas** que citam o PythonAnywhere ficam como estão (não-objetivos).
+- **Cabeçalhos (ADR-11):** toda resposta passa a levar a CSP e o
+  `Permissions-Policy`, também no `runserver` e no Lighthouse CI, que já reprova
+  erro de console: uma violação da CSP numa página pública aparece lá.
 
 ## Estratégia de testes
 
-Tudo em `nucleo/test_hospedagem.py`, sem rede e sem tocar a pasta de dados real.
+Tudo em `nucleo/test_hospedagem.py`, sem rede e sem tocar a pasta de dados real,
+menos os cabeçalhos de segurança, em `nucleo/test_cabecalhos.py` (o último item).
 
 - **Configurações de produção num processo à parte:** um helper roda
   `python -c` num `subprocess` com o ambiente pedido (`DJANGO_SETTINGS_MODULE`,
@@ -523,6 +589,13 @@ Tudo em `nucleo/test_hospedagem.py`, sem rede e sem tocar a pasta de dados real.
   `LOGGING` lido do `prod.py` com `logging.config.dictConfig` num `subprocess`, emite
   um ERROR e um WARNING no `django.request` e confere o `stderr`: o ERROR sai, o WARNING
   (o nível do 404) não (RF-11).
+- **Cabeçalhos:** o client de teste pede as páginas públicas (com uma receita criada)
+  e lê a CSP diretiva por diretiva na resposta, não no settings: um nome de
+  configuração errado tiraria o cabeçalho sem acusar. O HTML público não tem
+  `<script>` sem `src`, `<style>`, `style=` nem atributo de evento. No Admin, com um
+  superusuário, o `style-src` traz o nonce, todo `<style>` inline traz o mesmo
+  nonce e não há script inline. O `Permissions-Policy` é o valor de
+  `PERMISSIONS_POLICY` (RF-16, RF-17, RNF-02).
 
 ## Desvios
 

@@ -29,7 +29,7 @@ This project was structured to consolidate core software engineering pillars:
 - **Two View Styles:** function-based (`nucleo`) and class-based (`receitas`), side by side, so you can compare the two approaches.
 - **Custom Design System:** template inheritance (`base.html` + blocks) and plain CSS in `static/css/tokens.css`, with no frontend framework and no build step. Fonts are hosted in the project, the light and dark themes follow the system using color variables only, and a visual catalog lives in `docs/design-system.html`.
 - **Built-in Authentication:** `django.contrib.auth` with no external library, with a per-IP limit on login attempts.
-- **Applied Security:** honeypot and time-trap on the comment form, image upload validation, secrets kept out of the code.
+- **Applied Security:** honeypot and time-trap on the comment form, image upload validation, Django's native Content-Security-Policy and `Permissions-Policy`, secrets kept out of the code.
 - **Audited Interface:** accessibility checked in a real browser (axe-core, keyboard, contrast, dark theme) and guarded by tests, starting from spec 008.
 - **Automated Quality:** a `pytest` test suite and a CI pipeline that runs the same quality gate used locally.
 
