@@ -48,10 +48,13 @@ uv run pytest caminho/para/tests.py::NomeDoTeste::test_caso
 
 ## Variáveis de ambiente
 
-Nenhuma é obrigatória em desenvolvimento — `settings/dev.py` roda com
-defaults seguros. Ver `.env.example` para a lista completa e
-`blog_culinario/settings/prod.py` para o que produção exige
-(`DJANGO_SECRET_KEY` e `DJANGO_ALLOWED_HOSTS` sem default).
+Só a `SECRET_KEY` é obrigatória em todo ambiente, desenvolvimento inclusive
+(sem default no `base.py`; o CI e o Lighthouse usam um placeholder). O resto
+tem default seguro no `settings/dev.py`. Ver `.env.example` para a lista
+completa e `blog_culinario/settings/prod.py` para o que produção exige a mais
+(`ALLOWED_HOSTS` sem default). O caminho do Admin vem do `ADMIN_URL` (padrão
+`admin/`): link ou teste que aponte para o Admin usa `reverse("admin:...")`, e o
+`robots.txt` nunca cita o caminho.
 
 ## Arquitetura
 

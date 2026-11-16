@@ -24,7 +24,7 @@ As configurações seguem em pacote (`base.py`, `dev.py`, `prod.py`). O `base.py
 `DIRETORIO_DADOS`, de onde saem o banco, a mídia e o cache; o cache passa a ser um
 backend em arquivo do próprio projeto, com `add()` e `incr()` atômicos entre processos
 (ADR-4). O `prod.py` ganha o cabeçalho do proxy, o `LOGGING` para a saída de erro, a
-leitura tolerante de `DJANGO_ALLOWED_HOSTS` e o silêncio justificado do `mail.E001`.
+leitura tolerante de `ALLOWED_HOSTS` e o silêncio justificado do `mail.E001`.
 
 Um middleware novo, primeiro da lista, recusa com 403 o pedido sem o segredo de origem
 quando `ORIGEM_SEGREDO` está definida. A limitação de taxa passa a pedir o IP a uma
@@ -83,7 +83,7 @@ Nenhuma mudança. Nenhuma migration.
   `CompressedManifestStaticFilesStorage` delas que grava o `staticfiles.json`, sem o
   qual toda página com estático responde 500.
 - O `collectstatic` importa as configurações de produção, que exigem
-  `DJANGO_SECRET_KEY` e `DJANGO_ALLOWED_HOSTS`: na Railway, as variáveis do serviço
+  `SECRET_KEY` e `ALLOWED_HOSTS`: na Railway, as variáveis do serviço
   valem também no build.
 - O número de workers não fica no comando: o gunicorn lê `WEB_CONCURRENCY` (padrão 1).
 
@@ -138,7 +138,7 @@ camada, nem ao redirect de HTTPS (RF-09).
 ```python
 # Lista separada por vírgula; espaços e vírgula sobrando não viram host.
 ALLOWED_HOSTS = [
-    host.strip() for host in env.list("DJANGO_ALLOWED_HOSTS") if host.strip()
+    host.strip() for host in env.list("ALLOWED_HOSTS") if host.strip()
 ]
 ```
 
@@ -271,7 +271,7 @@ real (RNF-04). Os `cache.clear()` dos testes da spec 006 seguem valendo.
 ### Documentação
 
 - `.env.example`: `DIRETORIO_DADOS`, `ORIGEM_SEGREDO`, `ORIGEM_SEGREDO_ANTERIOR` (como
-  gerar um valor com `secrets.token_urlsafe`), `DJANGO_ALLOWED_HOSTS` com exemplo de
+  gerar um valor com `secrets.token_urlsafe`), `ALLOWED_HOSTS` com exemplo de
   domínio próprio, e o aviso de que, atrás de proxy sem a trava, todos os visitantes
   dividem o limite de taxa.
 - `README.md` e `README.en.md`: seção de deploy com a receita (`railpack.json`), as
@@ -293,13 +293,15 @@ real (RNF-04). Os `cache.clear()` dos testes da spec 006 seguem valendo.
 | `DIRETORIO_DADOS` | raiz do repositório | Pasta de `db.sqlite3`, `media/` e `django_cache/`; na Railway, o caminho do volume (`/data`) |
 | `ORIGEM_SEGREDO` | vazia (trava desligada) | Valor que o cabeçalho `X-Origin-Verify` precisa trazer; ligada, o IP sai do `CF-Connecting-IP` |
 | `ORIGEM_SEGREDO_ANTERIOR` | vazia | Segundo valor aceito durante a troca do segredo |
-| `DJANGO_ALLOWED_HOSTS` | sem padrão em produção | Agora tolera espaços e vírgula no fim |
+| `ALLOWED_HOSTS` | sem padrão em produção | Agora tolera espaços e vírgula no fim |
+| `SECRET_KEY` | sem padrão em nenhum ambiente | Antes `DJANGO_SECRET_KEY`; obrigatória também em desenvolvimento (RF-15) |
+| `ADMIN_URL` | `admin/` | Caminho do Admin; vazio ou só barras vale `admin/`, barras sobrando são ignoradas (RF-14) |
 | `PORT` | 8000 | Porta do gunicorn; a plataforma define |
 | `WEB_CONCURRENCY` | 1 | Workers do gunicorn (lida pelo próprio gunicorn) |
 
 A demonstração roda com `MODO_DEMONSTRACAO=True`, `URL_PUBLICA` e
-`DJANGO_ALLOWED_HOSTS` com o domínio próprio, `DIRETORIO_DADOS=/data`,
-`ORIGEM_SEGREDO` igual ao da regra do proxy e `DJANGO_SECRET_KEY` própria.
+`ALLOWED_HOSTS` com o domínio próprio, `DIRETORIO_DADOS=/data`,
+`ORIGEM_SEGREDO` igual ao da regra do proxy e `SECRET_KEY` própria.
 
 ### Cabeçalhos lidos
 
@@ -431,6 +433,32 @@ contra um servidor que não há, em vez de ficar visível no código.
 **Trade-off.** Se uma funcionalidade nova passar a enviar e-mail, o `check --deploy`
 não avisa; o comentário do `prod.py` e a convenção do `CLAUDE.md` apontam a linha.
 
+### ADR-9 — `ADMIN_URL` normalizado no `base.py`
+
+**Decisão.** `ADMIN_URL = (env.str("ADMIN_URL", default="").strip().strip("/") or
+"admin") + "/"` no `base.py`, e `path(settings.ADMIN_URL, admin.site.urls)` no
+`urls.py`. O `robots.txt` vira `User-agent: *` / `Allow: /` (spec 010, decisão
+resolvida 6). Testes e links do Admin usam `reverse("admin:...")`.
+**Alternativas.** (a) Ler o valor cru, sem normalização; (b) recusar na subida o
+valor sem barra no fim.
+**Porquê.** Com (a), o vazio põe o Admin na raiz e `painel` sem barra gera
+`painellogin/`. (b) derruba um deploy por um detalhe que tem conserto óbvio; normalizar
+aceita as formas comuns e não deixa caminho quebrado.
+**Trade-off.** Um caminho com barra no meio (`a/b/`) passa como está; não há motivo
+para recusá-lo.
+
+### ADR-10 — `SECRET_KEY` sem default em todo ambiente
+
+**Decisão.** `SECRET_KEY = env.str("SECRET_KEY")` no `base.py`, sem default; o
+`prod.py` deixa de redefini-la. O `ci.yml` e o `lighthouse.yml` definem um placeholder
+no `env` do job.
+**Alternativas.** (a) Manter a chave fixa no `base.py` só para o desenvolvimento;
+(b) gerar uma chave aleatória a cada subida em desenvolvimento.
+**Porquê.** (a) deixa uma chave conhecida no repositório; (b) derruba as sessões a
+cada reinício do `runserver`. Gerar uma vez no `.env` é um passo só e não deixa
+chave fixa no código.
+**Trade-off.** Quem clona tem um passo a mais antes do `runserver` (README).
+
 ## Impacto no código existente
 
 - **Dependências:** o extra `prod` ganha o `gunicorn`. A versão sai do lock com o
@@ -446,7 +474,8 @@ não avisa; o comentário do `prod.py` e a convenção do `CLAUDE.md` apontam a 
 - **Desenvolvimento:** sem `DIRETORIO_DADOS`, banco e mídia não mudam de lugar; o cache
   passa a criar `django_cache/` na raiz (no `.gitignore`), e a mídia sai com
   `Cache-Control` também no `runserver`.
-- **CI e Lighthouse CI:** nada muda; o Lighthouse CI sobe o `runserver` com as
+- **CI e Lighthouse CI:** ganham a `SECRET_KEY` placeholder (ADR-10); fora isso,
+  nada muda. O Lighthouse CI sobe o `runserver` com as
   configurações de desenvolvimento e sem `ORIGEM_SEGREDO`.
 - **Specs concluídas** que citam o PythonAnywhere ficam como estão (não-objetivos).
 
@@ -456,7 +485,7 @@ Tudo em `nucleo/test_hospedagem.py`, sem rede e sem tocar a pasta de dados real.
 
 - **Configurações de produção num processo à parte:** um helper roda
   `python -c` num `subprocess` com o ambiente pedido (`DJANGO_SETTINGS_MODULE`,
-  `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`, `DIRETORIO_DADOS` num `tmp_path`) e
+  `SECRET_KEY`, `ALLOWED_HOSTS`, `DIRETORIO_DADOS` num `tmp_path`) e
   devolve os valores lidos em JSON. Recarregar o pacote de configurações dentro do
   processo do pytest deixaria o `base.py` com o ambiente de um teste para os outros.
   Cobre `ALLOWED_HOSTS` com espaços, vírgula no fim e vazia, e a subida que falha sem
@@ -505,7 +534,7 @@ Tudo em `nucleo/test_hospedagem.py`, sem rede e sem tocar a pasta de dados real.
    da coleta, um `override_settings` com o cache numa pasta temporária da sessão, e o
    `pytest_unconfigure` o desliga e apaga a pasta. A fixture por teste segue valendo.
 2. **Chave secreta obrigatória em produção (RF-02):** o RF-02 supunha que o `prod.py`
-   já falhava sem `DJANGO_SECRET_KEY`, mas ele herdava do `base.py` a chave insegura de
+   já falhava sem `SECRET_KEY`, mas ele herdava do `base.py` a chave insegura de
    desenvolvimento e subia com ela. O `prod.py` passou a ler a variável sem default:
    ausente, a subida falha; vazia, o Django recusa a chave. Dois testes guardam isso.
 3. **`DJANGO_DEBUG` removida (RNF-06):** a variável não tinha efeito: o `dev.py`

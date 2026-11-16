@@ -99,7 +99,8 @@ lista de context processors ganha `blog_culinario.descoberta.contexto_descoberta
 
 **Views** (funções, `require_GET`):
 
-- `robots_txt(request)`: linhas `User-agent: *`, `Disallow: /admin/` e, com
+- `robots_txt(request)`: linhas `User-agent: *`, `Allow: /` (sem citar o Admin,
+  decisão resolvida 6) e, com
   `URL_PUBLICA`, uma linha em branco e `Sitemap: <url_absoluta("/sitemap.xml")>`.
   `HttpResponse(..., content_type="text/plain; charset=utf-8")`.
 - `sitemap(request, sitemaps)`: `Http404` sem `URL_PUBLICA`; senão, delega para
@@ -274,7 +275,7 @@ primeiro uso, por um system check.
 **Porquê.** O arquivo de settings não é lugar de lógica testável, e importar
 `descoberta.py` (views, sitemaps) durante a carga das configurações arrisca import
 circular. Falhar na subida pega o erro no deploy, não no primeiro buscador; é o mesmo
-comportamento do `DJANGO_SECRET_KEY` ausente em produção.
+comportamento do `SECRET_KEY` ausente em produção.
 
 **Trade-off.** Mais um módulo pequeno em `blog_culinario/`.
 

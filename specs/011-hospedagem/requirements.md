@@ -59,6 +59,9 @@ as dependências. E o `wsgi.py` cai nas configurações de desenvolvimento quand
   o IP real do visitante quando o pedido comprovadamente passou pela Cloudflare.
 - Deixar os erros do servidor visíveis no log da plataforma.
 - `check --deploy` sem erro.
+- Dar às variáveis o nome da própria configuração do Django (`SECRET_KEY`,
+  `ALLOWED_HOSTS`), tornar configurável o caminho do Admin (`ADMIN_URL`) e exigir a
+  chave secreta em todo ambiente.
 - Tirar o PythonAnywhere da documentação e pôr no lugar a hospedagem nova.
 
 ## Não-objetivos
@@ -116,10 +119,10 @@ as dependências. E o `wsgi.py` cai nas configurações de desenvolvimento quand
   definida no ambiente
   **When** o `migrate` e o gunicorn carregam o projeto
   **Then** os dois usam `blog_culinario.settings.prod`, nunca as de desenvolvimento.
-- **Given** as configurações de produção sem `DJANGO_SECRET_KEY` ou sem
-  `DJANGO_ALLOWED_HOSTS`
+- **Given** as configurações de produção sem `SECRET_KEY` ou sem
+  `ALLOWED_HOSTS`
   **When** o serviço inicia
-  **Then** a subida falha, como hoje.
+  **Then** a subida falha (a chave, em qualquer ambiente: RF-15).
 - **Given** o desenvolvimento local
   **When** o `manage.py` roda sem `DJANGO_SETTINGS_MODULE`
   **Then** segue usando `blog_culinario.settings.dev`, como hoje.
@@ -142,7 +145,7 @@ as dependências. E o `wsgi.py` cai nas configurações de desenvolvimento quand
 
 ### RF-04 — Formulários e Admin aceitam POST pelo domínio público
 
-- **Given** as configurações de produção, o host em `DJANGO_ALLOWED_HOSTS` e um
+- **Given** as configurações de produção, o host em `ALLOWED_HOSTS` e um
   pedido HTTPS pelo proxy
   **When** o login, o cadastro, o comentário ou o login do Admin é enviado com o
   token CSRF e `Origin` igual ao endereço do site
@@ -151,12 +154,12 @@ as dependências. E o `wsgi.py` cai nas configurações de desenvolvimento quand
   **When** o pedido chega
   **Then** a resposta é 403, com a página de erro do CSRF.
 
-### RF-05 — `DJANGO_ALLOWED_HOSTS` tolera espaços e vírgula sobrando
+### RF-05 — `ALLOWED_HOSTS` tolera espaços e vírgula sobrando
 
-- **Given** `DJANGO_ALLOWED_HOSTS=exemplo.com, www.exemplo.com,`
+- **Given** `ALLOWED_HOSTS=exemplo.com, www.exemplo.com,`
   **When** as configurações de produção carregam
   **Then** a lista fica `["exemplo.com", "www.exemplo.com"]`.
-- **Given** `DJANGO_ALLOWED_HOSTS` vazia
+- **Given** `ALLOWED_HOSTS` vazia
   **When** as configurações de produção carregam
   **Then** todo host é recusado (falha fechada); ausente, a subida falha (RF-02).
 
@@ -254,6 +257,33 @@ as dependências. E o `wsgi.py` cai nas configurações de desenvolvimento quand
   **Then** não há erro, e o único aviso é o `security.W021` (HSTS preload desligado),
   que já existe hoje.
 
+### Admin e chave secreta
+
+### RF-14 — Caminho do Admin configurável
+
+- **Given** `ADMIN_URL=painel-secreto/`
+  **When** o site sobe
+  **Then** o Admin responde em `/painel-secreto/`, e `/admin/` não é mais o painel.
+- **Given** `ADMIN_URL` ausente, vazia ou só com barras
+  **When** o site sobe
+  **Then** o Admin fica em `/admin/`; nunca na raiz, no lugar da home.
+- **Given** `ADMIN_URL` com barra sobrando ou faltando (`/painel-secreto`)
+  **When** o site sobe
+  **Then** o caminho fica `painel-secreto/`.
+- **Given** qualquer `ADMIN_URL`
+  **When** `/robots.txt` é pedido
+  **Then** o arquivo não cita o caminho (spec 010, RF-04).
+
+### RF-15 — Chave secreta obrigatória em todo ambiente
+
+- **Given** as configurações de desenvolvimento ou de produção sem `SECRET_KEY`
+  **When** o projeto carrega
+  **Then** a subida falha; vazia, o Django recusa a chave. Não há chave fixa no
+  repositório.
+- **Given** o CI e o Lighthouse CI
+  **When** a suíte ou o servidor sobem
+  **Then** usam uma `SECRET_KEY` descartável definida no workflow.
+
 ## Requisitos não-funcionais
 
 ### RNF-01 — Só o gunicorn de dependência nova
@@ -276,7 +306,8 @@ cache em arquivo é compartilhado entre processos (RF-08).
 
 Sem as variáveis novas, o `runserver`, o `uv run pytest`, o CI e o Lighthouse CI se
 comportam como hoje: mesmos caminhos, mesmas respostas e as mesmas notas. A suíte não
-grava na pasta de dados real.
+grava na pasta de dados real. A exceção é a `SECRET_KEY` (RF-15): quem clona gera uma
+no `.env`, e os workflows definem um placeholder.
 
 ### RNF-05 — Segredo fora do log e das respostas
 
@@ -331,6 +362,16 @@ Nenhuma.
 9. **O PythonAnywhere sai da documentação** (2026-11-16). Renovação manual a cada 30
    dias no plano gratuito e configuração manual do servidor pesam para quem está
    começando. As specs concluídas que o citam ficam como estão (não-objetivos).
+10. **Variáveis com o nome do Django e Admin configurável** (2026-11-16).
+    `DJANGO_SECRET_KEY` e `DJANGO_ALLOWED_HOSTS` passam a `SECRET_KEY` e
+    `ALLOWED_HOSTS`, o nome da própria configuração do Django, que dispensa traduzir
+    um nome no outro; o Admin ganha o `ADMIN_URL` (RF-14), com o vazio valendo
+    `admin/`. A proteção do Admin é o caminho trocado mais a senha; um limite próprio
+    no login do Admin foi descartado.
+11. **Sem chave fixa nem em desenvolvimento** (2026-11-16). A chave insegura do
+    `base.py` valia em todo clone e podia chegar a um deploy que não usasse o
+    `prod.py`. Gerar a chave vira um passo do "Como rodar", e o CI define um
+    placeholder (RF-15).
 
 ## Testes
 
@@ -345,8 +386,13 @@ A suíte (`uv run pytest`, sem rede, sem tocar a pasta de dados real) cobre:
   `Secure`; sem o cabeçalho: redirect 301 (RF-03);
 - POST com `Origin` do próprio site aceito e com `Origin` de fora recusado com 403
   (RF-04);
-- leitura de `DJANGO_ALLOWED_HOSTS` com espaços, vírgula no fim e valor vazio
+- leitura de `ALLOWED_HOSTS` com espaços, vírgula no fim e valor vazio
   (RF-05);
+- `ADMIN_URL` ausente, vazia, só barras, com e sem barra: o caminho lido e o Admin
+  respondendo nele; o `robots.txt` sem o caminho e o login do Admin com
+  `meta robots` (RF-14);
+- a subida sem `SECRET_KEY`, ausente ou vazia, nas configurações de desenvolvimento
+  e de produção (RF-15);
 - leitura de `DIRETORIO_DADOS` ausente e presente: caminhos do banco, da mídia e do
   cache (RF-06);
 - mídia com `DEBUG=False`: arquivo existente (200, `Content-Type`, `nosniff`),

@@ -80,16 +80,21 @@ As ferramentas de qualidade (Ruff, Black, Mypy e Pytest) estão em [Qualidade e 
     ```bash
     uv sync
     ```
-3.  **Crie as tabelas do banco:**
+3.  **Crie o `.env` e gere a chave secreta:** copie o modelo e cole a chave gerada na linha `SECRET_KEY=` do `.env`. É a única variável obrigatória; sem ela, o site não sobe.
+    ```bash
+    cp .env.example .env
+    uv run python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+    ```
+4.  **Crie as tabelas do banco:**
     ```bash
     uv run python manage.py migrate
     ```
-4.  **Suba o servidor:**
+5.  **Suba o servidor:**
     ```bash
     uv run python manage.py runserver
     ```
 
-Acesse `http://127.0.0.1:8000/`. Não é preciso configurar nenhuma variável de ambiente para rodar localmente; veja o `.env.example` se quiser customizar algo.
+Acesse `http://127.0.0.1:8000/`. Fora a `SECRET_KEY`, nenhuma variável precisa ser configurada para rodar localmente; veja o `.env.example` se quiser customizar algo.
 
 Quer ver o site com receitas de exemplo sem cadastrar nada? Rode `uv run python manage.py semear_dados_demo`: ele cria receitas, capas e comentários fictícios (só em desenvolvimento, e sem duplicar se rodar de novo).
 
@@ -99,7 +104,7 @@ Vai publicar o seu? Defina `URL_PUBLICA` (só esquema e host, como `https://blog
 
 Vai hospedar na Railway? A receita de build está no `railpack.json`: instala as dependências pelo `uv.lock`, com o gunicorn (extra `prod`), roda o `collectstatic` no build e, no start, o `migrate` antes do gunicorn, sempre com `blog_culinario.settings.prod`. Monte um volume e aponte `DIRETORIO_DADOS` para ele (ex.: `/data`): o banco, as capas e o cache da limitação de taxa ficam lá e sobrevivem a cada deploy. Com a Cloudflare na frente, crie uma regra de transformação que acrescente o cabeçalho `X-Origin-Verify` com um segredo e ponha o mesmo valor em `ORIGEM_SEGREDO`: o site passa a recusar o pedido que não veio pela Cloudflare, e a limitação de taxa passa a usar o IP real do visitante (`CF-Connecting-IP`). Sem essa trava, atrás de um proxy, todos os visitantes dividem o mesmo limite de login e de comentário. A lista completa de variáveis está no `.env.example`.
 
-> ⚠️ **Nota sobre o Admin:** quer um usuário para acessar `/admin/`? Rode `uv run python manage.py createsuperuser` e siga as instruções no terminal.
+> ⚠️ **Nota sobre o Admin:** quer um usuário para acessar `/admin/`? Rode `uv run python manage.py createsuperuser` e siga as instruções no terminal. Ao publicar, você pode tirar o painel do caminho padrão definindo `ADMIN_URL` (ex.: `painel-secreto/`) no `.env`; o `/robots.txt` não cita o caminho.
 
 ---
 

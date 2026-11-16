@@ -50,8 +50,9 @@ repositório e roda localmente.
   e-mail; o backend de console segue como está.
 - Mudar o limite de taxa do login ou do comentário (spec 006), o honeypot e o time-trap
   (spec 007).
-- Esconder ou desligar o `/admin/`: a conta de demonstração não é staff, e o Admin
-  segue protegido pelo login normal.
+- Desligar o Admin: a conta de demonstração não é staff, e o Admin segue protegido
+  pelo login normal. O caminho passou a ser configurável pelo `ADMIN_URL` na spec 011
+  (RF-14, 2026-11-16), sem mudar o que esta spec entrega.
 - Apagar ou bloquear comentários e contas que já existem no banco.
 - Hospedagem, domínio e descoberta (`robots.txt`, `sitemap.xml`): ficam para specs
   próprias.

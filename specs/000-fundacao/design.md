@@ -66,7 +66,7 @@ resultante foi aprovado antes de qualquer comando `uv`/`django-admin`.
 `base.py` concentra tudo que não muda entre ambientes (apps, middleware,
 templates, validação de senha, i18n, estáticos/mídia). `dev.py` sobrescreve
 `DEBUG`/`ALLOWED_HOSTS` para uso local sem configuração. `prod.py` exige
-`DJANGO_ALLOWED_HOSTS` (sem default) e liga hardening HTTPS
+`ALLOWED_HOSTS` (sem default) e liga hardening HTTPS
 (`SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE`, HSTS).
 
 ### Apps por domínio (`nucleo`, `receitas`, `usuarios`)

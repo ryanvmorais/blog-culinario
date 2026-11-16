@@ -53,8 +53,8 @@ cabeçalho vem do cliente, e um endereço canônico precisa ser um só.
 - **Política de robôs de IA no código.** Se o deploy tiver um proxy com `robots.txt`
   gerenciado, o bloqueio de robôs de treino fica com ele (decisão resolvida 5).
 - **Enviar o sitemap a buscadores.** É operação de quem publica, fora do código.
-- **Mudar o caminho do Admin.** Ele segue em `/admin/`, protegido pelo login (spec 009,
-  não-objetivos).
+- **Mudar o caminho do Admin.** Fica com a spec 011 (RF-14, `ADMIN_URL`); esta spec só
+  garante que o `robots.txt` não o revele (RF-04).
 - **`/security.txt` na raiz** (local antigo, que a RFC 9116 aceita só como
   redirecionamento).
 
@@ -128,8 +128,9 @@ cabeçalho vem do cliente, e um endereço canônico precisa ser um só.
 
 - **Given** um pedido a `/robots.txt`
   **When** a aplicação responde
-  **Then** devolve 200, `text/plain; charset=utf-8`, com `User-agent: *`,
-  `Disallow: /admin/` e nenhuma outra regra que impeça o rastreio das páginas públicas.
+  **Then** devolve 200, `text/plain; charset=utf-8`, com `User-agent: *` e
+  `Allow: /`, sem regra que impeça o rastreio das páginas públicas e sem citar o
+  caminho do Admin (decisão resolvida 6).
 - **Given** `URL_PUBLICA` definida
   **When** `/robots.txt` é pedido
   **Then** o arquivo termina com `Sitemap: <URL_PUBLICA>/sitemap.xml`; vazia, não há
@@ -233,10 +234,12 @@ perfis, com o `robots.txt` agora servido e válido para o Lighthouse.
 5. **O `robots.txt` da aplicação convive com o de um proxy.** Um proxy com `robots.txt`
    gerenciado (como o da Cloudflare) põe o bloco dele antes do conteúdo da origem, que
    segue valendo. Sem proxy na frente, vale só o da aplicação.
-6. **`Disallow: /admin/` sem custo** (2026-11-16): o caminho do Admin é o padrão do
-   Django e não é segredo (não-objetivos), então citá-lo no `robots.txt` não revela
-   nada. As páginas de login e cadastro ficam rastreáveis, porque o Lighthouse CI as
-   audita e uma regra `Disallow` derrubaria a nota de SEO delas.
+6. **`robots.txt` sem o Admin** (2026-11-16, revista no mesmo dia): a primeira versão
+   tinha `Disallow: /admin/`, porque o caminho era o padrão do Django e não era segredo.
+   Com o `ADMIN_URL` da spec 011 (RF-14), um `Disallow` entregaria o caminho trocado;
+   o arquivo passa a ser `User-agent: *` / `Allow: /`, e a tela de
+   login do Admin já traz `<meta name="robots" content="NONE,NOARCHIVE">`. As páginas
+   de login e cadastro seguem rastreáveis, porque o Lighthouse CI as audita.
 
 ## Testes
 
