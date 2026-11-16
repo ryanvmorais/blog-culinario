@@ -2,9 +2,26 @@
 
 {% block titulo %}Entrar — Blog Culinário{% endblock %}
 
+{# As mensagens desta página aparecem junto do formulário, não no topo à esquerda (spec 009). #}
+{% block mensagens %}{% endblock %}
+
 {% block content %}
   <section class="container cabecalho-pagina pagina-formulario">
     <h1>Entrar</h1>
+    {% include "includes/mensagens.html" %}
+
+    {% if modo_demonstracao %}
+      {# Credenciais públicas de propósito, como texto selecionável (spec 009, RF-04). #}
+      <div class="mensagem mensagem--info aviso-demonstracao" role="note">
+        <strong>Conta de demonstração</strong>
+        <dl class="credenciais">
+          <dt>Usuário</dt>
+          <dd>{{ conta_demonstracao.usuario }}</dd>
+          <dt>Senha</dt>
+          <dd>{{ conta_demonstracao.senha }}</dd>
+        </dl>
+      </div>
+    {% endif %}
 
     <form class="formulario" method="post" novalidate>
       {% csrf_token %}

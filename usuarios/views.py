@@ -3,7 +3,8 @@ Views de autenticação: cadastro, login e logout (spec 004).
 
 Login e logout reaproveitam ``LoginView``/``LogoutView`` do Django (RNF-01)
 — só acrescentam a mensagem de feedback (ADR-3). Cadastro precisa de uma
-view própria porque o Django não fornece uma pronta.
+view própria porque o Django não fornece uma pronta. No modo demonstração
+(spec 009), o cadastro valida mas não cria a conta.
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import FormView
 
+from blog_culinario.demonstracao import mensagem_cadastro, modo_demonstracao_ligado
 from blog_culinario.limitacao import limite_excedido
 
 from .forms import FormularioCadastro
@@ -33,12 +35,20 @@ class CadastroView(FormView):
         """
         Salva o usuário, autentica a sessão e mostra a mensagem de boas-vindas.
 
+        No modo demonstração (spec 009, RF-03), o formulário já passou por toda
+        a validação, mas nada é gravado: a página volta ao cadastro com o aviso
+        educativo, no padrão post/redirect/get (ADR-4).
+
         Args:
             form (FormularioCadastro): formulário já validado.
 
         Returns:
-            HttpResponse: redireciona para ``success_url``.
+            HttpResponse: redireciona para ``success_url`` ou, no modo
+            demonstração, de volta para o cadastro.
         """
+        if modo_demonstracao_ligado():
+            messages.info(self.request, mensagem_cadastro())
+            return redirect("usuarios:cadastro")
         usuario = form.save()
         login(self.request, usuario)
         messages.success(self.request, f"Bem-vindo(a), {usuario.username}!")

@@ -35,6 +35,7 @@ TEXTO_SOBRE_FUNDO = [
     ("--cor-destaque-escura", "--cor-superficie", 4.5),  # categoria do cartão
     ("--cor-erro", "--cor-erro-fundo", 4.5),
     ("--cor-texto", "--cor-borda", 4.5),  # mensagem de informação
+    ("--cor-primaria-escura", "--cor-borda", 4.5),  # link na mensagem (spec 009)
     ("--cor-borda-campo", "--cor-superficie", 3.0),  # WCAG 1.4.11
     ("--cor-borda-campo", "--cor-fundo", 3.0),
 ]

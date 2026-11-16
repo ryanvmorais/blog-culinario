@@ -1,6 +1,7 @@
 """
 Views públicas de receitas: listagem paginada com busca/filtros, detalhe
-(specs 002 e 003) e criação de comentário (spec 005).
+(specs 002 e 003) e criação de comentário (spec 005), que no modo
+demonstração (spec 009) valida mas não publica.
 
 Class-based views de propósito (ADR-1 da spec 002) — em contraste com as
 views baseadas em função de ``nucleo``, para o repositório mostrar os dois
@@ -21,6 +22,7 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, ListView
 
+from blog_culinario.demonstracao import mensagem_comentario, modo_demonstracao_ligado
 from blog_culinario.limitacao import limite_excedido
 
 from .forms import (
@@ -211,6 +213,23 @@ class ComentarioCreateView(LoginRequiredMixin, View):
             url_receita, self.get_login_url(), self.get_redirect_field_name()
         )
 
+    @staticmethod
+    def _confirmar_envio(request: HttpRequest) -> None:
+        """
+        Registra a mensagem de envio aceito, a mesma para o real e o falso.
+
+        O falso sucesso do honeypot/time-trap precisa imitar o sucesso daquele
+        ambiente (spec 007, ADR-4): no modo demonstração, é o aviso educativo;
+        fora dele, "Comentário publicado!" (spec 009, decisão resolvida 6).
+
+        Args:
+            request (HttpRequest): requisição que recebe a mensagem.
+        """
+        if modo_demonstracao_ligado():
+            messages.info(request, mensagem_comentario())
+        else:
+            messages.success(request, "Comentário publicado!")
+
     def post(self, request: HttpRequest, slug: str) -> HttpResponse:
         """
         Valida e salva o comentário, ou volta com uma mensagem de erro (ADR-3).
@@ -220,6 +239,8 @@ class ComentarioCreateView(LoginRequiredMixin, View):
         time-trap (spec 007) — nessa ordem, antes de qualquer acesso ao
         banco. Um envio pego pelo honeypot/time-trap finge sucesso sem
         salvar nada e sem consumir o limite de taxa (spec 007, ADR-3, ADR-4).
+        No modo demonstração (spec 009, RF-06), o comentário válido também não
+        é salvo, e os dois casos respondem a mensagem do modo.
 
         Args:
             request (HttpRequest): requisição POST recebida, já autenticada.
@@ -233,7 +254,7 @@ class ComentarioCreateView(LoginRequiredMixin, View):
         url_retorno = f"{url_receita}#comentarios"
 
         if eh_envio_suspeito_de_bot(request.POST):
-            messages.success(request, "Comentário publicado!")
+            self._confirmar_envio(request)
             return redirect(url_retorno)
 
         if limite_excedido(request, "comentario", limite=5, janela_segundos=60):
@@ -248,8 +269,9 @@ class ComentarioCreateView(LoginRequiredMixin, View):
             comentario = form.save(commit=False)
             comentario.receita = receita
             comentario.autor = request.user
-            comentario.save()
-            messages.success(request, "Comentário publicado!")
+            if not modo_demonstracao_ligado():
+                comentario.save()
+            self._confirmar_envio(request)
         else:
             messages.error(request, "O comentário não pode ficar vazio.")
         return redirect(url_retorno)

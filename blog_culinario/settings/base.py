@@ -76,6 +76,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "blog_culinario.demonstracao.contexto_demonstracao",
             ],
         },
     },
@@ -144,6 +145,16 @@ MEDIA_ROOT = BASE_DIR / "media"  # uploads de imagens das receitas (gitignored)
 LOGIN_URL = "usuarios:entrar"
 LOGIN_REDIRECT_URL = "nucleo:home"
 LOGOUT_REDIRECT_URL = "nucleo:home"
+
+
+# ---------------------------------------------------------------------------
+# Modo demonstração (spec 009)
+# ---------------------------------------------------------------------------
+
+# Desligado por padrão: quem clona tem cadastro e comentário gravando de
+# verdade. A instância pública liga com MODO_DEMONSTRACAO=True, e aí cadastro
+# e comentário validam mas não gravam (blog_culinario/demonstracao.py).
+MODO_DEMONSTRACAO = env.bool("MODO_DEMONSTRACAO", default=False)
 
 
 # ---------------------------------------------------------------------------

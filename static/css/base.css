@@ -544,6 +544,47 @@ ol {
   color: var(--cor-texto);
 }
 
+/* O link na cor primária fica abaixo de 4,5:1 sobre o fundo da mensagem
+   (--cor-borda); o tom escuro passa nos dois temas (spec 009, RNF-03). */
+.mensagem a {
+  color: var(--cor-primaria-escura);
+}
+
+/* Aviso fixo do modo demonstração (spec 009): a caixa fica na largura do
+   formulário de acesso, centrada; o texto dentro é leitura, à esquerda. */
+.aviso-demonstracao {
+  max-width: 420px;
+  margin: var(--espaco-4) auto 0;
+  text-align: left;
+}
+
+/* Nas páginas de acesso, a mensagem depois do envio fica na coluna do
+   formulário, junto do aviso fixo (spec 009). */
+.pagina-formulario .mensagens {
+  max-width: 420px;
+  margin-inline: auto;
+  padding-inline: 0;
+  text-align: left;
+}
+
+/* Credenciais da conta de demonstração (spec 009): lista de definição em duas
+   colunas, com a senha em fonte monoespaçada para distinguir l, 1 e I. */
+.credenciais {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--espaco-1) var(--espaco-3);
+  margin: var(--espaco-2) 0 0;
+}
+
+.credenciais dt {
+  font-weight: 600;
+}
+
+.credenciais dd {
+  margin: 0;
+  font-family: var(--fonte-mono);
+}
+
 
 /* 9. Rodapé --------------------------------------------------------------- */
 .rodape {
