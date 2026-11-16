@@ -254,8 +254,8 @@ as dependências. E o `wsgi.py` cai nas configurações de desenvolvimento quand
 
 - **Given** as configurações de produção com as variáveis obrigatórias
   **When** `uv run python manage.py check --deploy` roda
-  **Then** não há erro, e o único aviso é o `security.W021` (HSTS preload desligado),
-  que já existe hoje.
+  **Then** não há erro nem aviso (até a Etapa 7, o `security.W021`, do HSTS preload
+  desligado, era o único; ADR-12).
 
 ### Admin e chave secreta
 
@@ -319,7 +319,8 @@ de runtime. A trava de origem, a escolha do IP, a mídia e o cache usam só o Dj
 ### RNF-02 — Postura de segurança mantida
 
 O HSTS, o `X-Frame-Options`, o `nosniff` e os cookies seguros de `settings/prod.py`
-seguem iguais. Nenhum template ganha `<script>` ou estilo inline: a CSP do RF-16
+seguem iguais; o HSTS só sobe para 1 ano na Etapa 7, com o HTTPS conferido no ar
+(ADR-12). Nenhum template ganha `<script>` ou estilo inline: a CSP do RF-16
 bloquearia, e a suíte confere o HTML das páginas públicas.
 
 ### RNF-03 — Uma instância

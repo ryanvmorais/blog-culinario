@@ -521,6 +521,21 @@ sozinhas. (d) não acrescenta nada: o Admin não tem script inline, e sem o nonc
 com estilo inline precisa do `{% csp_nonce_attr %}`; com script inline, de um
 arquivo em `static/js/`.
 
+### ADR-12 — HSTS de 1 ano com preload, depois do HTTPS no ar
+
+**Decisão.** `SECURE_HSTS_SECONDS = 31_536_000` e `SECURE_HSTS_PRELOAD = True` no
+`prod.py`, com o `includeSubDomains` que já existia, só na Etapa 7, depois de conferir
+de fora que todo o site responde em HTTPS.
+**Alternativas.** (a) Manter 1 semana sem preload; (b) 1 ano desde o primeiro deploy.
+**Porquê.** O domínio principal já envia 1 ano com `includeSubDomains` e `preload`,
+então o subdomínio do blog já é só HTTPS para quem o visitou; (a) só deixaria o
+`security.W021` no `check --deploy` e o cabeçalho do blog mais fraco que o do
+domínio. (b) prenderia o navegador ao HTTPS por um ano antes de saber se o
+certificado e o redirect funcionam no ar.
+**Trade-off.** Voltar a servir HTTP no subdomínio deixa de ser possível por um ano
+para quem já recebeu o cabeçalho. O `preload` sozinho não inscreve nada: a lista
+dos navegadores é pedida pelo domínio principal.
+
 ## Impacto no código existente
 
 - **Dependências:** o extra `prod` ganha o `gunicorn`. A versão sai do lock com o
@@ -629,9 +644,9 @@ menos os cabeçalhos de segurança, em `nucleo/test_cabecalhos.py` (o último it
 ## Notas de implementação
 
 - **Suíte:** 322 testes ao fim da spec, com as Etapas 6b e 6c e a correção do WebP.
-- **`check --deploy`:** no ar, só o `security.W021` (`SECURE_HSTS_PRELOAD` desligado,
-  de propósito enquanto o HSTS é de 7 dias) e o `mail.E001` silenciado (o blog não
-  envia e-mail).
+- **`check --deploy`:** no ar, com o HSTS ainda de 7 dias, só o `security.W021`
+  (`SECURE_HSTS_PRELOAD` desligado) e o `mail.E001` silenciado (o blog não envia
+  e-mail); com o ADR-12, nenhum aviso.
 - **Console da plataforma:** o shell não carrega o ambiente do start, então o
   `python` não está no `PATH`; o ambiente virtual do build fica em `/app/.venv`
   (`export PATH="/app/.venv/bin:$PATH"`). A `DJANGO_SETTINGS_MODULE` também fica

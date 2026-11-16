@@ -82,6 +82,7 @@ origin: concepcao
 ## Etapa 7 — Com a demonstração publicada
 
 - [x] Conferência de fora, no endereço público: redirect 301 de HTTP para HTTPS, HSTS, `nosniff`, `X-Frame-Options`, `Content-Security-Policy` e `Permissions-Policy`, cookie CSRF com `Secure`, uma capa em `/media/` e `../` em 404, login com a conta de demonstração, POST com `Origin` de outro site em 403, a sexta senha errada recusada e o `migrate` antes do gunicorn no log do deploy. — RF-01, RF-03, RF-04, RF-07, RF-08, RF-10, RF-16, RF-17
+- [x] `blog_culinario/settings/prod.py`: HSTS de 1 ano com `preload`, depois do HTTPS conferido no ar; o `nucleo/test_hospedagem.py` passa a exigir o `check --deploy` sem aviso. — ADR-12, RF-12
 - [x] `README.md` e `README.en.md`: link da demonstração, com o endereço já respondendo com o conteúdo carregado. — RNF-06
 - [x] `specs/011-hospedagem/` (os três arquivos) e `specs/README.md`: status `concluído`; `design.md` com `## Desvios` e `## Notas de implementação` (suíte antes e depois, `check --deploy`, o que foi conferido no ar). —
 - [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. — verdes (322 testes, 3 pulados).
