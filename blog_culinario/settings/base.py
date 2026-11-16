@@ -12,6 +12,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import environ
+from django.utils.csp import CSP
 
 from blog_culinario.endereco import normalizar_url_publica
 
@@ -44,6 +45,29 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 # "admin/": um caminho vazio poria o Admin na raiz, no lugar da home (RF-14).
 ADMIN_URL = (env.str("ADMIN_URL", default="").strip().strip("/") or "admin") + "/"
 
+# Content-Security-Policy: de onde a página pode carregar scripts, estilos,
+# imagens e fontes. Um script injetado num comentário, por exemplo, não roda,
+# porque só vale o que vem de um arquivo do próprio site. Nenhum template do
+# blog tem <script> ou estilo inline; o Admin do Django tem um <style> inline,
+# que passa pelo nonce do pedido (CSP.NONCE), gerado só nas páginas que o usam.
+# As páginas de depuração do Django (DEBUG=True) saem da política sozinhas
+# (spec 011, RF-16).
+SECURE_CSP = {
+    "default-src": [CSP.SELF],
+    "script-src": [CSP.SELF],
+    "style-src": [CSP.SELF, CSP.NONCE],
+    "img-src": [CSP.SELF],
+    "font-src": [CSP.SELF],
+    # base-uri e form-action não herdam o default-src: sem elas, uma tag <base>
+    # ou um <form> injetado poderia apontar para fora do site.
+    "base-uri": [CSP.NONE],
+    "form-action": [CSP.SELF],
+    # Herdaria o 'self'; 'none' explícito, porque o blog não embute plugin.
+    "object-src": [CSP.NONE],
+    # O mesmo que o X-Frame-Options DENY, no padrão atual dos navegadores.
+    "frame-ancestors": [CSP.NONE],
+}
+
 
 # ---------------------------------------------------------------------------
 # Apps e middleware
@@ -75,6 +99,10 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.middleware.csp.ContentSecurityPolicyMiddleware",  # o SECURE_CSP
+    # Nega câmera, microfone, localização e afins (o Django não tem configuração
+    # para este cabeçalho; spec 011, RF-17).
+    "blog_culinario.cabecalhos.PermissionsPolicyMiddleware",
 ]
 
 ROOT_URLCONF = "blog_culinario.urls"
@@ -89,6 +117,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                # O nonce da CSP para o {% csp_nonce_attr %} dos templates do Admin.
+                "django.template.context_processors.csp",
                 "blog_culinario.demonstracao.contexto_demonstracao",
                 "blog_culinario.descoberta.contexto_descoberta",
             ],
