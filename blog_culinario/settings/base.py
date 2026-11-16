@@ -26,18 +26,23 @@ environ.Env.read_env(BASE_DIR / ".env")  # arquivo local, fora do git
 # Segurança
 # ---------------------------------------------------------------------------
 
-# Chave de assinatura de sessões/CSRF. O default só serve para clonar o repo
-# e rodar localmente sem configurar nada; o prod.py exige DJANGO_SECRET_KEY.
-SECRET_KEY = env(
-    "DJANGO_SECRET_KEY",
-    default="django-insecure-troque-esta-chave-em-producao",
-)
+# Chave de assinatura de sessões/CSRF. Sem default, nem em desenvolvimento: uma
+# chave fixa no repositório valeria em todo clone e iria parar em produção por
+# descuido. Ausente, a subida falha; vazia, o Django recusa a chave (spec 011,
+# RF-15). O .env.example mostra como gerar uma.
+SECRET_KEY = env.str("SECRET_KEY")
 
 # Desligado aqui; o dev.py liga e o prod.py mantém desligado. Não há variável
 # de ambiente: o módulo de configurações escolhido já decide.
 DEBUG = False
 
-ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
+
+# Caminho do painel Admin, como "painel-secreto/". Trocar o padrão tira o painel
+# do primeiro endereço que os robôs de força bruta testam; a proteção de verdade
+# segue sendo a senha. Barras sobrando são ignoradas, e vazio ou só barras vale
+# "admin/": um caminho vazio poria o Admin na raiz, no lugar da home (RF-14).
+ADMIN_URL = (env.str("ADMIN_URL", default="").strip().strip("/") or "admin") + "/"
 
 
 # ---------------------------------------------------------------------------

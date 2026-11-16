@@ -1,9 +1,10 @@
 """
 Configuração raiz de URLs do projeto Blog Culinário.
 
-Mapeia as rotas principais: painel Admin do Django, e as URLs de cada app de
-domínio (``nucleo``, ``receitas``, ``usuarios``), cada um com seu próprio
-namespace via ``app_name`` em ``urls.py``. Os arquivos de descoberta
+Mapeia as rotas principais: painel Admin do Django (no caminho do
+``ADMIN_URL``), e as URLs de cada app de domínio (``nucleo``, ``receitas``,
+``usuarios``), cada um com seu próprio namespace via ``app_name`` em
+``urls.py``. Os arquivos de descoberta
 (``robots.txt``, ``sitemap.xml`` e ``/.well-known/security.txt``, spec 010)
 ficam aqui, sem namespace, porque são caminhos fixos da raiz do site.
 
@@ -27,7 +28,8 @@ from receitas.sitemaps import ReceitaSitemap
 SITEMAPS = {"paginas": descoberta.PaginasSitemap, "receitas": ReceitaSitemap}
 
 urlpatterns: list[URLPattern | URLResolver] = [
-    path("admin/", admin.site.urls),
+    # Caminho do ADMIN_URL, "admin/" por padrão (spec 011, RF-14).
+    path(settings.ADMIN_URL, admin.site.urls),
     path("robots.txt", descoberta.robots_txt, name="robots_txt"),
     path(
         "sitemap.xml",

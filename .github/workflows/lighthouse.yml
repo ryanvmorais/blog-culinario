@@ -58,6 +58,9 @@ jobs:
       # atualize aqui à mão e recalibre os limites em .github/lighthouse/.
       # 0.15.1 = Lighthouse 12.6.1.
       LHCI_VERSION: "0.15.1"
+      # O settings exige SECRET_KEY em todo ambiente (spec 011, RF-15); valor
+      # descartável, só para o settings importar no CI (não é produção).
+      SECRET_KEY: ci-placeholder-nao-usar-em-producao-MQ5e-SKRD_O0QqcJ
     steps:
       - name: Baixa o repositório
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
