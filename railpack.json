@@ -1,0 +1,14 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "steps": {
+    "build": {
+      "commands": [
+        "uv sync --locked --no-dev --extra prod",
+        "DJANGO_SETTINGS_MODULE=blog_culinario.settings.prod python manage.py collectstatic --noinput"
+      ]
+    }
+  },
+  "deploy": {
+    "startCommand": "export DJANGO_SETTINGS_MODULE=blog_culinario.settings.prod && python manage.py migrate --noinput && gunicorn blog_culinario.wsgi:application --bind 0.0.0.0:${PORT:-8000}"
+  }
+}

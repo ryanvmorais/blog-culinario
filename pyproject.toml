@@ -2,6 +2,9 @@
 # Configuração do projeto (PEP 621) — gerenciado com uv.
 #
 #   [project]            metadados + dependências de runtime
+#   [project.optional-dependencies]
+#                        prod   servidor de produção (gunicorn), instalado
+#                               pela receita de build (railpack.json)
 #   [dependency-groups]  dev    lint / tipos / testes
 #   [tool.*]             ruff, black, mypy, pytest
 #
@@ -19,6 +22,13 @@ dependencies = [
     "django-environ>=0.14.0",
     "pillow>=13.0.0",
     "whitenoise>=6.12.0",
+]
+
+# Só o build de produção instala este extra (`uv sync --extra prod`): quem
+# clona para estudar roda o runserver e não precisa do gunicorn.
+[project.optional-dependencies]
+prod = [
+    "gunicorn>=26.2.0",
 ]
 
 [dependency-groups]
