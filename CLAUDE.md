@@ -8,10 +8,11 @@ Blog culinário multipáginas em Django, com propósito educacional: servir de
 referência para quem está aprendendo a construir uma aplicação web completa
 em Python (modelagem, views, templates, autenticação, admin, segurança).
 Stack mínima de propósito — SQLite, CSS puro sem framework, sem build step —
-para manter o foco em Django. Pensado para deploy no PythonAnywhere (ver
-`blog_culinario/settings/prod.py`).
+para manter o foco em Django. Deploy na Railway, atrás da Cloudflare: receita
+de build em `railpack.json` e configurações em `blog_culinario/settings/prod.py`
+(spec 011).
 
-> **Python 3.12 é o piso (`requires-python = ">=3.12"`):** o PythonAnywhere lista Python só até o 3.13 e o servidor roda o 3.12, que também é o mínimo do Django 6.1. O `.python-version` fixa o 3.12 no desenvolvimento, o CI testa do 3.12 ao 3.15 (matriz) e `ruff`, `black` e `mypy` apontam para o 3.12: não use sintaxe exclusiva de versão mais nova (ex.: `except A, B:` sem parênteses, do 3.14).
+> **Python 3.12 é o piso (`requires-python = ">=3.12"`):** é o mínimo do Django 6.1. O `.python-version` fixa o 3.12 no desenvolvimento, o CI testa do 3.12 ao 3.15 (matriz) e `ruff`, `black` e `mypy` apontam para o 3.12: não use sintaxe exclusiva de versão mais nova (ex.: `except A, B:` sem parênteses, do 3.14).
 
 ## Comandos comuns
 
@@ -57,6 +58,8 @@ defaults seguros. Ver `.env.example` para a lista completa e
 ```
 blog_culinario/settings/   # base.py (comum) + dev.py / prod.py (por ambiente)
 blog_culinario/limitacao.py # rate limit por IP via cache do Django (login e comentário — spec 006)
+blog_culinario/cache.py    # CacheArquivoAtomico: cache em arquivo com add() e incr() atômicos entre workers (spec 011)
+blog_culinario/origem.py   # trava de origem (X-Origin-Verify + ORIGEM_SEGREDO) e ip_do_visitante() (spec 011)
 blog_culinario/demonstracao.py # modo demonstração: conta pública, mensagens e context processor (spec 009)
 blog_culinario/endereco.py # URL_PUBLICA: validação na subida e url_absoluta() (spec 010)
 blog_culinario/descoberta.py # canonical (context processor), sitemaps, robots.txt, sitemap.xml e security.txt (spec 010)
@@ -73,6 +76,8 @@ docs/stack.md              # o que compõe a stack, por que e o que estudar
 docs/design-system.html    # catálogo visual (tokens, tipografia, componentes); abra direto no navegador — usa o tokens.css e o base.css do site
 .github/                   # CI (ci.yml), pip-audit semanal (pip-audit.yml), Lighthouse CI (lighthouse.yml + lighthouse/), Dependabot (uv + github-actions), formulário de issue (com o atalho para o aviso privado de segurança) e template de PR
 SECURITY.md                # política de segurança: relato privado pelos avisos do GitHub, prazos e escopo
+railpack.json              # build e start na Railway: uv sync --locked, collectstatic, migrate e gunicorn, sempre com settings.prod (spec 011)
+conftest.py                # pytest: cache em pasta temporária, fora da django_cache/ da raiz
 ```
 
 Cada app novo do domínio segue o padrão de `nucleo`: `views.py` com funções
@@ -108,6 +113,13 @@ simples primeiro, `urls.py` com `app_name` namespaced, templates em
   que estende o `base.html` ganha canonical e Open Graph sozinha; página de erro
   esvazia o bloco `endereco_canonico`. O `Expires` do `security.txt` é fixo: o
   `nucleo/test_descoberta.py` falha 30 dias antes, e aí se move a data.
+
+- **Hospedagem (spec 011):** banco, mídia e cache saem de `DIRETORIO_DADOS`
+  (o volume em produção). View nova que limita por IP usa `limite_excedido()`,
+  nunca o `REMOTE_ADDR` direto: o IP real só vem do `CF-Connecting-IP` com a
+  trava de origem ligada (`ORIGEM_SEGREDO`). O `mail.E001` fica silenciado no
+  `prod.py` porque o blog não envia e-mail; funcionalidade que enviar tira a
+  linha e configura o SMTP.
 
 - **README bilíngue:** `README.md` (português) e `README.en.md` (inglês) têm as
   mesmas seções, na mesma ordem. Mudou um, muda o outro no mesmo PR; o

@@ -7,20 +7,19 @@ namespace via ``app_name`` em ``urls.py``. Os arquivos de descoberta
 (``robots.txt``, ``sitemap.xml`` e ``/.well-known/security.txt``, spec 010)
 ficam aqui, sem namespace, porque são caminhos fixos da raiz do site.
 
-Em desenvolvimento (``DEBUG=True``), acrescenta a rota de ``media/`` para
-servir os uploads de imagem das receitas diretamente pelo Django — em
-produção, o WhiteNoise cuida só de estáticos, e mídia real usaria um
-storage externo (fora do escopo deste projeto educacional).
+A rota de ``media/`` serve as capas das receitas pelo próprio Django, com ou
+sem ``DEBUG`` (``nucleo.views.servir_midia``, spec 011): o WhiteNoise cuida só
+dos estáticos, e a plataforma de deploy não tem servidor web na frente.
 """
 
 from __future__ import annotations
 
 from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import URLPattern, URLResolver, include, path
 
 from blog_culinario import descoberta
+from nucleo.views import servir_midia
 from receitas.sitemaps import ReceitaSitemap
 
 # Montado aqui, e não em descoberta.py, para aquele módulo não importar de
@@ -44,9 +43,10 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path("", include("nucleo.urls")),
     path("receitas/", include("receitas.urls")),
     path("usuarios/", include("usuarios.urls")),
+    # O MEDIA_URL começa com "/", que o path() não aceita no início.
+    path(
+        f"{settings.MEDIA_URL.lstrip('/')}<path:caminho>",
+        servir_midia,
+        name="midia",
+    ),
 ]
-
-if settings.DEBUG:
-    # Em produção o WhiteNoise/servidor web cuida disso; em dev o Django serve
-    # media/ diretamente para não exigir configuração extra de quem clona o repo.
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

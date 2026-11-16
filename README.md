@@ -61,6 +61,7 @@ Para garantir a melhor experiência de aprendizado, o projeto utiliza as seguint
 | **Pillow** | Processa e valida as imagens de capa das receitas. |
 | **django-environ** | Lê `SECRET_KEY` e `DEBUG` do ambiente em vez de deixá-los no código. |
 | **WhiteNoise** | Serve os arquivos estáticos em produção sem precisar de Nginx ou CDN. |
+| **Gunicorn** | Servidor WSGI de produção, instalado só pela receita de build (`railpack.json`). |
 
 As ferramentas de qualidade (Ruff, Black, Mypy e Pytest) estão em [Qualidade e testes](#qualidade-e-testes). Para o porquê de cada escolha (e as alternativas descartadas), veja [docs/stack.md](docs/stack.md).
 
@@ -95,6 +96,8 @@ Quer ver o site com receitas de exemplo sem cadastrar nada? Rode `uv run python 
 Quer ver como a demonstração pública se comporta? Suba o servidor com `MODO_DEMONSTRACAO=True` (no `.env`) e rode `uv run python manage.py criar_conta_demonstracao`: cadastro e comentário passam a validar sem gravar nada, a tela de login mostra a conta de demonstração e o `/.well-known/security.txt` passa a responder com o contato de segurança do repositório.
 
 Vai publicar o seu? Defina `URL_PUBLICA` (só esquema e host, como `https://blog.exemplo.com.br`) no `.env`: as páginas ganham `<link rel="canonical">` e `og:url` com esse endereço, e o `/sitemap.xml` passa a listar a home, a lista e cada receita publicada. O `/robots.txt` responde sempre e, com a variável, aponta o sitemap.
+
+Vai hospedar na Railway? A receita de build está no `railpack.json`: instala as dependências pelo `uv.lock`, com o gunicorn (extra `prod`), roda o `collectstatic` no build e, no start, o `migrate` antes do gunicorn, sempre com `blog_culinario.settings.prod`. Monte um volume e aponte `DIRETORIO_DADOS` para ele (ex.: `/data`): o banco, as capas e o cache da limitação de taxa ficam lá e sobrevivem a cada deploy. Com a Cloudflare na frente, crie uma regra de transformação que acrescente o cabeçalho `X-Origin-Verify` com um segredo e ponha o mesmo valor em `ORIGEM_SEGREDO`: o site passa a recusar o pedido que não veio pela Cloudflare, e a limitação de taxa passa a usar o IP real do visitante (`CF-Connecting-IP`). Sem essa trava, atrás de um proxy, todos os visitantes dividem o mesmo limite de login e de comentário. A lista completa de variáveis está no `.env.example`.
 
 > ⚠️ **Nota sobre o Admin:** quer um usuário para acessar `/admin/`? Rode `uv run python manage.py createsuperuser` e siga as instruções no terminal.
 

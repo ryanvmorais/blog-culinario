@@ -27,13 +27,15 @@ environ.Env.read_env(BASE_DIR / ".env")  # arquivo local, fora do git
 # ---------------------------------------------------------------------------
 
 # Chave de assinatura de sessões/CSRF. O default só serve para clonar o repo
-# e rodar localmente sem configurar nada; produção define DJANGO_SECRET_KEY.
+# e rodar localmente sem configurar nada; o prod.py exige DJANGO_SECRET_KEY.
 SECRET_KEY = env(
     "DJANGO_SECRET_KEY",
     default="django-insecure-troque-esta-chave-em-producao",
 )
 
-DEBUG = env.bool("DJANGO_DEBUG", default=False)
+# Desligado aqui; o dev.py liga e o prod.py mantém desligado. Não há variável
+# de ambiente: o módulo de configurações escolhido já decide.
+DEBUG = False
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 
@@ -57,6 +59,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # Primeiro de propósito: com ORIGEM_SEGREDO, o pedido que não veio pela
+    # Cloudflare não chega a nenhuma outra camada (spec 011, RF-09).
+    "blog_culinario.origem.OrigemCloudflareMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",  # serve estáticos sem Nginx/CDN
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -90,6 +95,18 @@ WSGI_APPLICATION = "blog_culinario.wsgi.application"
 
 
 # ---------------------------------------------------------------------------
+# Dados graváveis (spec 011)
+# ---------------------------------------------------------------------------
+
+# Pasta do banco, da mídia enviada pelo Admin e do cache da limitação de taxa.
+# Em produção, o caminho do volume que a plataforma monta e que sobrevive ao
+# deploy (ex.: /data). Vazia: a raiz do repositório, como sempre foi — um
+# caminho absoluto substitui o BASE_DIR, um relativo fica dentro dele, e
+# Path / "" é o próprio Path.
+DIRETORIO_DADOS = BASE_DIR / env.str("DIRETORIO_DADOS", default="").strip()
+
+
+# ---------------------------------------------------------------------------
 # Banco de dados
 # ---------------------------------------------------------------------------
 
@@ -97,11 +114,27 @@ WSGI_APPLICATION = "blog_culinario.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": DIRETORIO_DADOS / "db.sqlite3",
     }
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# ---------------------------------------------------------------------------
+# Cache (spec 011)
+# ---------------------------------------------------------------------------
+
+# Em arquivo, na pasta de dados: os workers do gunicorn são processos
+# separados, e um cache em memória (o LocMemCache padrão) daria a cada um o
+# próprio contador da limitação de taxa. O backend do projeto torna o add() e
+# o incr() atômicos entre os processos (blog_culinario/cache.py).
+CACHES = {
+    "default": {
+        "BACKEND": "blog_culinario.cache.CacheArquivoAtomico",
+        "LOCATION": DIRETORIO_DADOS / "django_cache",
+    }
+}
 
 
 # ---------------------------------------------------------------------------
@@ -139,7 +172,7 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"  # destino do collectstatic (gitignored)
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"  # uploads de imagens das receitas (gitignored)
+MEDIA_ROOT = DIRETORIO_DADOS / "media"  # capas das receitas (gitignored)
 
 
 # ---------------------------------------------------------------------------
@@ -159,6 +192,24 @@ LOGOUT_REDIRECT_URL = "nucleo:home"
 # verdade. A instância pública liga com MODO_DEMONSTRACAO=True, e aí cadastro
 # e comentário validam mas não gravam (blog_culinario/demonstracao.py).
 MODO_DEMONSTRACAO = env.bool("MODO_DEMONSTRACAO", default=False)
+
+
+# ---------------------------------------------------------------------------
+# Trava de origem (spec 011)
+# ---------------------------------------------------------------------------
+
+# Com um segredo definido, só passa o pedido que traz o cabeçalho
+# X-Origin-Verify com ele, e o IP da limitação de taxa passa a vir do
+# CF-Connecting-IP (blog_culinario/origem.py). O anterior vale junto durante
+# a troca do segredo. Vazias (o padrão): trava desligada, IP do REMOTE_ADDR.
+ORIGEM_SEGREDOS = tuple(
+    segredo
+    for segredo in (
+        env.str("ORIGEM_SEGREDO", default="").strip(),
+        env.str("ORIGEM_SEGREDO_ANTERIOR", default="").strip(),
+    )
+    if segredo
+)
 
 
 # ---------------------------------------------------------------------------
