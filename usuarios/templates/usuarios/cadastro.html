@@ -2,9 +2,21 @@
 
 {% block titulo %}Criar conta — Blog Culinário{% endblock %}
 
+{# As mensagens desta página aparecem junto do formulário, não no topo à esquerda (spec 009). #}
+{% block mensagens %}{% endblock %}
+
 {% block content %}
   <section class="container cabecalho-pagina pagina-formulario">
     <h1>Criar conta</h1>
+    {% include "includes/mensagens.html" %}
+
+    {% if modo_demonstracao %}
+      {# Antes do formulário, para ninguém preencher à toa (spec 009, RF-02). #}
+      <p class="mensagem mensagem--info aviso-demonstracao" role="note">
+        <strong>Cadastro de demonstração:</strong> nenhuma conta é criada. Para ver o blog
+        por dentro, <a href="{% url 'usuarios:entrar' %}">entre com a conta de demonstração</a>.
+      </p>
+    {% endif %}
 
     <form class="formulario" method="post" novalidate>
       {% csrf_token %}

@@ -11,6 +11,7 @@
  *   2. Tipografia (Fraunces para títulos, Inter para corpo)
  *   3. Espaçamento, raio e sombra
  *   4. Transições
+ *   5. Tema escuro do sistema
  */
 
 :root {
@@ -45,6 +46,9 @@
      Inter no corpo mantém a leitura confortável em telas pequenas. */
   --fonte-titulo: "Fraunces", "Georgia", serif;
   --fonte-corpo: "Inter", "Segoe UI", sans-serif;
+  /* Credenciais da conta de demonstração (spec 009): só fontes do sistema, nada
+     baixado, e cada caractere da senha fica distinto (l, 1, I). */
+  --fonte-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
 
   --texto-xs: 0.8rem;
   --texto-sm: 0.9rem;

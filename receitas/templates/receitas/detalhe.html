@@ -74,6 +74,12 @@
       <form class="formulario" method="post" action="{% url 'receitas:comentar' receita.slug %}">
         {% csrf_token %}
         {{ formulario_comentario.carimbo_tempo }}
+        {% if modo_demonstracao %}
+          {# Antes do campo, para ninguém escrever à toa (spec 009, RF-06). #}
+          <p class="mensagem mensagem--info" role="note">
+            <strong>Comentários de demonstração:</strong> nada é publicado.
+          </p>
+        {% endif %}
         <div class="campo-armadilha" aria-hidden="true">
           <label for="{{ formulario_comentario.endereco_web.id_for_label }}">Deixe este campo em branco</label>
           {{ formulario_comentario.endereco_web }}
