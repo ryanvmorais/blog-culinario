@@ -13,6 +13,8 @@ from pathlib import Path
 
 import environ
 
+from blog_culinario.endereco import normalizar_url_publica
+
 # Raiz do projeto (onde ficam manage.py, .env e o pacote blog_culinario/).
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -48,6 +50,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",  # filtros de template (timesince, intcomma) das receitas
+    "django.contrib.sitemaps",  # template do /sitemap.xml (spec 010, ADR-1)
     "nucleo",
     "receitas",
     "usuarios",
@@ -77,6 +80,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "blog_culinario.demonstracao.contexto_demonstracao",
+                "blog_culinario.descoberta.contexto_descoberta",
             ],
         },
     },
@@ -155,6 +159,17 @@ LOGOUT_REDIRECT_URL = "nucleo:home"
 # verdade. A instância pública liga com MODO_DEMONSTRACAO=True, e aí cadastro
 # e comentário validam mas não gravam (blog_culinario/demonstracao.py).
 MODO_DEMONSTRACAO = env.bool("MODO_DEMONSTRACAO", default=False)
+
+
+# ---------------------------------------------------------------------------
+# Descoberta (spec 010)
+# ---------------------------------------------------------------------------
+
+# Endereço público do site, só esquema e host (https://exemplo.com.br). É a
+# única fonte do canonical, do og:url, do sitemap.xml e da linha Sitemap: do
+# robots.txt; vazio (o padrão em desenvolvimento) desliga os quatro. Valor
+# fora do formato derruba a subida (blog_culinario/endereco.py).
+URL_PUBLICA = normalizar_url_publica(env.str("URL_PUBLICA", default=""))
 
 
 # ---------------------------------------------------------------------------
