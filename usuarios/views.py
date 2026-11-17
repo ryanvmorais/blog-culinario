@@ -19,7 +19,12 @@ from django.urls import reverse_lazy
 from django.views.generic import FormView
 
 from blog_culinario.demonstracao import mensagem_cadastro, modo_demonstracao_ligado
-from blog_culinario.limitacao import limite_excedido
+from blog_culinario.limitacao import (
+    JANELA_LOGIN_SEGUNDOS,
+    LIMITE_LOGIN,
+    MENSAGEM_LIMITE_LOGIN,
+    limite_excedido,
+)
 
 from .forms import FormularioCadastro
 
@@ -30,6 +35,34 @@ class CadastroView(FormView):
     template_name = "usuarios/cadastro.html"
     form_class = FormularioCadastro
     success_url = reverse_lazy("nucleo:home")
+
+    def post(
+        self, request: HttpRequest, *args: object, **kwargs: object
+    ) -> HttpResponse:
+        """
+        Bloqueia o envio se o visitante excedeu o limite de cadastros.
+
+        A checagem vem antes do formulário (spec 006, adendo, RF-05): acima do
+        limite, nada é validado, nem no modo demonstração, e o formulário não
+        chega a dizer se um nome de usuário já existe. O contador
+        ``"cadastro"`` é separado do login e do comentário.
+
+        Args:
+            request (HttpRequest): requisição POST recebida.
+            *args (object): argumentos posicionais repassados ao ``super().post()``.
+            **kwargs (object): argumentos nomeados repassados ao ``super().post()``.
+
+        Returns:
+            HttpResponse: redireciona de volta ao cadastro com mensagem de erro
+            se o limite foi atingido; caso contrário, segue o fluxo normal do
+            ``FormView``.
+        """
+        if limite_excedido(request, "cadastro", limite=10, janela_segundos=3600):
+            messages.error(
+                request, "Muitas tentativas de cadastro. Tente novamente mais tarde."
+            )
+            return redirect("usuarios:cadastro")
+        return super().post(request, *args, **kwargs)
 
     def form_valid(self, form: FormularioCadastro) -> HttpResponse:
         """
@@ -80,11 +113,13 @@ class EntrarView(LoginView):
             erro se o limite foi atingido; caso contrário, segue o fluxo
             normal do ``LoginView``.
         """
-        if limite_excedido(request, "login", limite=5, janela_segundos=300):
-            messages.error(
-                request,
-                "Muitas tentativas de login. Tente novamente em alguns minutos.",
-            )
+        if limite_excedido(
+            request,
+            "login",
+            limite=LIMITE_LOGIN,
+            janela_segundos=JANELA_LOGIN_SEGUNDOS,
+        ):
+            messages.error(request, MENSAGEM_LIMITE_LOGIN)
             return redirect("usuarios:entrar")
         return super().post(request, *args, **kwargs)
 

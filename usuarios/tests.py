@@ -1,6 +1,6 @@
 """
 Testes de autenticação: cadastro, login, logout, reflexo na navbar (spec 004)
-e limite de tentativas de login (spec 006).
+e limite de tentativas de login e de envios do cadastro (spec 006 e adendo).
 
 Estratégia de isolamento: ORM/HTTP de teste do Django, sem mock — login e
 logout são o comportamento nativo do ``django.contrib.auth``, exercitado
@@ -20,6 +20,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import Client, RequestFactory
 from django.urls import reverse
+from pytest_django.fixtures import Settings
 
 from blog_culinario.limitacao import limite_excedido
 
@@ -243,6 +244,42 @@ def test_limite_excedido_expira_apos_a_janela(rf: RequestFactory) -> None:
     time.sleep(1.1)
 
     assert limite_excedido(request, "teste-janela", 3, 1) is False
+
+
+# -----------------------------------------------------------------------------
+# Limite de envios do cadastro (spec 006, adendo, RF-05)
+# -----------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("modo_demonstracao", [False, True])
+def test_cadastro_recusa_o_envio_acima_do_limite(
+    client: Client, settings: Settings, modo_demonstracao: bool
+) -> None:
+    """Dez envios gastam o limite; o 11º, mesmo válido, não cria a conta."""
+    settings.MODO_DEMONSTRACAO = modo_demonstracao
+    # Senhas diferentes: os dez envios falham na validação e não criam conta.
+    for _ in range(10):
+        client.post(reverse("usuarios:cadastro"), _dados_cadastro(password2="outra"))
+
+    resposta = client.post(reverse("usuarios:cadastro"), _dados_cadastro(), follow=True)
+
+    assert not User.objects.filter(username="chef-teste").exists()
+    assert "Muitas tentativas de cadastro" in resposta.content.decode()
+
+
+def test_cadastro_esgotado_nao_recusa_o_login(client: Client) -> None:
+    """O contador ``"cadastro"`` é separado do ``"login"``."""
+    User.objects.create_user(username="chef-teste", password="uma-senha-bem-forte-123")
+    for _ in range(11):
+        client.post(reverse("usuarios:cadastro"), _dados_cadastro(password2="outra"))
+
+    resposta = client.post(
+        reverse("usuarios:entrar"),
+        {"username": "chef-teste", "password": "uma-senha-bem-forte-123"},
+        follow=True,
+    )
+
+    assert resposta.wsgi_request.user.is_authenticated
 
 
 # -----------------------------------------------------------------------------
