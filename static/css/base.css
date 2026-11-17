@@ -322,9 +322,13 @@ a.navbar__acao:hover {
 
 /* 4.1.1 Abertura: o texto e, ao lado no desktop, a receita mais nova (RF-01).
    Sem receita publicada, a view não manda destaque e o template põe
-   .hero-dividido--uma-coluna: o texto fica centrado em qualquer largura. */
+   .hero-dividido--uma-coluna: o texto fica centrado em qualquer largura.
+   A coluna explícita impede a grade de crescer até a largura natural do campo
+   de busca (campo + botão passam de 328 px): sem ela, a 360 px ou com a fonte
+   do sistema aumentada, a página ficava mais larga que a tela. */
 .hero-dividido {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--espaco-8);
   padding-block: var(--espaco-12) var(--espaco-8);
 }
@@ -503,9 +507,11 @@ a.navbar__acao:hover {
   color: var(--cor-texto-suave);
 }
 
+/* min(…, 100%): com a fonte do sistema aumentada, 14rem passa da largura do
+   painel numa tela de 320 px e a nota vazaria; assim a coluna encolhe. */
 .notas-codigo {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
   gap: var(--espaco-4);
   margin: var(--espaco-6) 0;
   padding: 0;
@@ -537,9 +543,11 @@ a.navbar__acao:hover {
 
 .nota-codigo a {
   align-self: flex-start; /* no flex em coluna, o link esticaria na largura toda */
+  max-width: 100%;
   margin-top: auto;
   font-size: var(--texto-sm);
   font-weight: 600;
+  overflow-wrap: anywhere; /* o caminho é uma palavra só; numa tela estreita, quebra na barra */
 }
 
 

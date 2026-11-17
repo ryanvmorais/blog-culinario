@@ -200,6 +200,21 @@ def test_imagem_com_altura_no_html_segue_a_proporcao_do_css() -> None:
     assert "height: auto;" in _bloco_css(CSS_BASE, "img")
 
 
+def test_abertura_da_home_nao_passa_da_largura_da_tela() -> None:
+    """
+    Nada da home passa da largura da tela, mesmo com a fonte do sistema maior.
+
+    Sem a coluna explícita, a abertura cresce até o campo de busca e vaza a
+    360 px; com 14rem fixos, as notas de "Por dentro" vazam a 320 px com a
+    fonte 30% maior, e o caminho do arquivo precisa poder quebrar.
+    """
+    assert "grid-template-columns: minmax(0, 1fr);" in _bloco_css(
+        CSS_BASE, ".hero-dividido"
+    )
+    assert "minmax(min(14rem, 100%), 1fr)" in _bloco_css(CSS_BASE, ".notas-codigo")
+    assert "overflow-wrap: anywhere;" in _bloco_css(CSS_BASE, ".nota-codigo a")
+
+
 def test_movimento_reduzido_desliga_rolagem_suave_e_elevacao() -> None:
     """RF-11: quem pede menos movimento não recebe rolagem suave nem hover animado."""
     achado = re.search(
