@@ -1,29 +1,11 @@
-{% extends "base.html" %}
+{% extends "erro.html" %}
+{# PermissionDenied e a trava de origem (spec 008, RF-04; spec 011). A falha de CSRF tem página própria, o 403_csrf.html. #}
 
-{% block titulo %}Acesso negado — Blog Culinário{% endblock %}
-{% block descricao %}Você não tem permissão para abrir esta página.{% endblock %}
-{# Página de erro não tem endereço canônico (spec 010, RF-02). #}
-{% block endereco_canonico %}{% endblock %}
-
-{% block content %}
-  {% comment %}
-       ============================================================
-       SEÇÃO: ACESSO NEGADO
-       Mostrada pelo Django com DEBUG=False (PermissionDenied e falha de
-       CSRF) no lugar da página padrão em inglês (spec 008, RF-04).
-       ============================================================
-  {% endcomment %}
-  <section class="hero container">
-    <span class="hero__legenda">Erro 403</span>
-    <h1 class="hero__titulo">Você não pode abrir esta página.</h1>
-    <p class="hero__descricao">
-      Entre na sua conta ou volte para as receitas. Se você acabou de enviar
-      um formulário, recarregue a página e tente de novo.
-    </p>
-    <div class="hero__acoes">
-      <a class="botao botao--primario" href="{% url 'usuarios:entrar' %}">Entrar</a>
-      <a class="botao botao--contorno" href="{% url 'nucleo:home' %}">Voltar ao início</a>
-    </div>
-  </section>
-  {# fim: ACESSO NEGADO #}
+{% block titulo %}Acesso negado{% endblock %}
+{% block codigo %}403{% endblock %}
+{% block titulo_pagina %}Você não pode abrir esta página.{% endblock %}
+{% block texto %}Entre na sua conta ou volte para as receitas.{% endblock %}
+{% block acoes %}
+  <a class="botao botao--primario" href="{% url 'usuarios:entrar' %}">Entrar</a>
+  <a class="botao botao--contorno" href="/">Voltar ao início</a>
 {% endblock %}

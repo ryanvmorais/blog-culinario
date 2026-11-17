@@ -1,34 +1,7 @@
-{% load static %}
-{% comment %}
-  Erro do servidor (spec 008, RF-04). HTML completo, sem herdar o base.html: o
-  Django renderiza o 500 sem contexto, sem sessão e sem consultar o banco, e é
-  justamente quando algo está quebrado que esta página não pode quebrar junto.
-  Só reaproveita os CSS do site; os links são caminhos fixos, sem a tag url.
-{% endcomment %}
-<!doctype html>
-<html lang="pt-br">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Algo deu errado — Blog Culinário</title>
-    <meta name="robots" content="noindex" />
-    <link rel="stylesheet" href="{% static 'css/fontes.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
-  </head>
-  <body>
-    <main>
-      <section class="hero container">
-        <span class="hero__legenda">Erro 500</span>
-        <h1 class="hero__titulo">Algo deu errado na cozinha.</h1>
-        <p class="hero__descricao">
-          O problema é nosso, não seu. Já foi registrado; tente de novo em
-          alguns minutos.
-        </p>
-        <div class="hero__acoes">
-          <a class="botao botao--primario" href="/">Voltar ao início</a>
-        </div>
-      </section>
-    </main>
-  </body>
-</html>
+{% extends "erro.html" %}
+{# Erro do servidor (spec 008, RF-04). Sem a tag url: o Django renderiza o 500 sem contexto, e as rotas podem ser justamente o que quebrou. #}
+
+{% block titulo %}Algo deu errado{% endblock %}
+{% block codigo %}500{% endblock %}
+{% block titulo_pagina %}Algo deu errado na cozinha.{% endblock %}
+{% block texto %}O problema é nosso, não seu. Já foi registrado; tente de novo em alguns minutos.{% endblock %}

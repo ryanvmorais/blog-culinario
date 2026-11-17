@@ -1,0 +1,7 @@
+{% extends "erro.html" %}
+{# Pedido inválido: em produção, quase sempre um Host fora do ALLOWED_HOSTS. Sem este arquivo, o Django responde "Bad Request (400)" cru. #}
+
+{% block titulo %}Pedido inválido{% endblock %}
+{% block codigo %}400{% endblock %}
+{% block titulo_pagina %}Não entendemos este pedido.{% endblock %}
+{% block texto %}O endereço ou o pedido chegou de um jeito que o blog não reconhece. Confira o endereço digitado ou volte ao início.{% endblock %}
