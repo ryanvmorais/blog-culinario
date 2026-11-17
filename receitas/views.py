@@ -15,7 +15,7 @@ from typing import Any
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import redirect_to_login
-from django.db.models import Q, QuerySet
+from django.db.models import Case, IntegerField, Q, QuerySet, Value, When
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -109,12 +109,25 @@ class ReceitaListView(ListView):
             quando o slug não existe ou não há filtro), ``filtro_ativo``
             (``True`` se há busca, categoria ou tag) e ``querystring``
             (GET sem ``page``, urlencoded, usada pela paginação para
-            preservar o filtro).
+            preservar o filtro); e, para as pílulas (spec 012, adendo,
+            RF-26), ``categorias`` (com receita publicada, na ordem da
+            home), ``total_publicadas`` (a soma das contagens, ADR-11) e
+            ``querystring_sem_categoria`` (GET sem ``page`` nem
+            ``categoria``: a pílula troca a categoria e mantém a busca e a
+            tag).
         """
         contexto = super().get_context_data(**kwargs)
 
         parametros = self.request.GET.copy()
         parametros.pop("page", None)
+        sem_categoria = parametros.copy()
+        sem_categoria.pop("categoria", None)
+        contexto["querystring_sem_categoria"] = sem_categoria.urlencode()
+        categorias = list(Categoria.objects.com_receitas_publicadas())
+        contexto["categorias"] = categorias
+        # Categoria é obrigatória (PROTECT, sem null): a soma é o total de
+        # publicadas, sem consulta a mais.
+        contexto["total_publicadas"] = sum(c.total_receitas for c in categorias)
 
         contexto["termo_busca"] = self.request.GET.get("q", "")
         contexto["categoria_selecionada"] = self.request.GET.get("categoria", "")
@@ -132,6 +145,37 @@ class ReceitaListView(ListView):
             or contexto["tag_selecionada"]
         )
         return contexto
+
+
+def _mais_receitas(receita: Receita, limite: int = 3) -> list[Receita]:
+    """
+    Escolhe outras receitas publicadas para o fim da página de uma receita.
+
+    Uma consulta só: a anotação põe 0 nas da mesma categoria e 1 nas outras,
+    e a ordem por ela e pela data traz primeiro a mesma categoria, mais
+    recentes antes, e completa com as outras (spec 012, adendo, RF-24, ADR-10).
+
+    Args:
+        receita (Receita): a receita aberta, que fica fora da lista.
+        limite (int): quantas receitas devolver, no máximo.
+
+    Returns:
+        list[Receita]: até ``limite`` receitas, com a categoria pré-carregada
+        para o cartão.
+    """
+    return list(
+        Receita.objects.filter(publicado=True)
+        .exclude(pk=receita.pk)
+        .select_related("categoria")
+        .annotate(
+            mesma_categoria=Case(
+                When(categoria_id=receita.categoria_id, then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField(),
+            )
+        )
+        .order_by("mesma_categoria", "-criado_em")[:limite]
+    )
 
 
 class ReceitaDetailView(DetailView):
@@ -172,9 +216,12 @@ class ReceitaDetailView(DetailView):
             dict[str, Any]: contexto do template, com ``comentarios``
             (aprovados, mais antigo primeiro, autor pré-carregado — spec
             005 RF-02, RNF-01) e ``formulario_comentario`` (vazio; só é
-            usado no template quando o visitante está autenticado).
+            usado no template quando o visitante está autenticado) e
+            ``mais_receitas`` (até 3 outras publicadas, a mesma categoria
+            primeiro; spec 012, adendo, RF-24).
         """
         contexto = super().get_context_data(**kwargs)
+        contexto["mais_receitas"] = _mais_receitas(self.object)
         comentarios = self.object.comentarios.filter(aprovado=True)
         contexto["comentarios"] = comentarios.select_related("autor")
         # carimbo_tempo nasce aqui, no momento em que a página é servida --

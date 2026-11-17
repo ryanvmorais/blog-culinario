@@ -8,7 +8,7 @@
 {% block mensagens %}{% endblock %}
 
 {% block content %}
-  <article class="container cabecalho-pagina">
+  <article class="container receita">
     {% if receita.imagem_capa %}
       <img class="receita-detalhe__capa" src="{{ receita.imagem_capa.url }}" alt="{{ receita.titulo }}" />
     {% endif %}
@@ -17,17 +17,23 @@
       {{ receita.categoria.nome }}
     </a>
     <h1>{{ receita.titulo }}</h1>
-    <p>{{ receita.resumo }}</p>
+    <p class="receita__resumo">{{ receita.resumo }}</p>
 
-    <div class="receita-detalhe__meta">
-      <span>{{ receita.tempo_preparo_minutos }} min de preparo</span>
-      <span>{{ receita.porcoes }} porções</span>
-      <span>
-        Por
-        {% if receita.autor %}{{ receita.autor.username }}{% else %}Autor removido{% endif %}
-      </span>
-      <span>Publicado {{ receita.criado_em|naturaltime }}</span>
-    </div>
+    {# Lista de definições: o leitor de tela anuncia o rótulo junto do valor (spec 012, adendo, RF-19). #}
+    <dl class="ficha">
+      <div>
+        <dt>Preparo</dt>
+        <dd>{{ receita.tempo_preparo_minutos }} min</dd>
+      </div>
+      <div>
+        <dt>Rende</dt>
+        <dd>{{ receita.porcoes }} porç{{ receita.porcoes|pluralize:"ão,ões" }}</dd>
+      </div>
+    </dl>
+    <p class="receita-autoria">
+      Por {% if receita.autor %}{{ receita.autor.username }}{% else %}Autor removido{% endif %}
+      &middot; publicado {{ receita.criado_em|naturaltime }}
+    </p>
 
     {% if receita.tags.all %}
       <ul class="etiquetas">
@@ -37,25 +43,51 @@
       </ul>
     {% endif %}
 
-    <h2>Ingredientes</h2>
-    <ul>
-      {% for linha in receita.ingredientes.splitlines %}
-        {% if linha %}<li>{{ linha }}</li>{% endif %}
-      {% endfor %}
-    </ul>
+    {% comment %}
+      Ingredientes antes do preparo no HTML: é a ordem do celular e do leitor de
+      tela. Acima de 900 px o cartão vai para a coluna da esquerda e acompanha a
+      rolagem; o tabindex deixa a rolagem interna ao alcance do teclado quando a
+      lista é mais alta que a tela (spec 012, adendo, RF-21, ADR-12).
+    {% endcomment %}
+    <div class="receita-corpo">
+      <section class="ingredientes" aria-labelledby="titulo-ingredientes" tabindex="0">
+        <h2 id="titulo-ingredientes">Ingredientes</h2>
+        <ul>
+          {% for linha in receita.ingredientes.splitlines %}
+            {% if linha.strip %}<li>{{ linha }}</li>{% endif %}
+          {% endfor %}
+        </ul>
+      </section>
 
-    <h2>Modo de preparo</h2>
-    {{ receita.modo_de_preparo|linebreaks }}
+      {# O modelo divide o texto; aqui só se monta o HTML, com o escape do Django (ADR-9). #}
+      <section class="preparo" aria-labelledby="titulo-preparo">
+        <h2 id="titulo-preparo">Modo de preparo</h2>
+        {% for trecho in receita.partes_do_preparo %}
+          {% if trecho.tipo == "passos" %}
+            <ol class="passos" start="{{ trecho.inicio }}">
+              {% for texto in trecho.textos %}
+                <li>{{ texto|linebreaksbr }}</li>
+              {% endfor %}
+            </ol>
+          {% else %}
+            {% for texto in trecho.textos %}
+              <p{% if trecho.tipo == "nota" %} class="preparo-nota"{% endif %}>{{ texto|linebreaksbr }}</p>
+            {% endfor %}
+          {% endif %}
+        {% endfor %}
+      </section>
+    </div>
   </article>
 
   {% comment %}
        ============================================================
        SEÇÃO: COMENTÁRIOS (spec 005)
-       Formulário só aparece autenticado; anônimo vê convite de login
-       com ?next= de volta pra esta mesma receita (ver ADR-2 da spec).
+       Formulário só aparece autenticado; anônimo vê o convite num
+       cartão, com ?next= de volta pra esta mesma receita (ADR-2 da
+       spec 005; spec 012, adendo, RF-23).
        ============================================================
   {% endcomment %}
-  <section class="container" id="comentarios">
+  <section class="container secao" id="comentarios">
     <h2>Comentários</h2>
     {% include "includes/mensagens.html" %}
 
@@ -68,7 +100,7 @@
         <p>{{ comentario.texto }}</p>
       </article>
     {% empty %}
-      <p>Ainda não há comentários. Seja o primeiro a comentar!</p>
+      {% if user.is_authenticated %}<p>Ainda não há comentários. Seja o primeiro a comentar!</p>{% endif %}
     {% endfor %}
 
     {% if user.is_authenticated %}
@@ -92,11 +124,33 @@
         <button type="submit" class="botao botao--primario">Comentar</button>
       </form>
     {% else %}
-      <p>
-        <a href="{% url 'usuarios:entrar' %}?next={% url 'receitas:detalhe' receita.slug %}">Entre</a>
-        para deixar um comentário.
-      </p>
+      <div class="convite-comentar">
+        <p>
+          {% if comentarios %}Entre para deixar um comentário.{% else %}Ainda não há comentários. Seja o primeiro a comentar!{% endif %}
+        </p>
+        <a class="botao botao--contorno" href="{% url 'usuarios:entrar' %}?next={% url 'receitas:detalhe' receita.slug %}">Entrar para comentar</a>
+      </div>
     {% endif %}
   </section>
   {# fim: COMENTÁRIOS #}
+
+  {% comment %}
+       ============================================================
+       SEÇÃO: MAIS RECEITAS (spec 012, adendo, RF-24)
+       A mesma categoria primeiro, depois as mais recentes; nunca a
+       receita aberta (ADR-10). Some sem outra receita publicada.
+       ============================================================
+  {% endcomment %}
+  {% if mais_receitas %}
+    <section class="container secao" aria-labelledby="titulo-mais-receitas">
+      <span class="rotulo">Continue cozinhando</span>
+      <h2 class="secao__titulo" id="titulo-mais-receitas">Mais receitas</h2>
+      <div class="grade-receitas">
+        {% for receita in mais_receitas %}
+          {% include "includes/cartao_receita.html" %}
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+  {# fim: MAIS RECEITAS #}
 {% endblock %}

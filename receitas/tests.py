@@ -364,9 +364,10 @@ def test_listagem_nao_tem_n_mais_1_com_tags(
         receita.tags.add(_tag(nome=f"tag-{i}-a"), _tag(nome=f"tag-{i}-b"))
 
     # 1 count (paginação) + 1 select principal (join de categoria/autor) + 1
-    # prefetch de tags + 1 das categorias do rodapé (spec 012, ADR-3) — não
-    # cresce com o número de receitas nem de tags.
-    with django_assert_num_queries(4):
+    # prefetch de tags + 1 das categorias do rodapé (spec 012, ADR-3) + 1 das
+    # pílulas (spec 012, adendo, RF-26) — não cresce com o número de receitas
+    # nem de tags.
+    with django_assert_num_queries(5):
         client.get(reverse("receitas:lista"))
 
 

@@ -153,31 +153,6 @@ ol {
   border: 0;
 }
 
-/* Formulário de busca da listagem (spec 003). */
-.formulario-busca {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--espaco-3);
-  align-items: center;
-  margin-top: var(--espaco-6);
-}
-
-.formulario-busca label {
-  flex-basis: 100%;
-  font-size: var(--texto-sm);
-  color: var(--cor-texto-suave);
-}
-
-.formulario-busca input[type="search"] {
-  flex: 1 1 240px;
-  padding: var(--espaco-3);
-  border: 1px solid var(--cor-borda-campo);
-  border-radius: var(--raio-md);
-  font: inherit;
-  background: var(--cor-superficie);
-  color: var(--cor-texto);
-}
-
 /* Controles de anterior/próxima da listagem paginada (spec 002). */
 .paginacao {
   display: flex;
@@ -551,6 +526,217 @@ a.navbar__acao:hover {
 }
 
 
+/* 4.2 Receita e listagem (spec 012, adendo) ---------------------------------
+   A página da receita: cabeçalho com a ficha, corpo em duas colunas acima de
+   900 px, passos numerados e o convite a comentar. As regras da listagem
+   (busca e pílulas) vêm no fim da seção. */
+
+/* 4.2.1 Cabeçalho da receita: resumo, ficha e autoria (RF-19). */
+.receita {
+  padding-block: var(--espaco-12) var(--espaco-4);
+}
+
+.receita__resumo {
+  max-width: 62ch;
+  color: var(--cor-texto-suave);
+  font-size: var(--texto-lg);
+}
+
+.ficha {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 22rem;
+  margin: var(--espaco-6) 0 var(--espaco-3);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-lg);
+  background: var(--cor-superficie);
+}
+
+.ficha div {
+  padding: var(--espaco-3) var(--espaco-4);
+}
+
+.ficha div + div {
+  border-left: 1px solid var(--cor-borda);
+}
+
+.ficha dt {
+  color: var(--cor-texto-suave);
+  font-size: var(--texto-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ficha dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.receita-autoria {
+  margin: 0 0 var(--espaco-4);
+  color: var(--cor-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+/* 4.2.2 Corpo: ingredientes num cartão e o modo de preparo (RF-20, RF-21).
+   No celular, uma coluna; as duas colunas ficam na 4.2.5. */
+.receita-corpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr); /* sem isso a grade cresce até o maior conteúdo e vaza da tela */
+  gap: var(--espaco-8);
+  margin-top: var(--espaco-8);
+}
+
+.ingredientes {
+  padding: var(--espaco-6);
+  border-radius: var(--raio-lg);
+  background: var(--cor-superficie);
+  box-shadow: var(--sombra-cartao);
+}
+
+.ingredientes h2,
+.preparo h2 {
+  margin-top: 0;
+}
+
+.ingredientes ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ingredientes li {
+  padding-block: var(--espaco-2);
+  border-top: 1px solid var(--cor-borda);
+}
+
+.ingredientes li:first-child {
+  border-top: 0;
+}
+
+.preparo {
+  min-width: 0;
+  max-width: 68ch;
+}
+
+/* 4.2.3 Passos numerados (RF-22). O <li> continua item de lista: com
+   display grid ele sairia do contador list-item e o start do <ol> se
+   perderia. O número é o próprio contador, num círculo à esquerda. */
+.passos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espaco-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.passos li {
+  position: relative;
+  min-height: 2.25rem;
+  padding-left: calc(2.25rem + var(--espaco-4));
+}
+
+.passos li::before {
+  content: counter(list-item);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--cor-primaria-clara);
+  color: var(--cor-primaria-escura);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.preparo-nota {
+  margin-top: var(--espaco-8);
+  padding-top: var(--espaco-4);
+  border-top: 1px solid var(--cor-borda);
+  color: var(--cor-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.preparo-nota + .preparo-nota {
+  margin-top: var(--espaco-2);
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* 4.2.4 Convite a comentar, só para visitante sem login (RF-23). Borda de
+   campo tracejada: é um convite, não um cartão de conteúdo. */
+.convite-comentar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-4);
+  margin-top: var(--espaco-4);
+  padding: var(--espaco-6);
+  border: 1px dashed var(--cor-borda-campo);
+  border-radius: var(--raio-lg);
+}
+
+.convite-comentar p {
+  margin: 0;
+}
+
+/* 4.2.5 Duas colunas a partir de 900 px (RF-21, ADR-13): abaixo disso o modo
+   de preparo ficaria mais estreito que no celular. O cartão acompanha a
+   rolagem e, mais alto que a tela, rola por dentro (ADR-12). */
+@media (min-width: 900px) {
+  .receita-corpo {
+    grid-template-columns: 22rem minmax(0, 1fr);
+    align-items: start;
+    gap: var(--espaco-12);
+  }
+
+  .ingredientes {
+    position: sticky;
+    top: calc(var(--altura-barra) + var(--espaco-6));
+    max-height: calc(100vh - var(--altura-barra) - 2 * var(--espaco-6));
+    overflow-y: auto;
+  }
+}
+
+
+/* 4.2.6 Listagem: a busca da home à esquerda e as pílulas de categoria entre
+   ela e a grade (RF-25, RF-26). A pílula da categoria ativa fica preenchida,
+   no par de cores do botão primário. */
+.lista-cabecalho {
+  padding-block: var(--espaco-12) var(--espaco-6);
+}
+
+.lista-cabecalho .busca-hero {
+  margin: var(--espaco-6) 0 0;
+}
+
+.lista-categorias {
+  margin-top: var(--espaco-6);
+}
+
+.pilula[aria-current="page"] {
+  border-color: var(--cor-primaria);
+  background: var(--cor-primaria);
+  color: var(--cor-texto-invertido);
+}
+
+.pilula[aria-current="page"]:hover {
+  border-color: var(--cor-primaria-escura);
+  background: var(--cor-primaria-escura);
+  color: var(--cor-texto-invertido);
+}
+
+.pilula[aria-current="page"] .pilula__contagem {
+  color: inherit;
+}
+
 /* 5. Cartões de receita -------------------------------------------------
    Cartão em coluna, corpo que cresce e meta no pé: os cartões de uma linha da
    grade têm a mesma altura, com o tempo e as porções alinhados (spec 012,
@@ -611,7 +797,7 @@ a.navbar__acao:hover {
 
 /* 6. Página de detalhe de receita (spec 002) -------------------------------
    Reaproveita .container e a paleta; só o que é específico do layout de
-   uma receita inteira (capa maior, meta-informação, etiquetas de tag). */
+   uma receita inteira (capa maior e etiquetas de tag); o resto está na 4.2. */
 .receita-detalhe__capa {
   width: 100%;
   aspect-ratio: 4 / 3; /* reserva o espaço antes da foto chegar: sem salto de layout (CLS), spec 008, RF-09 */
@@ -619,15 +805,6 @@ a.navbar__acao:hover {
   object-fit: cover;
   border-radius: var(--raio-lg);
   margin-bottom: var(--espaco-6);
-}
-
-.receita-detalhe__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--espaco-4);
-  color: var(--cor-texto-suave);
-  font-size: var(--texto-sm);
-  margin-bottom: var(--espaco-4);
 }
 
 .etiquetas {

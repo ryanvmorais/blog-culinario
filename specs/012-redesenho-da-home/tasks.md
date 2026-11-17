@@ -1,6 +1,6 @@
 ---
 feature: Redesenho da home
-status: concluído
+status: em andamento
 date: 2026-11-17
 related:
   - 002-listagem-detalhe-receitas/requirements.md
@@ -55,3 +55,43 @@ origin: concepcao
 - [x] Navegador real, a 390 e a 1280 px, nos dois temas, com o menu aberto e fechado: axe-core sem violação, medidas de botão e alinhamento, primeira tela da home; registrar em "Notas de implementação" do `design.md`. — RNF-04 (axe zerado em 14 combinações; medidas sem achado)
 - [x] Lighthouse da home (mobile e desktop) dentro dos limites de `.github/lighthouse/`; registrar o resultado. — RNF-05 (Lighthouse CI do PR: asserções aprovadas nas 5 páginas, 15 execuções por perfil)
 - [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. — 415 passed, 3 skipped; ruff/black/mypy verdes
+
+## Adendo (2026-11-17): página da receita e listagem
+
+> Status do adendo: aprovado (2026-11-17). Quebra o adendo do `design.md` (RF-19 a RF-28, RNF-07 a RNF-12,
+> ADR-9 a ADR-13). As etapas continuam a numeração acima.
+
+## Etapa 6 — Passos do modo de preparo
+
+- [x] `receitas/models.py`: dataclass `TrechoDoPreparo` e `Receita.partes_do_preparo()`, com a regra de parágrafo numerado, a numeração pela posição e a `nota` depois do último passo; sem campo novo. — RF-22, RNF-07, ADR-9
+- [x] `receitas/test_pagina_receita.py`: testes de unidade do método, sem banco ("1." e "1)", parágrafo antes, entre e depois dos passos, `start` do segundo grupo, `\r\n`, parágrafos vazios, receita sem passo). — RF-22, RF-28
+- [x] `uv run python manage.py makemigrations --check --dry-run`: nenhuma migration. — RNF-07 (No changes detected)
+- [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. — 427 passed, 3 skipped; ruff/black/mypy verdes
+
+## Etapa 7 — Página da receita
+
+- [x] `receitas/views.py`: `mais_receitas` no `ReceitaDetailView.get_context_data`, com `Case`/`When`, `select_related("categoria")` e corte em 3. — RF-24, RNF-08, ADR-10
+- [x] `receitas/templates/receitas/detalhe.html`: ficha (`<dl>`), linha de autoria, etiquetas, `.receita-corpo` com o cartão de ingredientes (`tabindex="0"`) e o modo de preparo pelos trechos (`<p>`, `<ol class="passos" start>`, `.preparo-nota`, `linebreaksbr`). — RF-19, RF-20, RF-21, RF-22, ADR-12
+- [x] `detalhe.html`: convite a comentar para anônimo, com e sem comentários, e o botão para o login com `?next=`; a seção de hoje para autenticado. — RF-23
+- [x] `detalhe.html`: seção "Mais receitas" (`.rotulo` "Continue cozinhando", `h2`, `includes/cartao_receita.html`), ausente com a lista vazia. — RF-24, RNF-11
+- [x] `static/css/base.css`: seção "4.2 Receita e listagem" com `.ficha`, `.receita-autoria`, `.receita-corpo`, `.ingredientes` (`sticky`, `max-height`, `overflow-y`), `.passos` (número em `::before` com `counter(list-item)`), `.preparo-nota`, `.convite-comentar` e a `@media (min-width: 900px)`; só tokens. — RF-19 a RF-23, RNF-09, ADR-12, ADR-13
+- [x] `receitas/test_pagina_receita.py`: integração da página (ficha com plural e singular, "Autor removido", ingredientes sem linha vazia, `<ol>` e nota, convite por estado de login, "Mais receitas" com a mesma categoria primeiro, complemento, sem a aberta, limite de 3, ausência e `loading="lazy"`) e `assertNumQueries` com 2 e com 12 receitas. — RF-28, RNF-08
+- [x] `receitas/tests.py`: ajustar ao HTML novo os testes do detalhe que procuravam o link "Entre" e a lista de ingredientes antiga, sem perder o que conferem. — RF-23, RF-20 (nenhum quebrou: conferem o conteúdo e o redirecionamento, não a marcação; o teste do aviso sem comentários em `nucleo/test_interface.py` foi o único ajustado)
+- [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. — 444 passed, 3 skipped; ruff/black/mypy verdes
+
+## Etapa 8 — Listagem
+
+- [x] `receitas/views.py`: `categorias`, `total_publicadas` (soma das contagens) e `querystring_sem_categoria` no `ReceitaListView.get_context_data`; `paginate_by = 9` mantido. — RF-26, RF-27, ADR-11
+- [x] `receitas/templates/receitas/lista.html`: busca `.busca-hero` com os campos ocultos de categoria e tag; `<nav class="lista-categorias" aria-label="Categorias">` com "Todas" e as pílulas, links sem `page` e com `q` e `tag`, `aria-current="page"` na ativa, ausente sem categorias. — RF-25, RF-26
+- [x] `static/css/base.css`: `.lista-cabecalho .busca-hero` à esquerda, `.lista-categorias` e `.pilula[aria-current="page"]` com `--cor-primaria` e `--cor-texto-invertido`; remover o `.formulario-busca`, sem uso. — RF-25, RF-26, RNF-09
+- [x] `receitas/test_listagem.py`: busca com os ocultos, pílulas na ordem com "Todas", contagens que ignoram a busca e a tag, `aria-current`, links que mantêm `q` e `tag` e voltam à primeira página, ausência sem categorias, soma igual ao `count()`, paginação com 9 e `assertNumQueries` com 2 e com 12 receitas. — RF-28, RNF-08
+- [x] `nucleo/test_interface.py` e `nucleo/test_tema_escuro.py`: o token de borda de campo conferido na `.busca-hero`; `sticky` com `max-height` e `overflow-y`, o ponto de 900 px e a pílula marcada só com tokens; o contraste dos pares usados pela pílula marcada e pelo número do passo nos dois temas. — RNF-09, RF-28
+- [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. — 462 passed, 3 skipped; ruff/black/mypy verdes (a listagem passou de 4 para 5 consultas, as pílulas; `test_listagem_nao_tem_n_mais_1_com_tags` atualizado)
+
+## Etapa 9 — Catálogo, documentação e conferência
+
+- [x] `docs/design-system.html`: ficha, cartão de ingredientes, passos numerados, convite a comentar e pílula marcada. — RNF-12
+- [x] `CLAUDE.md`: o mapa de `receitas/` com os testes novos, se mudar o que ele descreve. — RNF-12
+- [x] Navegador real, a 390 e a 1280 px, nos dois temas: axe-core sem violação e medidas de botão e alinhamento na receita e na listagem; o cartão de ingredientes fixo ao rolar e rolando por dentro com muitos ingredientes; registrar em "Notas de implementação do adendo" do `design.md`. — RNF-10, RF-21 (axe zerado em 12 combinações depois do desvio 1; cartão fixo a 88 px; nenhuma rolagem lateral)
+- [ ] Lighthouse da listagem e da receita (mobile e desktop) dentro dos limites de `.github/lighthouse/`; registrar o resultado. — RNF-11
+- [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. — 462 passed, 3 skipped; ruff/black/mypy verdes

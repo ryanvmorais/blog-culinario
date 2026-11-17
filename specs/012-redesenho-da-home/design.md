@@ -1,6 +1,6 @@
 ---
 feature: Redesenho da home
-status: concluído
+status: em andamento
 date: 2026-11-17
 related:
   - 002-listagem-detalhe-receitas/requirements.md
@@ -409,3 +409,293 @@ RF-17):
 - **Lighthouse CI** (no PR, mobile e desktop): as asserções de `.github/lighthouse/` passaram nas 5
   páginas auditadas, home inclusive, em 15 execuções por perfil.
 
+
+## Adendo (2026-11-17): página da receita e listagem
+
+> Status do adendo: aprovado (2026-11-17). O texto acima é o aprovado em 2026-11-17 e fica como está; o
+> adendo acrescenta o desenho dos RF-19 a RF-28, com os ADRs continuando a numeração.
+
+### Visão geral da abordagem do adendo
+
+A página da receita troca a coluna única por um cabeçalho (capa, categoria, título, resumo,
+ficha, autoria e etiquetas) e um corpo em duas colunas acima de 900 px: o cartão de
+ingredientes à esquerda, fixo ao rolar, e o modo de preparo à direita, com os passos numerados.
+Os passos saem de um método do modelo que divide o texto em parágrafos e separa os numerados,
+sem mudar o banco nem montar HTML em Python (ADR-9). Depois dos comentários, a seção "Mais
+receitas" vem de uma consulta só, que põe a mesma categoria na frente (ADR-10).
+
+A listagem troca o `.formulario-busca` pela busca da home (`.busca-hero`) e ganha, entre a
+busca e a grade, as pílulas da home com a pílula "Todas" e a categoria ativa marcada. As
+pílulas leem o mesmo `com_receitas_publicadas()` da home e do rodapé (ADR-2), e o total de
+"Todas" é a soma das contagens, sem consulta a mais (ADR-11). Nenhum modelo muda, nenhuma
+migration nasce e nenhum token entra: as cores novas reaproveitam pares que já existem.
+
+### Layout de módulos do adendo
+
+| Arquivo | O que muda |
+|---|---|
+| `receitas/models.py` | `Receita.partes_do_preparo()` e a dataclass `TrechoDoPreparo` (ADR-9) |
+| `receitas/views.py` | `ReceitaDetailView` ganha `mais_receitas`; `ReceitaListView` ganha `categorias`, `total_publicadas` e `querystring_sem_categoria` |
+| `receitas/templates/receitas/detalhe.html` | Cabeçalho com a ficha, corpo em duas colunas, passos, convite a comentar e "Mais receitas" |
+| `receitas/templates/receitas/lista.html` | Busca da home e pílulas de categoria |
+| `static/css/base.css` | Seção nova "4.2 Receita e listagem"; o `.formulario-busca` sai, sem uso |
+| `docs/design-system.html` | Ficha, cartão de ingredientes, passos, convite a comentar e pílula marcada (RNF-12) |
+| `receitas/test_pagina_receita.py`, `receitas/test_listagem.py` | Testes novos (RF-28) |
+| `nucleo/test_interface.py`, `receitas/tests.py` | Ajustes onde o HTML ou o CSS antigo era conferido |
+
+### Modelo de dados do adendo
+
+Nenhum campo, nenhuma migration (RNF-07). `TrechoDoPreparo` é uma dataclass só de exibição:
+
+| Campo | Tipo | O que guarda |
+|---|---|---|
+| `tipo` | `Literal["paragrafo", "passos", "nota"]` | Parágrafo antes ou entre os passos, grupo de passos seguidos, ou parágrafo depois do último passo |
+| `textos` | `list[str]` | Os parágrafos do trecho, já sem o número digitado nos passos |
+| `inicio` | `int` | Número do primeiro passo do grupo (o `start` do `<ol>`); 1 nos outros tipos |
+
+### Componentes do adendo
+
+#### Protótipo validado do adendo
+
+Validado a 390 e 1280 px com o HTML e o CSS do blog, antes do adendo:
+
+```text
+Receita, 1280 px
+┌──────────────────────────────────────────────────────────────────────┐
+│ capa (largura do container, até 420 px de altura)                    │
+│ LANCHES                                                               │
+│ Pão de queijo mineiro (h1)                                            │
+│ resumo                                                                │
+│ ┌ PREPARO │ RENDE      ┐                                              │
+│ │ 60 min  │ 10 porções ┘                                              │
+│ Por chef-ana · publicado 4 semanas, 2 dias atrás                     │
+│ (mineira) (para o lanche)                                             │
+│ ┌ Ingredientes ────┐   Modo de preparo                                │
+│ │ item             │   (1) Preaqueça o forno a 220 °C.                │
+│ │ ──────────────── │   (2) Numa tigela, misture…                      │
+│ │ item             │   (3) …                                          │
+│ │ (fixo ao rolar)  │   ─────────────────────────                      │
+│ └──────────────────┘   nota de fonte, texto menor                    │
+│ Comentários                                                           │
+│ ┌╌ Ainda não há comentários…            [Entrar para comentar] ╌┐    │
+│ CONTINUE COZINHANDO / Mais receitas                                   │
+│ ┌ cartão ┐ ┌ cartão ┐ ┌ cartão ┐                                      │
+└──────────────────────────────────────────────────────────────────────┘
+390 px: uma coluna; o cartão de ingredientes antes do modo de preparo, os passos
+numerados, o convite com o botão abaixo do texto, os cartões empilhados.
+
+Listagem, 1280 px (390 px: o mesmo, com as pílulas quebrando linha)
+┌──────────────────────────────────────────────────────────────────────┐
+│ Receitas (h1)                                                         │
+│ Todas as receitas publicadas… (ou "N receitas em X · Limpar filtro")  │
+│ Buscar por título ou ingrediente                                      │
+│ [Ex.: cenoura              ] [Buscar]                                 │
+│ (Todas · 6) (Pratos principais · 2) (Lanches · 1) (…)                 │
+│ ┌ cartão ┐ ┌ cartão ┐ ┌ cartão ┐                                      │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+#### `Receita.partes_do_preparo()` (`receitas/models.py`)
+
+Normaliza as quebras de linha (`\r\n` → `\n`), divide `modo_de_preparo` em parágrafos pelos
+blocos separados por linha em branco e descarta os vazios. Um parágrafo é passo quando casa
+com `^\s*\d+[.)]\s+`; o número digitado sai do texto. Os passos seguidos formam um trecho
+`passos`, numerado pela posição (o primeiro passo da receita é 1, mesmo que o texto diga
+outro número), e um parágrafo sem número entre dois grupos fica entre eles, com o segundo
+grupo continuando a contagem (`inicio`). Os parágrafos depois do último passo viram `nota`.
+Sem nenhum passo, devolve um único trecho `paragrafo` com todos os parágrafos (RF-22). Não
+grava nada e não monta HTML (ADR-9).
+
+#### Ficha e autoria (`detalhe.html`)
+
+`<dl class="ficha">` com dois `<div>`, cada um com `<dt>` ("Preparo", "Rende") e `<dd>`
+("{{ tempo_preparo_minutos }} min"; porções com `pluralize:"ão,ões"` sobre "porç"). Logo
+abaixo, `<p class="receita-autoria">` com "Por {{ autor }} · publicado {{ criado_em|naturaltime }}"
+e "Autor removido" sem autor. As etiquetas continuam no `<ul class="etiquetas">` de hoje (RF-19).
+
+#### Corpo em duas colunas (`.receita-corpo`)
+
+`<div class="receita-corpo">` com o `<section class="ingredientes" aria-labelledby>` e o
+`<section class="preparo" aria-labelledby>`, nessa ordem no HTML, que é a ordem do celular e
+do leitor de tela. Acima de 900 px, `grid-template-columns: 22rem minmax(0, 1fr)` (ADR-13).
+O cartão de ingredientes tem `position: sticky`, `top` igual à altura da barra mais
+`--espaco-6`, `max-height` da tela menos essa folga e `overflow-y: auto`, com `tabindex="0"`
+para a rolagem interna funcionar pelo teclado (ADR-12). Os ingredientes saem de
+`ingredientes.splitlines`, sem as linhas vazias, numa `<ul>` sem marcador e com divisória
+`--cor-borda` entre os itens (RF-20, RF-21).
+
+#### Passos (`.passos`)
+
+O template percorre `partes_do_preparo`: `paragrafo` vira `<p>`, `passos` vira
+`<ol class="passos" start="{{ inicio }}">` com um `<li>` por passo, e `nota` vira
+`<p class="preparo-nota">`, com a linha de cima e o texto em `--texto-sm` e
+`--cor-texto-suave`. Cada texto passa por `linebreaksbr`, que escapa o HTML como o
+`linebreaks` de hoje. O número do passo é um `::before` com `counter(list-item)`, num círculo
+com `--cor-primaria-clara` e `--cor-primaria-escura`, o par da legenda da home; o leitor de
+tela anuncia a lista ordenada pelo `<ol>` (RF-22, RNF-10).
+
+#### Convite a comentar (`.convite-comentar`)
+
+Para anônimo, no fim da seção "Comentários": um `<div class="convite-comentar">` com borda
+tracejada `--cor-borda-campo`, a frase ("Ainda não há comentários. Seja o primeiro a
+comentar!" sem comentários; "Entre para deixar um comentário." com eles) e o
+`<a class="botao botao--contorno">` "Entrar para comentar", para o login com
+`?next=<caminho da receita>`, o mesmo destino do link de hoje. Para autenticado, a seção não
+muda (RF-23).
+
+#### "Mais receitas" (`ReceitaDetailView`)
+
+`get_context_data` acrescenta `mais_receitas`: as publicadas, sem a aberta, com
+`select_related("categoria")`, anotadas com `mesma_categoria = Case(When(categoria_id=…,
+then=0), default=1)` e ordenadas por `mesma_categoria` e `-criado_em`, cortadas em 3 (ADR-10).
+O template mostra a seção com `.rotulo` "Continue cozinhando", o `h2` "Mais receitas" e os
+cartões de `includes/cartao_receita.html`, que já carregam a capa com `loading="lazy"`; com a
+lista vazia, a seção some (RF-24, RNF-11).
+
+#### Busca da listagem (`lista.html`)
+
+O formulário passa a ser `.busca-hero` (rótulo, `.busca-hero__linha` com o campo e o botão),
+com os campos ocultos de categoria e tag de hoje. Na listagem, `.lista-cabecalho
+.busca-hero` tira a margem automática, para a busca ficar à esquerda; a largura máxima de
+34rem é a da home (RF-25).
+
+#### Pílulas da listagem
+
+`<nav class="lista-categorias" aria-label="Categorias">` com o `<ul class="pilulas">` da
+home. A primeira pílula é "Todas · {{ total_publicadas }}"; as outras, as `categorias` da
+view. Cada `href` é `?{{ querystring_sem_categoria }}&categoria=<slug>` (sem o `&` quando a
+querystring está vazia); "Todas" leva só a `?{{ querystring_sem_categoria }}`, ou à listagem
+sem parâmetros. A pílula ativa ganha `aria-current="page"` e, no CSS, `--cor-primaria` de
+fundo, `--cor-texto-invertido` no texto e na contagem, o par do `.botao--primario`. Sem
+categorias, o `<nav>` não aparece (RF-26).
+
+#### Contexto da listagem (`ReceitaListView`)
+
+`get_context_data` acrescenta `categorias` (lista de `com_receitas_publicadas()`),
+`total_publicadas` (soma de `total_receitas` das categorias, ADR-11) e
+`querystring_sem_categoria` (o `GET` sem `page` e sem `categoria`, urlencoded). O
+`paginate_by = 9` não muda (RF-27).
+
+### Interfaces do adendo
+
+Nenhuma URL nova. A listagem continua aceitando `q`, `categoria`, `tag` e `page` (spec 003); as
+pílulas só montam links com esses parâmetros.
+
+### ADR-9 — Os passos saem de um método do modelo, sem HTML em Python
+
+**Decisão.** `Receita.partes_do_preparo()` devolve uma lista de `TrechoDoPreparo` com textos
+puros; o template monta o `<ol>` e escapa cada texto com `linebreaksbr`.
+**Alternativas.** (a) Um filtro de template que devolve o HTML pronto, com `mark_safe`. (b) Um
+campo por passo, com migration e inline no Admin. (c) Só CSS, contando os `<p>` de hoje.
+**Porquê.** O método é uma função pura, testável sem banco e sem template, e o escape fica com
+o Django, como hoje. (a) põe HTML montado à mão num lugar onde um esquecimento vira XSS; (b)
+foi descartada nos requisitos (decisão resolvida 5); (c) não tira o número digitado do texto.
+**Trade-off.** A regra "parágrafo que começa por número é passo" fica implícita para quem
+escreve no Admin. Mudar o `help_text` do campo para explicá-la geraria migration (RNF-07), então
+ela fica documentada aqui e no teste.
+
+### ADR-10 — "Mais receitas" numa consulta, com `Case`/`When`
+
+**Decisão.** Uma consulta anota `mesma_categoria` com `Case(When(...))` e ordena por ela e
+pela data.
+**Alternativas.** (a) Duas consultas: a mesma categoria e, se faltar, as outras. (b) Um método
+em `QuerySet` de `Receita`, como o `CategoriaQuerySet` da ADR-2.
+**Porquê.** Uma consulta cobre o "primeiro a mesma categoria, depois as outras" sem lógica de
+completar em Python, nunca repete receita e mostra a quem estuda uma expressão condicional do
+ORM. (b) não se paga com um só uso; se outra página precisar da regra, ela sobe para o modelo.
+**Trade-off.** A ordenação por um campo anotado percorre todas as receitas publicadas antes do
+corte em 3; no tamanho de um blog, não pesa.
+
+### ADR-11 — O total de "Todas" é a soma das contagens
+
+**Decisão.** `total_publicadas = sum(c.total_receitas for c in categorias)`.
+**Alternativas.** (a) `Receita.objects.filter(publicado=True).count()`. (b) O `paginator.count`.
+**Porquê.** `Receita.categoria` é obrigatória (`on_delete=PROTECT`, sem `null`), então toda
+receita publicada está numa categoria e a soma é o total, sem consulta a mais (RNF-08). (b)
+muda com a busca, e o RF-26 pede o total sem considerar a busca.
+**Trade-off.** Se um dia a categoria virar opcional, a soma deixa de fora as receitas sem
+categoria; o teste do RF-26 compara a soma com o `count()` e acusa a diferença.
+
+### ADR-12 — Ingredientes fixos com `position: sticky` e rolagem própria
+
+**Decisão.** `position: sticky` com `max-height` e `overflow-y: auto` no cartão, que leva
+`tabindex="0"`.
+**Alternativas.** (a) `sticky` sem limite de altura. (b) JavaScript que fixa o cartão.
+**Porquê.** Sem limite (a), um cartão mais alto que a tela esconde os últimos ingredientes até
+o fim dos passos, contra o RF-21; o CSS resolve sem script (b), e o CSP fica como está. O
+`tabindex="0"` deixa a rolagem interna ao alcance do teclado, que o axe exige de região rolável.
+**Trade-off.** Uma parada de Tab a mais na página, no cartão, mesmo quando ele não rola.
+
+### ADR-13 — Duas colunas a partir de 900 px
+
+**Decisão.** Uma `@media (min-width: 900px)` nova, só para o corpo da receita.
+**Alternativas.** (a) O ponto de quebra de 721 px que o resto do site usa. (b) Um token.
+**Porquê.** Entre 721 e 900 px, com 22rem de ingredientes, o modo de preparo ficaria com menos
+de 380 px, mais estreito que no celular. (b) não funciona: variável CSS não vale dentro de
+`@media`.
+**Trade-off.** O CSS passa a ter dois pontos de quebra de largura; o novo vale só para esta
+página.
+
+### Impacto no código existente do adendo
+
+- **`detalhe.html`** é reescrito do cabeçalho até o fim da seção de comentários; o formulário
+  de comentário (spec 005, spec 007) e a lista de comentários não mudam.
+- **`.formulario-busca`** sai do `base.css`: a listagem era o único uso. O teste do token de
+  borda de campo em `nucleo/test_interface.py` passa a conferir o campo da `.busca-hero`, que já
+  usa `--cor-borda-campo`.
+- **Testes de HTML** em `receitas/tests.py` que procuram o link "Entre" ou a lista de
+  ingredientes antiga são ajustados ao HTML novo, sem perder o que conferem.
+- **Consultas:** a listagem passa de 4 para 5 (as pílulas); a página da receita ganha 1 ("Mais
+  receitas"). As duas continuam fixas (RNF-08).
+- **Lighthouse CI:** as duas páginas já estão em `.github/lighthouse/`; os limites são
+  conferidos no PR (RNF-11).
+
+### Estratégia de testes do adendo
+
+- **Unidade, sem banco** (`receitas/test_pagina_receita.py`): `partes_do_preparo()` com passos
+  "1." e "1)", parágrafo antes, entre e depois dos passos, numeração pela posição, `\r\n`,
+  parágrafos vazios e o caso sem passo (RF-22).
+- **Integração, com o `Client`:** a receita (ficha com plural e singular, autoria e "Autor
+  removido", cartão de ingredientes sem linha vazia, `<ol>` com `start`, nota, convite para
+  anônimo com e sem comentários, seção de hoje para autenticado, "Mais receitas" com a mesma
+  categoria primeiro, complemento, sem a aberta, limite de 3 e ausência) e a listagem
+  (`receitas/test_listagem.py`: busca com os ocultos, pílulas na ordem com "Todas", contagens
+  que ignoram a busca, `aria-current`, links com `q` e `tag` e sem `page`, ausência sem
+  categorias, soma igual ao `count()`, paginação com 9).
+- **Consultas:** `assertNumQueries` com 2 e com 12 receitas, nas duas páginas (RNF-08).
+- **CSS lido do arquivo:** o `sticky` com `max-height` e `overflow-y`, o ponto de 900 px e a
+  pílula marcada só com tokens (`nucleo/test_interface.py`); os pares de contraste em
+  `nucleo/test_tema_escuro.py` (RNF-09).
+- **No navegador** (fora da suíte, registrado nas notas): axe-core e medidas de desenho nas
+  duas páginas, a 390 e 1280 px, nos dois temas, e o cartão fixo ao rolar (RNF-10).
+
+### Desvios do adendo
+
+1. **RF-26:** a região das pílulas se chama "Filtrar por categoria", não "Categorias". O rodapé
+   já tem uma região de navegação "Categorias" (RF-12), e o axe-core acusou dois marcos com o
+   mesmo nome (`landmark-unique`): o leitor de tela não distinguiria um do outro. O
+   comportamento do RF-26 é o aprovado: uma região de navegação com nome, com as pílulas.
+2. **Componente "Corpo em duas colunas" e "Passos":** a `.receita-corpo` e a `.passos` ganharam
+   `grid-template-columns: minmax(0, 1fr)` também no celular. Sem a coluna explícita, uma grade
+   cresce até o maior conteúdo e passa da largura da tela: foi o defeito encontrado na abertura
+   da home, corrigido à parte.
+
+### Notas de implementação do adendo
+
+- **Suíte:** de 416 para 462 testes (`receitas/test_pagina_receita.py` e
+  `receitas/test_listagem.py` novos, mais os ajustes em `nucleo/test_interface.py`,
+  `nucleo/test_tema_escuro.py` e `receitas/tests.py`); 3 pulados, como antes.
+  `makemigrations --check`: nenhuma migration; o `total_receitas: int` em `Categoria` é só a
+  anotação de tipo para o mypy.
+- **Consultas:** a listagem passou de 4 para 5 (as pílulas) e a receita ganhou 1 ("Mais
+  receitas"); as duas são iguais com 2 e com 12 receitas.
+- **Navegador real** (Chrome, servidor local com os dados da demonstração): nenhuma rolagem
+  lateral na receita, na listagem e na listagem filtrada a 320, 360, 390, 412 e 1280 px, com a
+  fonte normal e 30% maior. O cartão de ingredientes fica a 88 px do topo ao rolar passos
+  longos e, com 48 ingredientes, limita-se à altura da tela e rola por dentro.
+- **axe-core 4.14.0** (mesmo SHA-256 da spec): zero violações na receita, na listagem e na
+  listagem filtrada, a 390 e 1280 px, nos temas claro e escuro, depois do desvio 1. Nenhum alvo
+  de toque menor que 24 px; todas as paradas de Tab com indicador visível.
+- **Medidas de desenho** (`auditar_proporcoes.py`): botões sem achado. Duas sugestões de
+  alinhamento ficam como estão por decisão aprovada: a busca da listagem à esquerda (RF-25) e o
+  aviso de comentários à esquerda no cartão (spec 008, RF-17).

@@ -237,8 +237,12 @@ def test_borda_dos_campos_tem_contraste_de_3_para_1() -> None:
 
 
 def test_campos_usam_o_token_de_borda_de_campo() -> None:
-    """RF-08: os dois grupos de campo (busca e formulário) usam o token novo."""
-    busca = _bloco_css(CSS_BASE, '.formulario-busca input[type="search"]')
+    """
+    RF-08: os dois grupos de campo (busca e formulário) usam o token novo.
+
+    A busca da listagem passou a ser a da home (spec 012, adendo, RF-25).
+    """
+    busca = _bloco_css(CSS_BASE, '.busca-hero input[type="search"]')
     formulario = _bloco_css(
         CSS_BASE, ".formulario__campo input,\n.formulario__campo textarea"
     )
@@ -403,13 +407,24 @@ def test_mensagem_de_outras_paginas_continua_no_topo_com_role_status(
 
 
 def test_sem_comentarios_o_aviso_segue_o_alinhamento_do_titulo(client: Client) -> None:
-    """RF-17: o aviso fica à esquerda, como o título "Comentários" que o abre."""
+    """
+    RF-17: o aviso fica à esquerda, como o título "Comentários" que o abre.
+
+    Para o visitante sem login, o aviso mora no cartão de convite (spec 012,
+    adendo, RF-23), que começa à esquerda; com login, é o parágrafo de sempre.
+    """
     receita = _receita_publicada()
+    url = reverse("receitas:detalhe", args=[receita.slug])
 
-    html = client.get(reverse("receitas:detalhe", args=[receita.slug])).content.decode()
+    anonimo = client.get(url).content.decode()
+    convite = anonimo[anonimo.index('class="convite-comentar"') :]
+    assert "Ainda não há comentários" in convite[: convite.index("</div>")]
+    assert 'estado-vazio">Ainda não há comentários' not in anonimo
 
-    assert "<p>Ainda não há comentários" in html
-    assert 'estado-vazio">Ainda não há comentários' not in html
+    client.force_login(User.objects.create_user("ana", password="senha-forte-123"))
+    logado = client.get(url).content.decode()
+    assert "<p>Ainda não há comentários" in logado
+    assert "convite-comentar" not in logado
 
 
 # -----------------------------------------------------------------------------
@@ -629,3 +644,54 @@ def test_catalogo_tambem_usa_as_fontes_locais() -> None:
 
     assert "fonts.googleapis.com" not in catalogo
     assert "../static/css/fontes.css" in catalogo
+
+
+# -----------------------------------------------------------------------------
+# Spec 012, adendo: página da receita e listagem
+# -----------------------------------------------------------------------------
+def _bloco_900() -> str:
+    """
+    Devolve o corpo da ``@media (min-width: 900px)`` da página da receita.
+
+    Returns:
+        str: as regras de dentro do bloco.
+    """
+    achado = re.search(
+        r"(?m)^@media \(min-width: 900px\) \{(.*?)^\}", CSS_BASE, flags=re.DOTALL
+    )
+    assert achado, "bloco de 900 px não encontrado"
+    return achado.group(1)
+
+
+def test_receita_tem_duas_colunas_so_a_partir_de_900_px() -> None:
+    """RF-21, ADR-13: abaixo de 900 px o preparo ficaria estreito demais."""
+    assert "grid-template-columns: minmax(0, 1fr);" in _bloco_css(
+        CSS_BASE, ".receita-corpo"
+    )
+    assert "grid-template-columns: 22rem minmax(0, 1fr);" in _bloco_900()
+
+
+def test_ingredientes_acompanham_a_rolagem_e_rolam_por_dentro() -> None:
+    """RF-21, ADR-12: fixo ao rolar, mas mais alto que a tela ele rola por dentro."""
+    cartao = _bloco_900()[_bloco_900().index(".ingredientes {") :]
+    cartao = cartao[: cartao.index("}")]
+    assert "position: sticky;" in cartao
+    assert "max-height:" in cartao
+    assert "overflow-y: auto;" in cartao
+
+
+def test_passo_numerado_continua_item_de_lista() -> None:
+    """RF-22: com display grid no <li>, o contador list-item e o start se perderiam."""
+    item = _bloco_css(CSS_BASE, ".passos li")
+    assert "display" not in item
+    assert "content: counter(list-item);" in _bloco_css(CSS_BASE, ".passos li::before")
+
+
+def test_pilula_marcada_usa_so_tokens() -> None:
+    """RF-26, RNF-09: a pílula da categoria ativa sai do par do botão primário."""
+    marcada = _bloco_css(CSS_BASE, '.pilula[aria-current="page"]')
+    assert "background: var(--cor-primaria);" in marcada
+    assert "color: var(--cor-texto-invertido);" in marcada
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", marcada)
+    hover = _bloco_css(CSS_BASE, '.pilula[aria-current="page"]:hover')
+    assert "background: var(--cor-primaria-escura);" in hover
