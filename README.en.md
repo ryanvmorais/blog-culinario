@@ -30,7 +30,7 @@ This project was structured to consolidate core software engineering pillars:
 - **Domain Modeling:** real relationships between `Receita` (recipe), `Categoria` (category), `Tag` and `Comentario` (comment), with an explicit `on_delete` policy for each one.
 - **Two View Styles:** function-based (`nucleo`) and class-based (`receitas`), side by side, so you can compare the two approaches.
 - **Custom Design System:** template inheritance (`base.html` + blocks) and plain CSS in `static/css/tokens.css`, with no frontend framework and no build step. Fonts are hosted in the project, the light and dark themes follow the system using color variables only, and a visual catalog lives in `docs/design-system.html`.
-- **Built-in Authentication:** `django.contrib.auth` with no external library, with a per-IP limit on login attempts.
+- **Built-in Authentication:** `django.contrib.auth` with no external library, with a per-IP limit on login attempts, on both the site login and the Admin login.
 - **Applied Security:** honeypot and time-trap on the comment form, image upload validation, Django's native Content-Security-Policy and `Permissions-Policy`, secrets kept out of the code.
 - **Audited Interface:** accessibility checked in a real browser (axe-core, keyboard, contrast, dark theme) and guarded by tests, starting from spec 008.
 - **Automated Quality:** a `pytest` test suite and a CI pipeline that runs the same quality gate used locally.
@@ -45,7 +45,7 @@ For beginners, the biggest challenge is not memorizing Django commands but under
 2. **Per-Environment Configuration:** `settings/` is a package, not a single file. `base.py` holds what never changes; `dev.py` and `prod.py` only override what is specific to the environment. It is the pattern that avoids the classic "I forgot to change DEBUG before deploying".
 3. **A Database Chosen on Purpose:** SQLite not out of laziness, but by decision: zero configuration for whoever clones the repo, since the goal is to learn Django, not to administer a database.
 4. **Visual Identity from Scratch:** a small design system in `static/css/tokens.css` (colors, typography and spacing as CSS variables) keeps the project 100% focused on Python, without hiding how a front end is put together.
-5. **Layered Security:** per-IP attempt limits (login and comments) and a honeypot + time-trap on the comment form, implemented from the findings of a real security audit, not from speculation.
+5. **Layered Security:** per-IP attempt limits, with IPv6 grouped by /64 network (login, Admin, sign-up and comments) and a honeypot + time-trap on the comment form, implemented from the findings of a real security audit, not from speculation.
 6. **Spec-Driven Development:** every new feature is born in `specs/` before the code, with requirements, design and tasks, and approval before moving to the next phase.
 
 ---

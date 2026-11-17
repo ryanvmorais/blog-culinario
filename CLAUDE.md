@@ -60,7 +60,8 @@ completa e `blog_culinario/settings/prod.py` para o que produção exige a mais
 
 ```
 blog_culinario/settings/   # base.py (comum) + dev.py / prod.py (por ambiente)
-blog_culinario/limitacao.py # rate limit por IP via cache do Django (login e comentário — spec 006)
+blog_culinario/limitacao.py # rate limit por rede (IP; IPv6 por /64) via cache do Django: login, Admin, cadastro e comentário (spec 006 e adendo)
+blog_culinario/site_admin.py # site do Admin com o login limitado, ligado pelo ConfigAdmin no INSTALLED_APPS (spec 006, adendo)
 blog_culinario/cache.py    # CacheArquivoAtomico: cache em arquivo com add() e incr() atômicos entre workers (spec 011)
 blog_culinario/origem.py   # trava de origem (X-Origin-Verify + ORIGEM_SEGREDO) e ip_do_visitante() (spec 011)
 blog_culinario/cabecalhos.py # middleware do Permissions-Policy; a CSP é o SECURE_CSP nativo do base.py (spec 011)

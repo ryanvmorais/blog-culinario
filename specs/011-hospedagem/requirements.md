@@ -395,6 +395,7 @@ Nenhuma.
     um nome no outro; o Admin ganha o `ADMIN_URL` (RF-14), com o vazio valendo
     `admin/`. A proteção do Admin é o caminho trocado mais a senha; um limite próprio
     no login do Admin foi descartado.
+    **Superseded by** 006-limitacao-de-taxa, adendo, decisão resolvida 1.
 11. **Sem chave fixa nem em desenvolvimento** (2026-11-16). A chave insegura do
     `base.py` valia em todo clone e podia chegar a um deploy que não usasse o
     `prod.py`. Gerar a chave vira um passo do "Como rodar", e o CI define um
