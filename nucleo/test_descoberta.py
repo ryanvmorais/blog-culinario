@@ -413,10 +413,14 @@ def test_sitemap_lista_home_lista_e_so_receitas_publicadas(client: Client) -> No
     assert resposta.status_code == 200
     assert resposta["Content-Type"] == "application/xml"
     assert raiz.tag == "{http://www.sitemaps.org/schemas/sitemap/0.9}urlset"
+    # O template do sitemap escreve a data no fuso do site (TIME_ZONE), e o
+    # atualizado_em vem em UTC: das 21h à meia-noite de Brasília, as duas
+    # datas já são dias diferentes.
+    data_local = timezone.localdate(publicada.atualizado_em).isoformat()
     assert entradas == {
         f"{URL_PUBLICA_TESTE}/": None,
         f"{URL_PUBLICA_TESTE}/receitas/": None,
-        f"{URL_PUBLICA_TESTE}{detalhe}": publicada.atualizado_em.strftime("%Y-%m-%d"),
+        f"{URL_PUBLICA_TESTE}{detalhe}": data_local,
     }
     assert HOST_DO_PEDIDO.encode() not in resposta.content
 
