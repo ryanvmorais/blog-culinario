@@ -68,10 +68,10 @@ blog_culinario/cabecalhos.py # middleware do Permissions-Policy; a CSP é o SECU
 blog_culinario/demonstracao.py # modo demonstração: conta pública, mensagens e context processor (spec 009)
 blog_culinario/endereco.py # URL_PUBLICA: validação na subida e url_absoluta() (spec 010)
 blog_culinario/descoberta.py # canonical (context processor), sitemaps, robots.txt, sitemap.xml e security.txt (spec 010)
-nucleo/                    # a home, a view servir_midia (capas), a tag {% capturar %} (templatetags/metadados.py) e os testes transversais (interface, tema escuro, descoberta, cabeçalhos, hospedagem, limitação de taxa, comentários de template, README em inglês, impessoalidade)
+nucleo/                    # a home (spec 012), a view servir_midia (capas), as tags {% capturar %} (templatetags/metadados.py), {% link_repositorio %} e {% categorias_do_rodape %} (templatetags/navegacao.py) e os testes transversais (home, menu e rodapé, interface, tema escuro, descoberta, cabeçalhos, hospedagem, limitação de taxa, comentários de template, README em inglês, impessoalidade)
 receitas/                  # domínio principal: Receita, Categoria, Tag, Comentario; management/commands/semear_dados_demo.py (dados do Lighthouse CI) e seu teste
 usuarios/                  # autenticação (django.contrib.auth); management/commands/criar_conta_demonstracao.py
-templates/                 # base.html + includes/ (navbar, rodapé) + erro.html (layout sem sessão) e 400, 403, 403_csrf, 404 e 500
+templates/                 # base.html + includes/ (navbar com o painel do celular, rodapé em colunas, rodapé de uma linha das páginas de erro) + erro.html (layout sem sessão) e 400, 403, 403_csrf, 404 e 500
 static/css/                # design system: tokens.css (variáveis e tema escuro), fontes.css (@font-face) e base.css
 static/fonts/              # Inter e Fraunces (woff2 variável, subconjunto latin, licença OFL)
 static/js/, static/img/    # interacoes.js (JS puro, sem build) e favicon.svg

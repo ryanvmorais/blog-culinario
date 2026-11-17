@@ -55,6 +55,8 @@ um projeto Django aberto para estudo.
 
 ### RF-01 — Home: blog por fora, Django por dentro
 
+**Superseded by** 012-redesenho-da-home, RF-04.
+
 - **Given** um visitante abre a home
   **When** a página carrega
   **Then** o título da abertura fala de receitas, o botão principal leva à lista e
