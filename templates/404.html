@@ -1,30 +1,11 @@
-{% extends "base.html" %}
+{% extends "erro.html" %}
+{# Mostrada pelo Django com DEBUG=False, no lugar da página padrão em inglês (spec 008, RF-04). #}
 
-{% block titulo %}Página não encontrada — Blog Culinário{% endblock %}
-{% block descricao %}A página que você procurou não existe ou saiu do ar.{% endblock %}
-{# Página de erro não tem endereço canônico (spec 010, RF-02). #}
-{% block endereco_canonico %}{% endblock %}
-
-{% block content %}
-  {% comment %}
-       ============================================================
-       SEÇÃO: PÁGINA NÃO ENCONTRADA
-       Mostrada pelo Django com DEBUG=False, no lugar da página padrão em
-       inglês. Herda a navbar e o rodapé; reaproveita o componente .hero
-       (spec 008, RF-04).
-       ============================================================
-  {% endcomment %}
-  <section class="hero container">
-    <span class="hero__legenda">Erro 404</span>
-    <h1 class="hero__titulo">Esta página não existe.</h1>
-    <p class="hero__descricao">
-      O endereço pode ter mudado ou a receita saiu do ar. Que tal procurar
-      outra no nosso caderno?
-    </p>
-    <div class="hero__acoes">
-      <a class="botao botao--primario" href="{% url 'receitas:lista' %}">Ver receitas</a>
-      <a class="botao botao--contorno" href="{% url 'nucleo:home' %}">Voltar ao início</a>
-    </div>
-  </section>
-  {# fim: PÁGINA NÃO ENCONTRADA #}
+{% block titulo %}Página não encontrada{% endblock %}
+{% block codigo %}404{% endblock %}
+{% block titulo_pagina %}Esta página não existe.{% endblock %}
+{% block texto %}O endereço pode ter mudado ou a receita saiu do ar. Que tal procurar outra no nosso caderno?{% endblock %}
+{% block acoes %}
+  <a class="botao botao--primario" href="{% url 'receitas:lista' %}">Ver receitas</a>
+  <a class="botao botao--contorno" href="/">Voltar ao início</a>
 {% endblock %}

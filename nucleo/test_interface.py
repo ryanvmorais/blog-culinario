@@ -426,7 +426,7 @@ def test_404_e_a_pagina_do_projeto_em_portugues(client: Client) -> None:
 
 
 def test_403_e_a_pagina_do_projeto_em_portugues(rf: RequestFactory) -> None:
-    """RF-04: o PermissionDenied (e a falha de CSRF) usam o templates/403.html."""
+    """RF-04: o PermissionDenied usa o 403.html (o CSRF tem página própria)."""
     resposta = permission_denied(rf.get("/"), PermissionError())
     html = resposta.content.decode()
 
@@ -447,12 +447,73 @@ def test_500_e_html_completo_e_nao_consulta_o_banco(
     assert '<html lang="pt-br">' in html
     assert 'name="viewport"' in html
     assert "Algo deu errado na cozinha." in html
-    assert 'class="navbar"' not in html
+    assert "navbar__links" not in html
 
 
 def test_500_nao_depende_de_contexto_nem_de_url_nomeada() -> None:
     """RF-04: o template renderiza sem nenhum contexto."""
     assert "Erro 500" in render_to_string("500.html")
+
+
+@pytest.mark.parametrize(
+    ("template", "titulo"),
+    [
+        ("400.html", "Não entendemos este pedido."),
+        ("403.html", "Você não pode abrir esta página."),
+        ("403_csrf.html", "Não deu para confirmar o envio."),
+        ("404.html", "Esta página não existe."),
+        ("500.html", "Algo deu errado na cozinha."),
+    ],
+)
+def test_paginas_de_erro_usam_o_layout_proprio_sem_sessao(
+    template: str, titulo: str
+) -> None:
+    """As cinco estendem o erro.html: marca e rodapé, sem os links que leem a sessão."""
+    html = render_to_string(template)
+
+    assert titulo in html
+    assert '<html lang="pt-br">' in html
+    assert '<meta name="robots" content="noindex" />' in html
+    assert 'class="navbar__marca"' in html
+    assert 'class="rodape"' in html
+    assert "navbar__links" not in html
+
+
+def test_404_nao_consulta_o_banco_com_usuario_logado(
+    client: Client, django_assert_num_queries: Any
+) -> None:
+    """Com o banco fora, um 404 que lesse a sessão viraria 500."""
+    client.force_login(User.objects.create_user("leitora", password="senha-longa-1"))
+
+    with django_assert_num_queries(0):
+        resposta = client.get("/isto-nao-existe/")
+
+    assert resposta.status_code == 404
+    assert "Esta página não existe." in resposta.content.decode()
+
+
+def test_host_recusado_mostra_o_400_em_portugues(client: Client, settings: Any) -> None:
+    """Sem o 400.html, o Django responde "Bad Request (400)" cru."""
+    settings.ALLOWED_HOSTS = ["testserver"]
+
+    resposta = client.get("/", HTTP_HOST="host-recusado.exemplo")
+
+    assert resposta.status_code == 400
+    assert "Não entendemos este pedido." in resposta.content.decode()
+
+
+def test_falha_de_csrf_mostra_a_pagina_propria_em_portugues() -> None:
+    """A csrf_failure procura o 403_csrf.html; sem ele, mostra a página em inglês."""
+    cliente = Client(enforce_csrf_checks=True)
+
+    resposta = cliente.post(
+        reverse("usuarios:entrar"), {"username": "x", "password": "y"}
+    )
+    html = resposta.content.decode()
+
+    assert resposta.status_code == 403
+    assert "Não deu para confirmar o envio." in html
+    assert "Forbidden" not in html
 
 
 # -----------------------------------------------------------------------------

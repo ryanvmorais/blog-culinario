@@ -1,0 +1,53 @@
+{% load static %}
+{% comment %}
+  Layout das páginas de erro: o 400, o 403, o 403_csrf, o 404 e o 500 estendem
+  este template, não o base.html. A navbar do base.html pergunta se há alguém
+  logado, e essa pergunta lê a sessão no banco: com o banco fora, o 404 virava
+  500. Aqui nada consulta sessão, banco nem contexto, porque é quando algo está
+  quebrado que esta página não pode quebrar junto. Ficam a marca (link para o
+  início) e o rodapé, que não dependem de nada; saem os links de login.
+{% endcomment %}
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block titulo %}Erro{% endblock %} — Blog Culinário</title>
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml" />
+    <link rel="stylesheet" href="{% static 'css/fontes.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+  </head>
+  <body>
+    {# Caminho fixo, sem a tag url: o 500 renderiza mesmo com as rotas quebradas. #}
+    <header class="navbar">
+      <div class="container">
+        <a class="navbar__marca" href="/">Blog Culinário</a>
+      </div>
+    </header>
+
+    <main>
+      {% comment %}
+           ============================================================
+           SEÇÃO: ERRO
+           Reaproveita o componente .hero da home; cada página preenche o
+           código, o título, o texto e, se quiser, os botões.
+           ============================================================
+      {% endcomment %}
+      <section class="hero container">
+        <span class="hero__legenda">Erro {% block codigo %}{% endblock %}</span>
+        <h1 class="hero__titulo">{% block titulo_pagina %}{% endblock %}</h1>
+        <p class="hero__descricao">{% block texto %}{% endblock %}</p>
+        <div class="hero__acoes">
+          {% block acoes %}
+            <a class="botao botao--primario" href="/">Voltar ao início</a>
+          {% endblock %}
+        </div>
+      </section>
+      {# fim: ERRO #}
+    </main>
+
+    {% include "includes/rodape.html" %}
+  </body>
+</html>
