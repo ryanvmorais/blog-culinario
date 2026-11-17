@@ -195,6 +195,11 @@ def test_capa_da_receita_reserva_o_espaco_antes_da_foto() -> None:
     assert "aspect-ratio: 4 / 3;" in _bloco_css(CSS_BASE, ".receita-detalhe__capa")
 
 
+def test_imagem_com_altura_no_html_segue_a_proporcao_do_css() -> None:
+    """Sem ``height: auto``, o ``height="900"`` do destaque vira 900 px fixos."""
+    assert "height: auto;" in _bloco_css(CSS_BASE, "img")
+
+
 def test_movimento_reduzido_desliga_rolagem_suave_e_elevacao() -> None:
     """RF-11: quem pede menos movimento não recebe rolagem suave nem hover animado."""
     achado = re.search(
