@@ -74,7 +74,8 @@ SECURE_CSP = {
 # ---------------------------------------------------------------------------
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    # O Admin do Django com o login limitado (spec 006, adendo, ADR-5).
+    "blog_culinario.site_admin.ConfigAdmin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -168,6 +169,10 @@ CACHES = {
     "default": {
         "BACKEND": "blog_culinario.cache.CacheArquivoAtomico",
         "LOCATION": DIRETORIO_DADOS / "django_cache",
+        # Acima do teto, o FileBasedCache apaga um terço dos arquivos ao acaso,
+        # contadores ainda dentro da janela inclusive; o padrão (300) ficava ao
+        # alcance de quem gerasse contadores em massa (spec 006, adendo, RF-07).
+        "OPTIONS": {"MAX_ENTRIES": 10_000},
     }
 }
 

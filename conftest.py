@@ -14,6 +14,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+from django.conf import settings as configuracoes_django
 from django.test.utils import override_settings
 from pytest_django.fixtures import Settings
 
@@ -26,18 +27,19 @@ def _caches(pasta: Path) -> dict[str, dict[str, object]]:
     """
     Monta o ``CACHES`` do projeto apontando para a pasta pedida.
 
+    Copia o ``CACHES["default"]`` das configurações e troca só a pasta: o
+    backend e as ``OPTIONS`` (o ``MAX_ENTRIES`` da spec 006, adendo, RF-07)
+    continuam os do projeto, e o teste mede a configuração real.
+
     Args:
         pasta (Path): pasta do cache.
 
     Returns:
-        dict[str, dict[str, object]]: o ``CACHES`` com o backend do projeto.
+        dict[str, dict[str, object]]: o ``CACHES`` do projeto com a pasta nova.
     """
-    return {
-        "default": {
-            "BACKEND": "blog_culinario.cache.CacheArquivoAtomico",
-            "LOCATION": pasta,
-        }
-    }
+    padrao: dict[str, object] = dict(configuracoes_django.CACHES["default"])
+    padrao["LOCATION"] = pasta
+    return {"default": padrao}
 
 
 def pytest_configure(config: pytest.Config) -> None:

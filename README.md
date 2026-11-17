@@ -30,7 +30,7 @@ Este projeto foi estruturado para consolidar pilares fundamentais de engenharia 
 - **Modelagem de Domínio:** relacionamentos reais entre `Receita`, `Categoria`, `Tag` e `Comentario`, com políticas explícitas de `on_delete` para cada um.
 - **Dois Estilos de View:** baseadas em função (`nucleo`) e em classe (`receitas`), lado a lado, para comparar as duas abordagens.
 - **Design System Próprio:** herança de templates (`base.html` + blocks) e CSS puro em `static/css/tokens.css`, sem framework de frontend nem build step. Fontes hospedadas no projeto, tema claro e escuro do sistema só por variáveis de cor, e um catálogo visual em `docs/design-system.html`.
-- **Autenticação Nativa:** `django.contrib.auth` sem lib externa, com limite de tentativas de login por IP.
+- **Autenticação Nativa:** `django.contrib.auth` sem lib externa, com limite de tentativas de login por IP, no login do site e no do Admin.
 - **Segurança Aplicada:** honeypot e time-trap no formulário de comentário, validação de upload de imagem, Content-Security-Policy nativa do Django e `Permissions-Policy`, segredos fora do código.
 - **Interface Auditada:** acessibilidade conferida em navegador real (axe-core, teclado, contraste, tema escuro) e guardada por testes, a partir da spec 008.
 - **Qualidade Automatizada:** suíte de testes com `pytest` e um pipeline de CI que roda o mesmo portão de qualidade usado localmente.
@@ -45,7 +45,7 @@ Para quem está começando, o maior desafio não é decorar comandos do Django, 
 2. **Configuração por Ambiente:** `settings/` é um pacote, não um arquivo só. `base.py` tem o que nunca muda; `dev.py` e `prod.py` só sobrescrevem o que é específico do ambiente. É o padrão que evita o clássico "esqueci de trocar DEBUG antes do deploy".
 3. **Banco de Dados de Propósito:** SQLite não por preguiça, mas por decisão: zero configuração para quem clona o repo, já que o objetivo é aprender Django, não administrar um banco.
 4. **Identidade Visual do Zero:** um design system pequeno em `static/css/tokens.css` (cores, tipografia, espaçamento como variáveis CSS) mantém o projeto 100% focado em Python, sem esconder como um front-end é montado.
-5. **Segurança em Camadas:** limite de tentativas por IP (login e comentário) e honeypot + time-trap no formulário de comentário, implementados a partir de achados de uma auditoria de segurança real, não de especulação.
+5. **Segurança em Camadas:** limite de tentativas por IP, com o IPv6 agrupado por rede /64 (login, Admin, cadastro e comentário) e honeypot + time-trap no formulário de comentário, implementados a partir de achados de uma auditoria de segurança real, não de especulação.
 6. **Desenvolvimento Guiado por Spec:** cada funcionalidade nova nasce em `specs/` antes do código, com requisitos, design e tarefas, e aprovação antes de avançar de fase.
 
 ---

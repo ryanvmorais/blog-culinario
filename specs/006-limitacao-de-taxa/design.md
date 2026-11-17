@@ -5,6 +5,7 @@ date: 2026-09-12
 related:
   - 004-autenticacao/requirements.md
   - 005-comentarios/requirements.md
+  - 011-hospedagem/requirements.md
 origin: concepcao
 ---
 
@@ -142,3 +143,182 @@ resolver os dois juntos evita reabrir a mesma spec para o segundo caso.
   dois IPs não compartilham contador.
 - `cache.clear()` também previne que a ordem de execução dos testes influencie
   o resultado (pytest-django não isola o cache entre testes por padrão).
+
+## Adendo (2026-11-16): login do Admin, cadastro e IPv6
+
+> Status do adendo: concluído (2026-11-16). Desenha os RF-04 a RF-08 e os RNF-03 a RNF-05 do adendo
+> do `requirements.md`. O texto acima fica como está; os ADRs continuam a numeração.
+
+### Visão geral da abordagem do adendo
+
+O `limite_excedido()` continua sendo a única porta da limitação de taxa, e o adendo o
+aplica em mais dois lugares e o torna mais difícil de contornar:
+
+- **Admin:** o site do Admin passa a ser uma subclasse do `AdminSite` do Django, ligada
+  pelo `default_site` de um `AdminConfig` do projeto. O `login()` dela chama o
+  `limite_excedido()` com o namespace `"login"` antes de delegar ao `login()` original,
+  e por isso divide o contador com a `EntrarView` (decisão resolvida 2).
+- **Cadastro:** a `CadastroView` ganha um `post()` que checa o namespace `"cadastro"`
+  antes de validar o formulário, no mesmo desenho da `EntrarView`.
+- **IPv6:** a chave do contador deixa de ser o endereço que o `ip_do_visitante()`
+  devolve e passa a ser o identificador de rede dele: o próprio endereço no IPv4, o /64
+  no IPv6.
+- **Cache:** o `CACHES` ganha `MAX_ENTRIES` de 10.000, e o descarte aleatório do
+  `FileBasedCache` só volta a acontecer muito acima do uso real.
+
+### Componentes do adendo
+
+#### `blog_culinario/limitacao.py`
+
+- **Constantes do login:** `LIMITE_LOGIN = 5`, `JANELA_LOGIN_SEGUNDOS = 300` e
+  `MENSAGEM_LIMITE_LOGIN` (o texto do RF-01). Saem da `EntrarView` porque agora duas
+  telas usam os mesmos valores.
+- **`_identificador_de_rede(ip: str) -> str`** (privada): devolve a chave do visitante
+  (RF-06).
+  - Endereço que não é IP (o `"desconhecido"`): volta como está.
+  - IPv6 com um IPv4 dentro (`::ffff:a.b.c.d`): o IPv4.
+  - Outro IPv6: a rede /64 em texto (`2001:db8:1:2::/64`).
+  - IPv4: o endereço normalizado.
+- **`limite_excedido()`:** a chave passa a ser
+  `limite:<namespace>:<identificador de rede>`. Assinatura, efeito colateral e contrato
+  ficam iguais (RNF-04).
+
+#### `blog_culinario/site_admin.py` (módulo novo)
+
+- **`SiteAdminComLimite(AdminSite)`:** sobrescreve
+  `login(request, extra_context=None)`. No POST, se
+  `limite_excedido(request, "login", LIMITE_LOGIN, JANELA_LOGIN_SEGUNDOS)` for
+  verdadeiro, grava `MENSAGEM_LIMITE_LOGIN` com `messages.error` e redireciona para
+  `request.get_full_path()`. O redirecionamento mantém o `?next=`, e o template de login
+  do Admin já mostra as mensagens (RF-04). Nos outros casos, delega ao `super().login()`
+  (RNF-05). O GET não passa pelo contador.
+- **`ConfigAdmin(AdminConfig)`:** só define
+  `default_site = "blog_culinario.site_admin.SiteAdminComLimite"`. O rótulo do app
+  continua `admin`, então templates, estáticos, `reverse("admin:...")` e cada
+  `@admin.register` dos apps seguem iguais.
+
+#### `blog_culinario/settings/base.py`
+
+- `INSTALLED_APPS`: `"django.contrib.admin"` vira `"blog_culinario.site_admin.ConfigAdmin"`.
+- `CACHES["default"]` ganha `"OPTIONS": {"MAX_ENTRIES": 10_000}` (RF-07, decisão
+  resolvida 4).
+
+#### `usuarios/views.py`
+
+- **`EntrarView.post()`:** passa a usar as constantes do `limitacao.py`, com o mesmo
+  comportamento.
+- **`CadastroView.post()`** (novo): se
+  `limite_excedido(request, "cadastro", limite=10, janela_segundos=3600)`, grava a
+  mensagem do RF-05 e redireciona para `usuarios:cadastro`. Senão, segue o
+  `FormView.post()` (RF-05, decisão resolvida 3). A checagem vem antes do formulário,
+  então também vale no modo demonstração.
+
+### Interfaces do adendo
+
+Nenhuma rota nova. Mudam só as respostas acima do limite:
+
+| Pedido | Acima do limite |
+|---|---|
+| POST no login do Admin | 302 para a mesma URL (com `?next=`), mensagem do RF-01 |
+| POST em `/usuarios/cadastro/` | 302 para `/usuarios/cadastro/`, mensagem do RF-05 |
+
+### ADR-5 — O limite do Admin mora no site do Admin, não numa rota na frente
+
+**Decisão.** Subclasse do `AdminSite`, ligada pelo `default_site` de um `AdminConfig`
+(o caminho que a documentação do Django indica para trocar o site padrão do Admin).
+**Alternativas.** (a) Uma rota `<ADMIN_URL>login/` declarada antes do
+`admin.site.urls`, apontando para uma view que limita e delega. (b) Um middleware que
+confere o caminho do login do Admin. (c) `django-axes`.
+**Porquê.** O `login()` do site é a única entrada do login do Admin, qualquer que seja
+o caminho. A rota da frente depende da ordem do `urlpatterns`, e o middleware, do
+caminho. O `django-axes` é dependência nova (RNF-03).
+**Trade-off.** O `INSTALLED_APPS` troca o app do Admin pela configuração do projeto, e
+quem lê o código precisa saber do `default_site` para achar o limite.
+
+### ADR-6 — O agrupamento por rede fica na chave do contador
+
+**Decisão.** O `/64` é calculado dentro do `limite_excedido()`, e o
+`ip_do_visitante()` continua devolvendo o endereço completo.
+**Alternativas.** Devolver a rede já no `ip_do_visitante()`.
+**Porquê.** O RF-10 da spec 011 define o que o `ip_do_visitante()` devolve, e o
+agrupamento é uma regra da limitação, não da identificação do visitante.
+**Trade-off.** Nenhum relevante: hoje só a limitação usa o `ip_do_visitante()`.
+
+### ADR-7 — Prefixo /64 no IPv6
+
+**Decisão.** Agrupar o IPv6 pelo /64.
+**Alternativas.** /56 ou /48, os blocos que muitas operadoras entregam a cada cliente
+residencial.
+**Porquê.** O /64 é a menor rede que uma operadora entrega a um cliente, então nunca
+junta dois clientes num contador. Um prefixo maior juntaria, nas operadoras móveis,
+aparelhos de pessoas diferentes.
+**Trade-off.** Quem recebe um /56 tem até 256 redes /64, cada uma com o próprio
+contador. O limite continua finito, contra o ilimitado de hoje.
+
+### ADR-8 — Teto no cache de hoje, sem um cache só para os limites
+
+**Decisão.** `MAX_ENTRIES` de 10.000 no `CACHES["default"]`.
+**Alternativas.** Um segundo cache (`CACHES["limites"]`) só para os contadores.
+**Porquê.** A limitação de taxa é o único uso do cache do projeto, e um segundo cache
+seria mais uma pasta e mais uma configuração para quem clona.
+**Trade-off.** Um uso novo do cache divide o mesmo teto. Quem acrescentar um revê o
+`MAX_ENTRIES` ou separa os caches.
+
+### Impacto no código existente do adendo
+
+- `blog_culinario/site_admin.py`: arquivo novo.
+- `blog_culinario/limitacao.py`: constantes do login, `_identificador_de_rede()` e a
+  chave nova. Os contadores que estiverem no cache durante o deploy ficam órfãos e
+  expiram sozinhos na janela deles.
+- `blog_culinario/settings/base.py`: `INSTALLED_APPS` e `CACHES`.
+- `usuarios/views.py`: `EntrarView` com as constantes e `CadastroView.post()` novo.
+- Specs: a decisão resolvida 10 da 011 e o não-objetivo "admin" desta spec ganham a
+  linha `**Superseded by**` apontando o adendo.
+- Documentação: o mapa do `CLAUDE.md` (a linha do `limitacao.py`) e a frase da
+  limitação de taxa nos dois READMEs passam a citar o Admin e o cadastro.
+
+### Estratégia de testes do adendo
+
+Arquivo novo `nucleo/test_limitacao.py`, para o que cruza os apps (Admin, IPv6 e
+cache), e `usuarios/tests.py`, para o cadastro, ao lado dos testes do login. Todos com
+`cache.clear()` antes de cada teste, como os de hoje.
+
+- **Admin (RF-04):**
+  - cinco POSTs errados em `reverse("admin:login")` e o sexto recusado, sem autenticar
+    e com a mensagem;
+  - um login de staff abaixo do limite entra no Admin;
+  - o limite esgotado no Admin recusa o login público, e o contrário também;
+  - o GET não soma;
+  - `admin.site` é um `SiteAdminComLimite`;
+  - um `ROOT_URLCONF` de teste que monta o `admin.site.urls` em outro caminho mantém o
+    limite.
+- **Cadastro (RF-05):** dez POSTs e o 11º recusado, sem criar o usuário, com o modo
+  demonstração ligado e desligado (`override_settings(MODO_DEMONSTRACAO=...)`); o
+  contador do cadastro esgotado não recusa o login.
+- **IPv6 (RF-06):** unidade do `_identificador_de_rede()` (IPv4, IPv4 na forma IPv6,
+  dois endereços do mesmo /64, /64 diferentes, `"desconhecido"`) e um teste de ponta a
+  ponta: dois `REMOTE_ADDR` do mesmo /64 dividem o contador do login.
+- **Cache (RF-07):** um contador no limite, depois 400 contadores de outros IPs pelo
+  `limite_excedido()`, e o primeiro ainda recusado.
+- **Regressão (RNF-04):** a suíte inteira, sem mudar os testes da 006, 007, 009 e 011.
+
+### Desvios do adendo
+
+1. **`conftest.py` herda o `CACHES` do projeto** (RF-07, ADR-8). A suíte montava um
+   `CACHES` próprio, só com o backend e a pasta, e rodaria com o teto padrão de 300.
+   O `_caches()` passou a copiar o `CACHES["default"]` das configurações e trocar só a
+   pasta, para o teste do RF-07 medir o `MAX_ENTRIES` real.
+2. **600 contadores no teste do cache, e não 400** (RF-07). Com o teto padrão, o
+   contador esgotado sobreviveria a 400 contadores novos em cerca de 44% das
+   execuções; com 600, em cerca de 20%. O teste fica mais sensível à regressão, e
+   continua rápido.
+
+### Notas de implementação do adendo
+
+- Suíte: 322 testes antes do adendo, 344 depois (22 novos: 19 em
+  `nucleo/test_limitacao.py`, 3 em `usuarios/tests.py`); os testes da 006, 007, 009 e
+  011 passaram sem mudança (RNF-04).
+- A chave do contador muda de formato só no IPv6 (`limite:login:2001:db8:1:2::/64`); o
+  IPv4 fica como antes, então os contadores IPv4 do cache seguem valendo no deploy.
+- O login do Admin abaixo do limite é o do Django (RNF-05). O teste manda o `next` como
+  o formulário do Admin, que o envia num campo oculto.
