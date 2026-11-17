@@ -10,17 +10,22 @@ workers do gunicorn, com ``add()`` e ``incr()`` atômicos
 projeto, e não dentro de um app de domínio (ADR-1 da spec 006).
 
 O contador é por rede, não por endereço (adendo da spec 006, RF-06): no IPv6,
-todos os endereços de um mesmo /64 dividem um contador só.
+todos os endereços de um mesmo /64 dividem um contador só. A primeira recusa de
+cada janela vai para o log como ``WARNING``, só com o nome do limite e o
+caminho (adendo 2, RF-09).
 """
 
 from __future__ import annotations
 
 import ipaddress
+import logging
 
 from django.core.cache import cache
 from django.http import HttpRequest
 
 from blog_culinario.origem import ip_do_visitante
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Constantes
@@ -114,4 +119,10 @@ def limite_excedido(
     except ValueError:  # o contador expirou entre o add() e o incr()
         cache.add(cache_key, 0, timeout=janela_segundos)
         tentativas = cache.incr(cache_key)
+
+    # O mesmo número único por pedido marca a primeira recusa da janela: só um
+    # pedido vê `limite + 1`, então o log ganha uma linha por janela, e não uma
+    # por recusa (adendo 2, RF-09, ADR-9). Nada do visitante entra na linha.
+    if tentativas == limite + 1:
+        logger.warning("limite atingido: %s %s", chave, request.path)
     return tentativas > limite
