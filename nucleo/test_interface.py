@@ -263,13 +263,26 @@ def test_link_da_foto_do_cartao_fica_fora_do_tab_e_do_leitor_de_tela(
     """RF-02: o link da foto repete o do título e sai do Tab e do leitor."""
     _receita_publicada()
 
-    html = client.get(reverse("nucleo:home")).content.decode()
+    # Na listagem: com uma receita só, a home mostra o destaque, sem cartão
+    # (spec 012, RF-07); o cartão é o mesmo include nas duas páginas.
+    html = client.get(reverse("receitas:lista")).content.decode()
     cartao = html[html.index('<article class="cartao-receita">') :]
     primeiro_link = re.search(r"<a [^>]*>", cartao)
 
     assert primeiro_link
     assert 'aria-hidden="true"' in primeiro_link.group(0)
     assert 'tabindex="-1"' in primeiro_link.group(0)
+
+
+def test_cartoes_da_mesma_linha_tem_a_mesma_altura() -> None:
+    """Spec 012, RF-08: cartão em coluna, corpo que cresce e meta no pé."""
+    cartao = _bloco_css(CSS_BASE, ".cartao-receita")
+    corpo = _bloco_css(CSS_BASE, ".cartao-receita__corpo")
+    meta = _bloco_css(CSS_BASE, ".cartao-receita__meta")
+
+    assert "display: flex;" in cartao and "flex-direction: column;" in cartao
+    assert "flex: 1;" in corpo
+    assert "margin-top: auto;" in meta
 
 
 def test_lista_tem_h2_oculto_entre_o_h1_e_os_cartoes(client: Client) -> None:
@@ -475,7 +488,9 @@ def test_paginas_de_erro_usam_o_layout_proprio_sem_sessao(
     assert '<html lang="pt-br">' in html
     assert '<meta name="robots" content="noindex" />' in html
     assert 'class="navbar__marca"' in html
-    assert 'class="rodape"' in html
+    # O rodapé de uma linha (spec 012, RF-13): sem as categorias nem a sessão.
+    assert 'class="rodape rodape--linha"' in html
+    assert "rodape__colunas" not in html
     assert "navbar__links" not in html
 
 
@@ -538,7 +553,7 @@ def test_menu_mobile_leva_o_foco_fecha_com_esc_e_com_clique_fora() -> None:
 # Home, ícone e fontes (RF-01, RF-12, RF-14)
 # -----------------------------------------------------------------------------
 def test_home_fala_de_receitas_e_o_django_fica_por_dentro(client: Client) -> None:
-    """RF-01: o h1 é de comida; o Django aparece na seção "Por dentro"."""
+    """RF-01: o h1 é de comida; o Django fica em "Por dentro" (spec 012, RF-09)."""
     html = client.get(reverse("nucleo:home")).content.decode()
     h1 = re.search(r"<h1[^>]*>(.*?)</h1>", html, re.DOTALL)
     por_dentro = html[html.index('id="por-dentro"') :]
@@ -546,20 +561,21 @@ def test_home_fala_de_receitas_e_o_django_fica_por_dentro(client: Client) -> Non
     assert h1
     assert "Receitas simples para todos os dias." in h1.group(1)
     assert "Django" not in h1.group(1)
-    assert "Por dentro, um projeto Django" in por_dentro
+    assert "Como este blog foi feito" in por_dentro
     assert "github.com/ryanvmorais/blog-culinario" in por_dentro
 
 
 def test_home_convida_o_anonimo_a_criar_conta_e_poupa_quem_ja_entrou(
     client: Client,
 ) -> None:
-    """RF-01: o botão secundário só aparece para quem não está autenticado."""
+    """RF-01, no texto da spec 012, RF-04: o convite só aparece sem login."""
     anonimo = client.get(reverse("nucleo:home")).content.decode()
     client.force_login(User.objects.create_user("ana", password="senha-forte-123"))
     logado = client.get(reverse("nucleo:home")).content.decode()
 
-    assert "Criar minha conta" in anonimo
-    assert "Criar minha conta" not in logado
+    assert "Quer comentar uma receita?" in anonimo
+    assert "Criar minha conta" not in anonimo
+    assert "Quer comentar uma receita?" not in logado
 
 
 def test_favicon_declarado_e_arquivo_existe(client: Client) -> None:

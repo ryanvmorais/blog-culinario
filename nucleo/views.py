@@ -17,7 +17,7 @@ from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_safe
 from django.views.static import serve
 
-from receitas.models import Receita
+from receitas.models import Categoria, Comentario, Receita
 
 # O Python 3.12 só conhece o .webp pelo mime.types do sistema, que o contêiner
 # da plataforma não tem (o tipo entrou no mimetypes no 3.13). Sem ele, a
@@ -28,7 +28,12 @@ mimetypes.add_type("image/webp", ".webp")
 
 def home(request: HttpRequest) -> HttpResponse:
     """
-    Renderiza a página inicial do blog, com as receitas mais recentes.
+    Renderiza a página inicial: destaque, categorias, recentes e os números.
+
+    Quatro consultas, quantas forem as receitas (spec 012, RNF-02): as 4
+    publicadas mais recentes, o total de publicadas, as categorias com
+    contagem e o total de comentários aprovados. O rodapé faz a quinta, pela
+    tag ``{% categorias_do_rodape %}`` (ADR-3).
 
     Args:
         request (HttpRequest): requisição recebida.
@@ -36,10 +41,28 @@ def home(request: HttpRequest) -> HttpResponse:
     Returns:
         HttpResponse: ``nucleo/home.html`` renderizado.
     """
-    receitas_recentes = Receita.objects.filter(publicado=True).select_related(
-        "categoria"
-    )[:3]
-    return render(request, "nucleo/home.html", {"receitas_recentes": receitas_recentes})
+    publicadas = Receita.objects.filter(publicado=True)
+
+    # Uma consulta só para o destaque e as recentes: as recentes nunca
+    # repetem o destaque (spec 012, ADR-1). O select_related traz a categoria
+    # de cada cartão no mesmo SELECT.
+    ultimas = list(publicadas.select_related("categoria")[:4])
+    destaque = ultimas[0] if ultimas else None
+
+    # A lista avaliada aqui serve às pílulas e ao número de categorias, sem
+    # uma segunda consulta (RF-03 e RF-06).
+    categorias = list(Categoria.objects.com_receitas_publicadas())
+
+    contexto = {
+        "destaque": destaque,
+        "recentes": ultimas[1:],
+        "total_receitas": publicadas.count(),
+        "categorias": categorias,
+        "total_comentarios": Comentario.objects.filter(
+            aprovado=True, receita__publicado=True
+        ).count(),
+    }
+    return render(request, "nucleo/home.html", contexto)
 
 
 @require_safe

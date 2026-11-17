@@ -41,6 +41,11 @@
   --cor-erro-fundo: #f8d7da; /* caixa de mensagem de erro; vira token para o tema escuro (spec 008, RF-15) */
   --cor-sucesso: #2f6b3a;
 
+  /* Véu sobre a página com o menu do celular aberto (spec 012, RF-14): o texto
+     atrás dele fica apagado, e o menu se separa da página. Transparente de
+     propósito, então não entra nos pares de contraste. */
+  --cor-veu: rgba(47, 38, 32, 0.45);
+
   /* 2. Tipografia -------------------------------------------------------------
      Fraunces (serifada, editorial) nos títulos evoca caderno de receitas;
      Inter no corpo mantém a leitura confortável em telas pequenas. */
@@ -70,6 +75,11 @@
   --espaco-8: 2rem;
   --espaco-12: 3rem;
   --espaco-16: 4rem;
+
+  /* Altura da barra do site: o painel do menu do celular e o véu começam logo
+     abaixo dela, com position: fixed (spec 012, ADR-5). Marca maior pede
+     subir este valor. */
+  --altura-barra: 4rem;
 
   --raio-sm: 6px;
   --raio-md: 12px;
@@ -116,6 +126,8 @@
     --cor-erro: #ffb4ab;
     --cor-erro-fundo: #42201e;
     --cor-sucesso: #8fd19e;
+
+    --cor-veu: rgba(0, 0, 0, 0.6);
 
     --sombra-cartao:
       0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);

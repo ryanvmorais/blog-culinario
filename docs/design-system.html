@@ -729,76 +729,132 @@
           <!-- ---------- Navbar ---------- -->
           <h3 class="ds-rotulo">
             Navbar — templates/includes/navbar.html (reduza a janela abaixo de
-            720px para testar o menu)
+            720px e toque no botão: o painel entra pela direita, com o véu)
           </h3>
           <div class="ds-exemplo ds-exemplo--sem-padding ds-exemplo--navbar">
             <header class="navbar">
               <div class="container">
                 <a class="navbar__marca" href="#componentes">Blog Culinário</a>
 
-                <nav aria-label="Navegação principal">
-                  <ul class="navbar__links" id="menu-principal">
-                    <li><a href="#componentes">Início</a></li>
-                    <li><a href="#componentes">Receitas</a></li>
-                    <li>Olá, maria</li>
-                    <li>
-                      <form method="post" action="#componentes">
-                        <button type="submit" class="link-botao">Sair</button>
-                      </form>
-                    </li>
-                  </ul>
-                </nav>
-
                 <button
                   type="button"
                   class="navbar__alternador"
-                  aria-label="Abrir menu de navegação"
                   aria-controls="menu-principal"
                   aria-expanded="false"
+                  aria-label="Abrir menu de navegação"
                 >
-                  ☰
+                  <svg class="navbar__icone navbar__icone--menu" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+                  <svg class="navbar__icone navbar__icone--fechar" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" /></svg>
                 </button>
+
+                <nav class="navbar__painel" id="menu-principal" aria-label="Navegação principal">
+                  <ul class="navbar__links">
+                    <li><a href="#componentes" aria-current="page">Início</a></li>
+                    <li><a href="#componentes">Receitas</a></li>
+                  </ul>
+                  <div class="navbar__conta">
+                    <span class="rotulo navbar__rotulo">Sua conta</span>
+                    <a class="navbar__acao" href="#componentes">Entrar</a>
+                    <a class="navbar__acao navbar__acao--principal" href="#componentes">Cadastrar</a>
+                  </div>
+                </nav>
               </div>
+              <div class="navbar__veu" hidden></div>
             </header>
           </div>
+          <p>
+            Uma marcação só para os dois tamanhos (spec 012): acima de 720 px é a
+            barra; até 720 px, um painel com 80% da largura, da barra até o fim da
+            tela. Com login, o grupo "Sua conta" mostra "Olá, nome" e o botão
+            "Sair". A altura da barra no celular vem de
+            <span class="ds-codigo">--altura-barra</span>, e o véu de
+            <span class="ds-codigo">--cor-veu</span>.
+          </p>
 
-          <!-- ---------- Hero ---------- -->
-          <h3 class="ds-rotulo">Hero — nucleo/templates/nucleo/home.html</h3>
-          <div class="ds-exemplo ds-exemplo--fundo">
-            <section class="hero">
-              <span class="hero__legenda">Blog culinário</span>
-              <h2 class="hero__titulo">Receitas simples para todos os dias.</h2>
-              <p class="hero__descricao">
-                Do bolo de cenoura ao jantar de terça-feira: receitas com
-                ingredientes e modo de preparo claros, para você cozinhar sem
-                complicação.
-              </p>
-              <div class="hero__acoes">
-                <a class="botao botao--primario" href="#componentes"
-                  >Ver receitas</a
-                >
-                <a class="botao botao--contorno" href="#componentes"
-                  >Criar minha conta</a
-                >
-              </div>
-            </section>
-          </div>
-
-          <!-- ---------- Painel de destaque ---------- -->
+          <!-- ---------- Abertura da home ---------- -->
           <h3 class="ds-rotulo">
-            Painel de destaque — .painel-destaque (home, "Por dentro, um projeto
-            Django")
+            Abertura — .hero-dividido (nucleo/templates/nucleo/home.html): duas
+            colunas acima de 720 px, centrada no celular
           </h3>
           <div class="ds-exemplo ds-exemplo--fundo">
-            <div class="painel-destaque" style="margin-top: 0">
-              <h2>Por dentro, um projeto Django</h2>
-              <p>
-                Este blog também é material de estudo. Por trás das receitas há
-                uma aplicação Django completa, em código aberto e comentado.
+            <section class="hero-dividido">
+              <div class="hero-dividido__texto">
+                <span class="hero__legenda">Blog culinário</span>
+                <h2 class="hero__titulo">Receitas simples para todos os dias.</h2>
+                <p class="hero__descricao">
+                  Do bolo de cenoura ao jantar de terça-feira: receitas com
+                  ingredientes e modo de preparo claros.
+                </p>
+                <form class="busca-hero" role="search" action="#componentes">
+                  <label for="ds-busca">Buscar por título ou ingrediente</label>
+                  <div class="busca-hero__linha">
+                    <input type="search" id="ds-busca" name="q" placeholder="Ex.: cenoura" />
+                    <button type="submit" class="botao botao--primario">Buscar</button>
+                  </div>
+                </form>
+                <ul class="numeros" aria-label="O blog em números">
+                  <li><strong>6</strong> receitas</li>
+                  <li><strong>5</strong> categorias</li>
+                </ul>
+                <p class="hero__conta">
+                  Quer comentar uma receita? <a href="#componentes">Crie sua conta.</a>
+                </p>
+              </div>
+              <article class="destaque">
+                <div class="destaque__imagem"></div>
+                <div class="destaque__corpo">
+                  <span class="rotulo">A receita mais nova</span>
+                  <h3 class="destaque__titulo"><a href="#componentes">Shakshuka (ovos no molho de tomate)</a></h3>
+                  <p class="destaque__resumo">Ovos cozidos direto num molho de tomate e pimentão.</p>
+                  <div class="cartao-receita__meta">
+                    <span>Pratos principais</span><span>30 min</span><span>5 porções</span>
+                  </div>
+                </div>
+              </article>
+            </section>
+          </div>
+          <p>
+            Sem receita publicada, <span class="ds-codigo">.hero-dividido--uma-coluna</span>
+            centra o texto em qualquer largura. O hero simples
+            (<span class="ds-codigo">.hero</span>) segue nas páginas de erro.
+          </p>
+
+          <!-- ---------- Rótulo e pílulas ---------- -->
+          <h3 class="ds-rotulo">
+            Rótulo de seção — .rotulo — e pílulas de categoria — .pilula
+          </h3>
+          <div class="ds-exemplo ds-exemplo--fundo">
+            <span class="rotulo">Por categoria</span>
+            <h2 class="secao__titulo">Comece pelo que tem vontade</h2>
+            <ul class="pilulas">
+              <li><a class="pilula" href="#componentes">Pratos principais <span class="pilula__contagem"><span aria-hidden="true">·</span> 2 receitas</span></a></li>
+              <li><a class="pilula" href="#componentes">Lanches <span class="pilula__contagem"><span aria-hidden="true">·</span> 1 receita</span></a></li>
+            </ul>
+          </div>
+
+          <!-- ---------- Por dentro ---------- -->
+          <h3 class="ds-rotulo">
+            "Por dentro" — .por-dentro com .nota-codigo (cada nota aponta um arquivo)
+          </h3>
+          <div class="ds-exemplo ds-exemplo--fundo">
+            <div class="por-dentro">
+              <span class="rotulo">Por dentro</span>
+              <h2>Como este blog foi feito</h2>
+              <p class="por-dentro__intro">
+                Cada nota aponta para o arquivo que faz a parte funcionar.
               </p>
-              <a class="botao botao--contorno" href="#componentes"
-                >Ver o código no GitHub</a
-              >
+              <ul class="notas-codigo">
+                <li class="nota-codigo">
+                  <h3>Esta página</h3>
+                  <p>Uma view de função busca as receitas com <code>select_related</code>.</p>
+                  <a href="#componentes">nucleo/views.py</a>
+                </li>
+                <li class="nota-codigo">
+                  <h3>Specs antes do código</h3>
+                  <p>Requisitos, design e tarefas aprovados antes do código.</p>
+                  <a href="#componentes">specs/</a>
+                </li>
+              </ul>
             </div>
           </div>
 
@@ -1030,9 +1086,46 @@
           </div>
 
           <!-- ---------- Rodapé ---------- -->
-          <h3 class="ds-rotulo">Rodapé — templates/includes/rodape.html</h3>
+          <h3 class="ds-rotulo">
+            Rodapé — templates/includes/rodape.html (colunas) e
+            includes/rodape_erro.html (uma linha, nas páginas de erro)
+          </h3>
           <div class="ds-exemplo ds-exemplo--fundo">
             <footer class="rodape" style="margin-top: 0">
+              <div class="container">
+                <div class="rodape__colunas">
+                  <div class="rodape__sobre">
+                    <p class="rodape__marca">Blog Culinário</p>
+                    <p>Receitas para todos os dias. Por dentro, um projeto Django open source.</p>
+                  </div>
+                  <nav class="rodape__coluna" aria-labelledby="ds-rodape-navegar">
+                    <h2 class="rodape__titulo" id="ds-rodape-navegar">Navegar</h2>
+                    <ul>
+                      <li><a href="#componentes">Início</a></li>
+                      <li><a href="#componentes">Receitas</a></li>
+                    </ul>
+                  </nav>
+                  <nav class="rodape__coluna" aria-labelledby="ds-rodape-categorias">
+                    <h2 class="rodape__titulo" id="ds-rodape-categorias">Categorias</h2>
+                    <ul>
+                      <li><a href="#componentes">Pratos principais</a></li>
+                      <li><a href="#componentes">Lanches</a></li>
+                    </ul>
+                  </nav>
+                  <nav class="rodape__coluna" aria-labelledby="ds-rodape-projeto">
+                    <h2 class="rodape__titulo" id="ds-rodape-projeto">O projeto</h2>
+                    <ul>
+                      <li><a href="#componentes">Código no GitHub</a></li>
+                      <li><a href="#componentes">Mapa da stack</a></li>
+                    </ul>
+                  </nav>
+                </div>
+                <p class="rodape__base">&copy; 2026 Blog Culinário</p>
+              </div>
+            </footer>
+          </div>
+          <div class="ds-exemplo ds-exemplo--fundo">
+            <footer class="rodape rodape--linha" style="margin-top: 0">
               <div class="container">
                 <span
                   >&copy; 2026 Blog Culinário — receitas para todos os dias.

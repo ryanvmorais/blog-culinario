@@ -100,6 +100,8 @@ spec conecta o domínio às páginas públicas: listagem paginada e detalhe.
 
 ### RF-06 — Home exibe receitas reais
 
+**Superseded by** 012-redesenho-da-home, RF-07.
+
 - **Given** existem receitas publicadas
   **When** a home (`/`) carrega
   **Then** a seção que hoje mostra 3 cartões estáticos passa a mostrar até
