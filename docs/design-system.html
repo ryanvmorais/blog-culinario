@@ -832,6 +832,21 @@
             </ul>
           </div>
 
+          <!-- ---------- Pílulas da listagem ---------- -->
+          <h3 class="ds-rotulo">
+            Pílulas da listagem — a categoria ativa leva aria-current="page" e o
+            par de cores do botão primário (spec 012, adendo)
+          </h3>
+          <div class="ds-exemplo ds-exemplo--fundo">
+            <nav class="lista-categorias" aria-label="Exemplo de filtro por categoria">
+              <ul class="pilulas">
+                <li><a class="pilula" href="#componentes">Todas <span class="pilula__contagem"><span aria-hidden="true">·</span> 6</span></a></li>
+                <li><a class="pilula" href="#componentes" aria-current="page">Pratos principais <span class="pilula__contagem"><span aria-hidden="true">·</span> 2</span></a></li>
+                <li><a class="pilula" href="#componentes">Lanches <span class="pilula__contagem"><span aria-hidden="true">·</span> 1</span></a></li>
+              </ul>
+            </nav>
+          </div>
+
           <!-- ---------- Por dentro ---------- -->
           <h3 class="ds-rotulo">
             "Por dentro" — .por-dentro com .nota-codigo (cada nota aponta um arquivo)
@@ -855,6 +870,41 @@
                   <a href="#componentes">specs/</a>
                 </li>
               </ul>
+            </div>
+          </div>
+
+          <!-- ---------- Página da receita ---------- -->
+          <h3 class="ds-rotulo">
+            Página da receita — .ficha, .receita-autoria, .ingredientes,
+            .passos, .preparo-nota e .convite-comentar (spec 012, adendo)
+          </h3>
+          <div class="ds-exemplo ds-exemplo--fundo">
+            <dl class="ficha">
+              <div><dt>Preparo</dt><dd>60 min</dd></div>
+              <div><dt>Rende</dt><dd>10 porções</dd></div>
+            </dl>
+            <p class="receita-autoria">Por chef-ana · publicado 4 semanas atrás</p>
+            <div class="receita-corpo">
+              <section class="ingredientes" aria-labelledby="ds-ingredientes" tabindex="0">
+                <h2 id="ds-ingredientes">Ingredientes</h2>
+                <ul>
+                  <li>1 xícara de polvilho doce</li>
+                  <li>1 ovo médio</li>
+                  <li>1 pitada de sal</li>
+                </ul>
+              </section>
+              <section class="preparo" aria-labelledby="ds-preparo">
+                <h2 id="ds-preparo">Modo de preparo</h2>
+                <ol class="passos" start="1">
+                  <li>Preaqueça o forno a 220 °C.</li>
+                  <li>Misture os polvilhos, o ovo e o sal e sove a massa.</li>
+                </ol>
+                <p class="preparo-nota">Nota depois do último passo, como a fonte da receita.</p>
+              </section>
+            </div>
+            <div class="convite-comentar">
+              <p>Ainda não há comentários. Seja o primeiro a comentar!</p>
+              <a class="botao botao--contorno" href="#componentes">Entrar para comentar</a>
             </div>
           </div>
 
@@ -1006,19 +1056,16 @@
           </div>
 
           <h3 class="ds-rotulo">
-            Formulário de busca — receitas/templates/receitas/lista.html
+            Busca da listagem — .busca-hero, o mesmo desenho da home
+            (receitas/templates/receitas/lista.html)
           </h3>
           <div class="ds-exemplo ds-exemplo--fundo">
-            <form
-              class="formulario-busca"
-              role="search"
-              onsubmit="return false;"
-            >
+            <form class="busca-hero" role="search" onsubmit="return false;">
               <label for="ds-busca">Buscar por título ou ingrediente</label>
-              <input type="search" id="ds-busca" placeholder="Ex.: cenoura" />
-              <button type="submit" class="botao botao--primario">
-                Buscar
-              </button>
+              <div class="busca-hero__linha">
+                <input type="search" id="ds-busca" placeholder="Ex.: cenoura" />
+                <button type="submit" class="botao botao--primario">Buscar</button>
+              </div>
             </form>
           </div>
 
@@ -1180,6 +1227,9 @@
               </tr>
               <tr data-texto="--cor-texto-suave" data-fundo="--cor-superficie">
                 <td>Meta do cartão</td>
+              </tr>
+              <tr data-texto="--cor-texto-invertido" data-fundo="--cor-primaria-escura">
+                <td>Pílula ativa com o mouse em cima</td>
               </tr>
               <tr data-texto="--cor-primaria" data-fundo="--cor-fundo">
                 <td>Links</td>

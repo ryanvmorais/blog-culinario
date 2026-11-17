@@ -4,7 +4,7 @@
 {% block descricao %}Todas as receitas publicadas no Blog Culinário, da mais recente para a mais antiga.{% endblock %}
 
 {% block content %}
-  <section class="container cabecalho-pagina">
+  <section class="container lista-cabecalho">
     <h1>Receitas</h1>
     {% if receitas and filtro_ativo %}
       <p>
@@ -18,23 +18,52 @@
       <p>Todas as receitas publicadas, da mais recente para a mais antiga.</p>
     {% endif %}
 
-    <form class="formulario-busca" method="get" role="search">
+    {# O desenho da busca da home; os ocultos mantêm o filtro ativo (spec 003, RF-07; spec 012, adendo, RF-25). #}
+    <form class="busca-hero" method="get" role="search">
       <label for="campo-busca">Buscar por título ou ingrediente</label>
-      <input
-        type="search"
-        id="campo-busca"
-        name="q"
-        value="{{ termo_busca }}"
-        placeholder="Ex.: cenoura"
-      />
+      <div class="busca-hero__linha">
+        <input
+          type="search"
+          id="campo-busca"
+          name="q"
+          value="{{ termo_busca }}"
+          placeholder="Ex.: cenoura"
+        />
+        <button type="submit" class="botao botao--primario">Buscar</button>
+      </div>
       {% if categoria_selecionada %}
         <input type="hidden" name="categoria" value="{{ categoria_selecionada }}" />
       {% endif %}
       {% if tag_selecionada %}
         <input type="hidden" name="tag" value="{{ tag_selecionada }}" />
       {% endif %}
-      <button type="submit" class="botao botao--primario">Buscar</button>
     </form>
+
+    {% comment %}
+      Pílulas de categoria (spec 012, adendo, RF-26). O link troca só a
+      categoria: a busca e a tag ficam, e o page sai, para voltar à primeira
+      página. A contagem é a de publicadas, sem considerar a busca.
+    {% endcomment %}
+    {% if categorias %}
+      <nav class="lista-categorias" aria-label="Filtrar por categoria">
+        <ul class="pilulas">
+          <li>
+            <a class="pilula" href="{% url 'receitas:lista' %}{% if querystring_sem_categoria %}?{{ querystring_sem_categoria }}{% endif %}"{% if not categoria_selecionada %} aria-current="page"{% endif %}>
+              Todas
+              <span class="pilula__contagem"><span aria-hidden="true">·</span> {{ total_publicadas }}</span>
+            </a>
+          </li>
+          {% for categoria in categorias %}
+            <li>
+              <a class="pilula" href="{% url 'receitas:lista' %}?{% if querystring_sem_categoria %}{{ querystring_sem_categoria }}&amp;{% endif %}categoria={{ categoria.slug }}"{% if categoria.slug == categoria_selecionada %} aria-current="page"{% endif %}>
+                {{ categoria.nome }}
+                <span class="pilula__contagem"><span aria-hidden="true">·</span> {{ categoria.total_receitas }}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </nav>
+    {% endif %}
   </section>
 
   <section class="container">

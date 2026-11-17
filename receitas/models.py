@@ -8,7 +8,9 @@ e moderação são escopo das specs seguintes (ver specs/README.md).
 
 from __future__ import annotations
 
-from typing import Any
+import re
+from dataclasses import dataclass, field
+from typing import Any, Literal
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -21,6 +23,34 @@ from .utils import gerar_slug_unico
 # Limite de upload da imagem de capa (RF-04) — evita que uma foto de celular
 # sem compressão vá parar direto em media/ sem controle de tamanho.
 _TAMANHO_MAXIMO_IMAGEM = 5 * 1024 * 1024  # 5 MB
+
+# Passo do modo de preparo: parágrafo que começa por "1." ou "1)" (spec 012,
+# adendo, RF-22). O grupo 1 é o texto sem o número digitado.
+_PASSO_NUMERADO = re.compile(r"^\s*\d+[.)]\s+(.*)$", re.DOTALL)
+_LINHA_EM_BRANCO = re.compile(r"\n\s*\n")
+
+
+@dataclass
+class TrechoDoPreparo:
+    """
+    Pedaço do modo de preparo pronto para exibir (spec 012, adendo, ADR-9).
+
+    Só de exibição: não é modelo nem vai ao banco. O template monta o HTML e
+    escapa cada texto.
+
+    Attributes:
+        tipo (Literal["paragrafo", "passos", "nota"]): parágrafo antes ou
+            entre os passos, grupo de passos seguidos, ou parágrafo depois do
+            último passo.
+        textos (list[str]): os parágrafos do trecho, sem o número digitado
+            nos passos.
+        inicio (int): número do primeiro passo do grupo (o ``start`` do
+            ``<ol>``); 1 nos outros tipos.
+    """
+
+    tipo: Literal["paragrafo", "passos", "nota"]
+    textos: list[str] = field(default_factory=list)
+    inicio: int = 1
 
 
 def validar_tamanho_imagem(arquivo: models.fields.files.FieldFile) -> None:
@@ -85,6 +115,8 @@ class Categoria(models.Model):
             primeiro ``save()`` quando não fornecido; único no banco.
         objects (CategoriaQuerySet): manager com as consultas de
             ``CategoriaQuerySet`` (spec 012, ADR-2).
+        total_receitas (int): só nas categorias que vêm de
+            ``com_receitas_publicadas()``, que o anota; não é campo do banco.
     """
 
     # unique fica no slug, não no nome (RF-01): duas categorias podem ter o
@@ -93,6 +125,9 @@ class Categoria(models.Model):
     slug = models.SlugField(max_length=90, unique=True, blank=True)
 
     objects = CategoriaQuerySet.as_manager()
+
+    # Só o tipo, para o mypy: anotação sem valor não vira campo nem migration.
+    total_receitas: int
 
     class Meta:
         verbose_name_plural = "categorias"
@@ -251,6 +286,43 @@ class Receita(models.Model):
         if not self.slug:
             self.slug = gerar_slug_unico(Receita, self.titulo)
         super().save(*args, **kwargs)
+
+    def partes_do_preparo(self) -> list[TrechoDoPreparo]:
+        """
+        Divide o modo de preparo em parágrafos, passos numerados e nota.
+
+        Parágrafo é um bloco separado por linha em branco; passo é o parágrafo
+        que começa por número seguido de ponto ou parêntese. Os passos são
+        numerados pela posição, não pelo número digitado, e o que vem depois
+        do último passo vira nota. Não grava nada: o texto do banco fica como
+        está (spec 012, adendo, RF-22, ADR-9).
+
+        Returns:
+            list[TrechoDoPreparo]: os trechos na ordem do texto; sem nenhum
+            passo, um único trecho ``paragrafo`` com todos os parágrafos.
+        """
+        texto = self.modo_de_preparo.replace("\r\n", "\n").strip()
+        paragrafos = [p.strip() for p in _LINHA_EM_BRANCO.split(texto) if p.strip()]
+        passos_vistos = 0
+        trechos: list[TrechoDoPreparo] = []
+        for paragrafo in paragrafos:
+            passo = _PASSO_NUMERADO.match(paragrafo)
+            tipo: Literal["paragrafo", "passos"] = "passos" if passo else "paragrafo"
+            conteudo = passo.group(1).strip() if passo else paragrafo
+            if not trechos or trechos[-1].tipo != tipo:
+                trechos.append(TrechoDoPreparo(tipo, inicio=passos_vistos + 1))
+            trechos[-1].textos.append(conteudo)
+            if passo:
+                passos_vistos += 1
+        if passos_vistos == 0:
+            return trechos
+        # O que sobra depois do último grupo de passos é nota (fonte, dica).
+        if trechos[-1].tipo == "paragrafo":
+            trechos[-1].tipo = "nota"
+        for trecho in trechos:
+            if trecho.tipo != "passos":
+                trecho.inicio = 1
+        return trechos
 
 
 class Comentario(models.Model):

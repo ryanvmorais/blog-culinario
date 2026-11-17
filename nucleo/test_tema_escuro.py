@@ -31,6 +31,7 @@ TEXTO_SOBRE_FUNDO = [
     ("--cor-primaria", "--cor-fundo", 4.5),
     ("--cor-primaria", "--cor-superficie", 4.5),
     ("--cor-texto-invertido", "--cor-primaria", 4.5),  # texto do botão primário
+    ("--cor-texto-invertido", "--cor-primaria-escura", 4.5),  # pílula ativa no hover
     ("--cor-primaria-escura", "--cor-primaria-clara", 4.5),  # selo e mensagem de ok
     ("--cor-destaque-escura", "--cor-superficie", 4.5),  # categoria do cartão
     ("--cor-erro", "--cor-erro-fundo", 4.5),
