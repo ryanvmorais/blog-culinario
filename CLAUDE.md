@@ -79,7 +79,7 @@ assets/                    # imagens do README e do social preview
 specs/                     # spec-driven development — ver specs/README.md
 docs/stack.md              # o que compõe a stack, por que e o que estudar
 docs/design-system.html    # catálogo visual (tokens, tipografia, componentes); abra direto no navegador — usa o tokens.css e o base.css do site
-.github/                   # CI (ci.yml), pip-audit semanal (pip-audit.yml), Lighthouse CI (lighthouse.yml + lighthouse/), Dependabot (uv + github-actions), formulário de issue (com o atalho para o aviso privado de segurança) e template de PR
+.github/                   # CI (ci.yml), pip-audit semanal (pip-audit.yml), CodeQL (codeql.yml), Lighthouse CI (lighthouse.yml + lighthouse/), Dependabot (uv + github-actions), formulário de issue (com o atalho para o aviso privado de segurança) e template de PR
 SECURITY.md                # política de segurança: relato privado pelos avisos do GitHub, prazos e escopo
 railpack.json              # build e start na Railway: uv sync --locked, collectstatic, migrate e gunicorn, sempre com settings.prod (spec 011)
 conftest.py                # pytest: cache em pasta temporária, fora da django_cache/ da raiz
@@ -164,7 +164,10 @@ Sequência do portão: `ruff check` → `black --check` → `mypy` → `pytest`.
 CI (`.github/workflows/ci.yml`) roda a mesma sequência em todo PR e em todo
 push na `main`. O `.github/workflows/pip-audit.yml` audita o `uv.lock` com
 `pip-audit` toda segunda, 09:00 de São Paulo (e à mão): o CI só roda em PR, e o Dependabot nem sempre
-abre PR de correção.
+abre PR de correção. O `.github/workflows/codeql.yml` roda o CodeQL (Python, JavaScript e os
+próprios workflows) em PR, na `main` e aos domingos; os alertas ficam na aba Security. É workflow
+do repositório, não o "default setup" do GitHub, que fica desligado: o GitHub não aceita os dois
+ao mesmo tempo.
 
 **Lighthouse CI** (`.github/workflows/lighthouse.yml`): audita 5 páginas públicas (home, lista e detalhe de receita, entrar e cadastro), em mobile e desktop, com 3 medições e mediana. Roda em PR quando muda template, estático, view, model, o comando de dados ou a configuração, no push da `main` e à mão (`workflow_dispatch`); repo público, então sem teto de minutos. **Não é check obrigatório** (o Lighthouse varia em runner compartilhado). O servidor sobe com os dados de `manage.py semear_dados_demo` (idempotente, recusa `DEBUG=False`, capas geradas com o Pillow, sem rede) e com `MODO_DEMONSTRACAO=True`, como a instância pública, e `URL_PUBLICA` no host do próprio runner (a auditoria de canonical reprova outro domínio). Limites em `.github/lighthouse/{mobile,desktop}.json`: **erro** para acessibilidade, boas práticas e SEO < 95, CLS > 0,1, peso por página, e `color-contrast`, `unsized-images`, `target-size` e `errors-in-console` como asserções próprias; **aviso** para a nota de Performance. `@lhci/cli` fixado em `LHCI_VERSION` (o Dependabot não vê um `npx`: ao subir, recalibre os limites). Os números são comparação relativa; os reais só existem em produção. Página nova importante entra nos dois JSON; o `receitas/test_semear_dados_demo.py` guarda que toda URL responde 200 e que mobile e desktop auditam o mesmo.
 
