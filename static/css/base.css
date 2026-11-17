@@ -80,8 +80,12 @@ a:hover {
   color: var(--cor-primaria-escura);
 }
 
+/* height: auto porque o atributo height do <img> vira altura de CSS: sem ele,
+   a capa com width/height no HTML fica com a altura cheia e o aspect-ratio
+   não age (a do destaque da home saía com 900 px em qualquer largura). */
 img {
   max-width: 100%;
+  height: auto;
   display: block;
 }
 
