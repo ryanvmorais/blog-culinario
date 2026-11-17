@@ -231,3 +231,66 @@ login obrigatório (RF-06: POST anônimo redireciona para
 e login em seguida volta pra lá), admin (RF-07: listagem com os filtros;
 desmarcar `aprovado` via `ComentarioAdmin` e conferir que a view pública
 deixa de mostrar o comentário).
+
+## Adendo (2026-11-16): tamanho máximo do comentário
+
+> Status do adendo: concluído (2026-11-16). Desenha o RF-08, o RF-09 e o RNF-03 do adendo do
+> `requirements.md`. O texto acima fica como está; os ADRs continuam a numeração.
+
+### Visão geral da abordagem do adendo
+
+O `FormularioComentario` declara o campo `texto` em vez de herdá-lo do modelo: um
+`forms.CharField` com `max_length=2000`, o mesmo `Textarea` e o mesmo rótulo de hoje, e
+as duas mensagens de erro (vazio e longo demais) em `error_messages`. O `CharField` do
+Django já põe o `maxlength` no `<textarea>` e corta os espaços das pontas antes de
+medir. A `ComentarioCreateView` deixa de escrever a mensagem de erro e passa a usar a do
+campo, então cada recusa sai com o motivo certo.
+
+### Componentes do adendo
+
+#### `receitas/forms.py`
+
+- **`TAMANHO_MAXIMO_COMENTARIO = 2000`**, com comentário do porquê (decisão resolvida 1
+  do adendo).
+- **`FormularioComentario.texto`:** `forms.CharField(max_length=TAMANHO_MAXIMO_COMENTARIO,
+  label="Comentário", widget=forms.Textarea(attrs={"rows": 4, "placeholder": ...}),
+  error_messages={"required": "O comentário não pode ficar vazio.", "max_length": "O
+  comentário pode ter até 2.000 caracteres."})`. O `widgets` e o `labels` do `Meta`
+  saem, porque o campo declarado os substitui; o `fields = ["texto"]` fica.
+
+#### `receitas/views.py::ComentarioCreateView.post()`
+
+- No ramo inválido, `messages.error(request, form.errors["texto"][0])` no lugar do texto
+  fixo. O `texto` é o único campo que pode falhar (o honeypot e o carimbo não são
+  obrigatórios), então o primeiro erro dele é o motivo da recusa.
+
+### ADR-5 — A mensagem de erro vem do campo, não da view
+
+**Decisão.** As duas mensagens ficam no `error_messages` do campo `texto`, e a view mostra
+o erro que o formulário devolveu.
+**Alternativas.** (a) A view medir o texto e escolher a mensagem. (b) Uma mensagem
+genérica para os dois casos ("O comentário é inválido.").
+**Porquê.** A regra e a mensagem moram juntas no formulário, como no cadastro (spec 004),
+e uma regra nova de conteúdo não pede mudança na view. A mensagem genérica não diz ao
+visitante o que corrigir.
+**Trade-off.** A view passa a depender de o `texto` ser o único campo que falha; um campo
+obrigatório novo no formulário precisaria rever esse ramo.
+
+### Impacto no código existente do adendo
+
+- `receitas/forms.py`: a constante e o campo declarado.
+- `receitas/views.py`: o ramo inválido do `post()`.
+- Nenhuma migration (RNF-03), nenhum template: o `{{ formulario_comentario.texto }}` do
+  `detalhe.html` já renderiza o `maxlength`.
+
+### Estratégia de testes do adendo
+
+Em `receitas/tests.py`, ao lado dos testes de validação do RF-05:
+
+- O HTML da receita, para um usuário logado, traz o `<textarea>` com `maxlength="2000"`.
+- 2.000 caracteres criam o comentário; 2.001 não criam e mostram "O comentário pode ter
+  até 2.000 caracteres.", parametrizado com `MODO_DEMONSTRACAO` ligado e desligado (com
+  ele ligado, nada é gravado nos dois casos, e o que muda é a mensagem).
+- O vazio continua com "O comentário não pode ficar vazio.".
+- O envio passa pelo time-trap da spec 007: o teste manda o `_carimbo_valido()`, como
+  os testes de hoje.

@@ -89,3 +89,19 @@ sem relação com o adendo: ele
 comparava o `lastmod` do sitemap com o `atualizado_em` em UTC, e o template do sitemap
 escreve a data no fuso do site (`TIME_ZONE`). Corrigido no próprio teste, que passou a
 comparar com `timezone.localdate()`.
+
+## Adendo 2 (2026-11-16): registro no log
+
+> Status do adendo 2: concluído (2026-11-16). Quebra o adendo 2 do `design.md` (RF-09, RF-10, RNF-06,
+> ADR-9). As etapas continuam a numeração acima.
+
+## Etapa 9 — Registro da primeira recusa
+
+- [x] `blog_culinario/limitacao.py`: `logger = logging.getLogger(__name__)` e, depois do `incr()`, `logger.warning("limite atingido: %s %s", chave, request.path)` quando `tentativas == limite + 1`. — RF-09, RNF-06, ADR-9
+- [x] `nucleo/test_limitacao.py`: com o `caplog`, a sexta tentativa de login gera a linha e a sétima não; a linha não traz o `REMOTE_ADDR` nem o usuário enviado; abaixo do limite, nada; a 11ª do cadastro gera a linha com `cadastro`. — RF-09, RF-10
+- [x] Portão de qualidade: `uv run ruff check . && uv run black --check . && uv run mypy . && uv run pytest` — 351 passed, 3 skipped; ruff/black/mypy verdes.
+
+## Etapa 10 — Fechamento dos adendos
+
+- [x] `specs/005-comentarios/` e `specs/006-limitacao-de-taxa/`: status `concluído` nos três arquivos de cada uma e no roadmap do `specs/README.md`. — RF-09 (005), RF-10 (006)
+- [x] Portão de qualidade completo: `uv run ruff check . && uv run black --check . && uv run mypy . && uv run pytest` — 351 passed, 3 skipped; ruff/black/mypy verdes.
