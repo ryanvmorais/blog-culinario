@@ -1,4 +1,4 @@
-![Blog Culinário: página inicial com receitas simples para todos os dias](assets/blog-culinario-django-home-receitas-desktop.webp)
+![Blog Culinário: página inicial no desktop, com a busca e a receita mais nova, e a página de uma receita no celular](assets/blog-culinario-django-home-desktop-e-celular.webp)
 
 # 🍲 Blog Culinário | Blog Multipáginas Educacional em Django
 

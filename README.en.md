@@ -1,4 +1,4 @@
-![Blog Culinário: home page with simple everyday recipes](assets/blog-culinario-django-home-receitas-desktop.webp)
+![Blog Culinário: home page on desktop, with the search and the newest recipe, and a recipe page on a phone](assets/blog-culinario-django-home-desktop-e-celular.webp)
 
 # 🍲 Blog Culinário | Django Recipe Blog for Learning Web Development
 
