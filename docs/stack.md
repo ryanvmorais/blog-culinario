@@ -246,6 +246,7 @@ faz, como ler um erro `[import-untyped]`/`[arg-type]`.
 | GitHub Actions | `ci.yml` roda o portão de qualidade (ruff, black, mypy, pytest) em todo PR e em todo push na `main`, numa matriz do Python 3.12 (o piso) ao 3.15. |
 | Dependabot | `.github/dependabot.yml` abre PRs de atualização para o `uv` e para as próprias Actions; os PRs são revisados, não mergeados sozinhos. |
 | pip-audit | `pip-audit.yml` audita o `uv.lock` atrás de CVEs toda segunda, 09:00 de São Paulo (e sob demanda): o CI só roda em PR e o Dependabot nem sempre abre PR de correção. |
+| CodeQL | `codeql.yml` roda o code scanning do GitHub (Python, JavaScript e os próprios workflows, sem build) em todo PR, em todo push na `main` e aos domingos; os alertas aparecem na aba Security. Fica no repositório, e não no "default setup", para o runner e as versões serem fixos como nos outros workflows. Estudar primeiro: o `codeql.yml` e a aba Security → Code scanning. |
 | Lighthouse CI | `lighthouse.yml` mede as 5 páginas públicas em mobile e desktop e falha se acessibilidade, SEO, contraste, alvo de toque, erro de console, CLS ou peso regredirem. Sobe o site com os dados de `manage.py semear_dados_demo`. Não é check obrigatório (varia em runner compartilhado). Estudar primeiro: `.github/lighthouse/*.json` (os limites) e o `semear_dados_demo.py`. |
 
 ## O que deliberadamente não está na stack
