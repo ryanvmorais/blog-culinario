@@ -1,6 +1,6 @@
 ---
 feature: Redesenho da home
-status: em andamento
+status: concluído
 date: 2026-11-17
 related:
   - 002-listagem-detalhe-receitas/requirements.md
@@ -406,4 +406,6 @@ RF-17):
   home, na listagem e numa receita, a 390 e 1280 px, nos temas claro e escuro, e na home a 390 px
   com o menu aberto, nos dois temas. Nenhuma página rola de lado; cada uma tem um `h1` e nenhum
   pulo de nível nos títulos.
+- **Lighthouse CI** (no PR, mobile e desktop): as asserções de `.github/lighthouse/` passaram nas 5
+  páginas auditadas, home inclusive, em 15 execuções por perfil.
 

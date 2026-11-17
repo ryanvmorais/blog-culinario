@@ -1,6 +1,6 @@
 ---
 feature: Redesenho da home
-status: em andamento
+status: concluído
 date: 2026-11-17
 related:
   - 002-listagem-detalhe-receitas/requirements.md
@@ -53,5 +53,5 @@ origin: concepcao
 - [x] `specs/002-listagem-detalhe-receitas/requirements.md` e `specs/008-correcoes-de-interface/requirements.md`: a linha `**Superseded by** 012-redesenho-da-home, RF-07.` (002, RF-06) e `… RF-04.` (008, RF-01). — RF-04, RF-07
 - [x] `CLAUDE.md`: o mapa de `nucleo/` com a `templatetags/navegacao.py` e os testes novos. — RNF-06
 - [x] Navegador real, a 390 e a 1280 px, nos dois temas, com o menu aberto e fechado: axe-core sem violação, medidas de botão e alinhamento, primeira tela da home; registrar em "Notas de implementação" do `design.md`. — RNF-04 (axe zerado em 14 combinações; medidas sem achado)
-- [ ] Lighthouse da home (mobile e desktop) dentro dos limites de `.github/lighthouse/`; registrar o resultado. — RNF-05
+- [x] Lighthouse da home (mobile e desktop) dentro dos limites de `.github/lighthouse/`; registrar o resultado. — RNF-05 (Lighthouse CI do PR: asserções aprovadas nas 5 páginas, 15 execuções por perfil)
 - [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. — 415 passed, 3 skipped; ruff/black/mypy verdes
