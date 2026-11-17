@@ -1,0 +1,11 @@
+{# Coluna "Categorias" do rodapé, desenhada pela tag {% categorias_do_rodape %} (spec 012, ADR-3). #}
+{% if categorias %}
+  <nav class="rodape__coluna" aria-labelledby="rodape-categorias">
+    <h2 class="rodape__titulo" id="rodape-categorias">Categorias</h2>
+    <ul>
+      {% for categoria in categorias %}
+        <li><a href="{% url 'receitas:lista' %}?categoria={{ categoria.slug }}">{{ categoria.nome }}</a></li>
+      {% endfor %}
+    </ul>
+  </nav>
+{% endif %}

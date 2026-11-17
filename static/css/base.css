@@ -185,9 +185,10 @@ ol {
 
 
 /* 3. Navbar --------------------------------------------------------------
-   .navbar__links--aberto é alternada pelo menu mobile em
-   static/js/interacoes.js (o estilo do estado aberto vive na seção 10,
-   dentro do breakpoint mobile). */
+   Uma marcação só para a barra do desktop e o painel do celular (spec 012,
+   ADR-4): aqui, a barra; na seção 10, o painel lateral. A classe
+   .navbar__painel--aberto e o atributo hidden do véu são alternados por
+   inicializarMenuMobile(), em static/js/interacoes.js. */
 .navbar {
   position: sticky;
   top: 0;
@@ -229,8 +230,44 @@ ol {
   color: var(--cor-primaria);
 }
 
+.navbar__painel,
+.navbar__conta {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-6);
+}
+
+/* No desktop, Entrar, Cadastrar e a saudação seguem os links da barra. */
+.navbar__acao,
+.navbar__saudacao {
+  color: var(--cor-texto);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+a.navbar__acao:hover {
+  color: var(--cor-primaria);
+}
+
+/* O rótulo "Sua conta" só faz sentido no painel do celular. */
+.navbar__conta .navbar__rotulo {
+  display: none;
+}
+
 .navbar__alternador {
   display: none; /* só aparece no breakpoint mobile, seção 10 */
+}
+
+/* O botão mostra o ícone do estado: três linhas fechado, X aberto (spec 012,
+   RF-15). O estado vem só do aria-expanded, que o JavaScript já atualiza
+   (ADR-7). */
+.navbar__icone--fechar,
+.navbar__alternador[aria-expanded="true"] .navbar__icone--menu {
+  display: none;
+}
+
+.navbar__alternador[aria-expanded="true"] .navbar__icone--fechar {
+  display: block;
 }
 
 
@@ -272,25 +309,243 @@ ol {
 }
 
 
-/* Painel de destaque: bloco centrado com fundo de superfície, para uma mensagem
-   curta que fecha uma página (na home, "Por dentro, um projeto Django"). */
-.painel-destaque {
-  margin-block: var(--espaco-12) 0;
+/* 4.1 Home (spec 012) -------------------------------------------------------
+   Peças da home redesenhada, na ordem da página: abertura, busca, números,
+   receita em destaque, rótulo de seção, pílulas de categoria e "Por dentro".
+   Tudo nasce no layout do celular (uma coluna, abertura centrada, como a
+   abertura de antes); as duas colunas da abertura entram acima de 720 px, na
+   seção 10. */
+
+/* 4.1.1 Abertura: o texto e, ao lado no desktop, a receita mais nova (RF-01).
+   Sem receita publicada, a view não manda destaque e o template põe
+   .hero-dividido--uma-coluna: o texto fica centrado em qualquer largura. */
+.hero-dividido {
+  display: grid;
+  gap: var(--espaco-8);
+  padding-block: var(--espaco-12) var(--espaco-8);
+}
+
+.hero-dividido__texto {
+  text-align: center;
+}
+
+/* 4.1.2 Busca da abertura (RF-02). O rótulo fica à esquerda mesmo com a
+   abertura centrada: rótulo de campo é leitura (spec 008, RF-17). */
+.busca-hero {
+  max-width: 34rem;
+  margin: var(--espaco-6) auto 0;
+  text-align: left;
+}
+
+.busca-hero label {
+  display: block;
+  margin-bottom: var(--espaco-1);
+  font-size: var(--texto-sm);
+  font-weight: 600;
+}
+
+.busca-hero__linha {
+  display: flex;
+  gap: var(--espaco-2);
+}
+
+.busca-hero input[type="search"] {
+  flex: 1 1 auto;
+  min-width: 0; /* sem isso o campo não encolhe e empurra o botão para fora a 320 px */
+  min-height: 3rem;
+  padding: var(--espaco-3) var(--espaco-4);
+  border: 1px solid var(--cor-borda-campo);
+  border-radius: var(--raio-pill);
+  font: inherit;
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+}
+
+/* 4.1.3 Números contados do banco e convite à conta (RF-03, RF-04). O "·"
+   entre os itens é decoração: o texto alternativo vazio do content o tira
+   do leitor de tela. */
+.numeros {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--espaco-1) var(--espaco-3);
+  margin: var(--espaco-4) 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--cor-texto-suave);
+  font-size: var(--texto-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.numeros strong {
+  color: var(--cor-texto);
+}
+
+.numeros li + li::before {
+  content: "·" / "";
+  margin-right: var(--espaco-3);
+}
+
+.hero__conta {
+  margin: var(--espaco-2) auto 0;
+  color: var(--cor-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+/* 4.1.4 Receita em destaque (RF-05): a capa sem lazy é a maior imagem da
+   primeira tela (RNF-05); o título fica no estilo de link do site. */
+.destaque {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--raio-lg);
+  background: var(--cor-superficie);
+  box-shadow: var(--sombra-cartao);
+  text-align: left;
+}
+
+.destaque__imagem {
+  width: 100%;
+  aspect-ratio: 4 / 3; /* reserva o espaço antes da foto chegar (spec 008, RF-09) */
+  object-fit: cover;
+  background: var(--cor-primaria-clara);
+}
+
+.destaque__corpo {
+  padding: var(--espaco-6);
+}
+
+.destaque__titulo {
+  margin: 0 0 var(--espaco-3);
+  font-size: var(--texto-lg);
+}
+
+.destaque__resumo {
+  color: var(--cor-texto-suave);
+}
+
+/* 4.1.5 Seções e o rótulo em caixa alta acima do título (RF-11). O rótulo
+   fica fora do h2: o nome da seção no leitor de tela continua só o título. */
+.secao {
+  padding-top: var(--espaco-12);
+}
+
+.secao__titulo {
+  margin-bottom: var(--espaco-6);
+}
+
+.secao__rodape {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--espaco-8);
+}
+
+.rotulo {
+  display: block;
+  margin-bottom: var(--espaco-2);
+  color: var(--cor-primaria-escura);
+  font-size: var(--texto-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* 4.1.6 Pílulas de categoria (RF-06). Borda de campo (3:1) porque a pílula é
+   um controle, não uma divisória (spec 008, RF-08). */
+.pilulas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pilula {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-1);
+  min-height: 2.75rem;
+  padding: var(--espaco-2) var(--espaco-4);
+  border: 1px solid var(--cor-borda-campo);
+  border-radius: var(--raio-pill);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color var(--transicao-rapida), color var(--transicao-rapida);
+}
+
+.pilula:hover {
+  border-color: var(--cor-primaria);
+  color: var(--cor-primaria);
+}
+
+.pilula__contagem {
+  color: var(--cor-texto-suave);
+  font-weight: 400;
+}
+
+/* 4.1.7 "Por dentro": cada nota aponta o arquivo que faz a parte funcionar
+   (RF-09). As notas têm a mesma altura e o link no pé, como os cartões. */
+.por-dentro {
   padding: var(--espaco-8) var(--espaco-6);
   border-radius: var(--raio-lg);
   background: var(--cor-superficie);
   box-shadow: var(--sombra-cartao);
-  text-align: center;
 }
 
-.painel-destaque p {
-  margin-inline: auto;
+.por-dentro__intro {
   color: var(--cor-texto-suave);
 }
 
+.notas-codigo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--espaco-4);
+  margin: var(--espaco-6) 0;
+  padding: 0;
+  list-style: none;
+}
 
-/* 5. Cartões de receita ------------------------------------------------- */
+.nota-codigo {
+  display: flex;
+  flex-direction: column;
+  padding: var(--espaco-6);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-md);
+  background: var(--cor-fundo);
+}
+
+.nota-codigo h3 {
+  margin-bottom: var(--espaco-2);
+}
+
+.nota-codigo p {
+  color: var(--cor-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.nota-codigo code {
+  font-family: var(--fonte-mono);
+  font-size: 0.85em;
+}
+
+.nota-codigo a {
+  align-self: flex-start; /* no flex em coluna, o link esticaria na largura toda */
+  margin-top: auto;
+  font-size: var(--texto-sm);
+  font-weight: 600;
+}
+
+
+/* 5. Cartões de receita -------------------------------------------------
+   Cartão em coluna, corpo que cresce e meta no pé: os cartões de uma linha da
+   grade têm a mesma altura, com o tempo e as porções alinhados (spec 012,
+   RF-08). */
 .cartao-receita {
+  display: flex;
+  flex-direction: column;
   background: var(--cor-superficie);
   border-radius: var(--raio-lg);
   overflow: hidden;
@@ -311,6 +566,10 @@ ol {
 }
 
 .cartao-receita__corpo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start; /* a categoria e o título não esticam na largura toda */
   padding: var(--espaco-4);
 }
 
@@ -332,6 +591,7 @@ ol {
 .cartao-receita__meta {
   display: flex;
   gap: var(--espaco-4);
+  margin-top: auto; /* a meta desce ao pé do cartão (spec 012, RF-08) */
   color: var(--cor-texto-suave);
   font-size: var(--texto-sm);
 }
@@ -595,7 +855,8 @@ ol {
   font-size: var(--texto-sm);
 }
 
-.rodape .container {
+/* 9.1 Rodapé de uma linha das páginas de erro (includes/rodape_erro.html). */
+.rodape--linha .container {
   display: flex;
   flex-wrap: wrap;
   gap: var(--espaco-4);
@@ -603,49 +864,210 @@ ol {
   justify-content: space-between;
 }
 
+/* 9.2 Rodapé em colunas do resto do site (spec 012, RF-12): marca, Navegar,
+   Categorias e O projeto; até 720 px, a marca na largura toda e os links em
+   duas colunas (seção 10). */
+.rodape__colunas {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+  gap: var(--espaco-8);
+}
+
+.rodape__marca {
+  margin-bottom: var(--espaco-2);
+  color: var(--cor-texto);
+  font-family: var(--fonte-titulo);
+  font-size: var(--texto-lg);
+  font-weight: 600;
+}
+
+.rodape__sobre p {
+  max-width: 32ch;
+}
+
+.rodape__titulo {
+  margin-bottom: var(--espaco-3);
+  font-family: var(--fonte-corpo);
+  font-size: var(--texto-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rodape__coluna ul {
+  display: grid;
+  gap: var(--espaco-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rodape__coluna a {
+  display: inline-block;
+  padding-block: var(--espaco-1); /* alvo de 24 px ou mais (WCAG 2.5.8) */
+  color: var(--cor-texto-suave);
+  text-decoration: none;
+}
+
+.rodape__coluna a:hover {
+  color: var(--cor-primaria);
+  text-decoration: underline;
+}
+
+/* O "©" centrado marca o fim da página, no celular e no desktop. */
+.rodape__base {
+  max-width: none;
+  margin: var(--espaco-8) 0 0;
+  padding-top: var(--espaco-6);
+  border-top: 1px solid var(--cor-borda);
+  text-align: center;
+}
+
 
 /* 10. Responsivo (mobile) ---------------------------------------------------
-   Abaixo de 720px o menu de links vira painel deslizante, controlado pela
-   classe .navbar__links--aberto (alternada por interacoes.js). */
+   Até 720 px o menu vira um painel que entra pela direita, abaixo da barra,
+   com um véu sobre a página (spec 012, RF-14 a RF-17). Os passos:
+     1. barra de altura fixa, para o painel e o véu saberem onde começar;
+     2. botão de 48 x 48 px;
+     3. painel fechado fora da tela, aberto com .navbar__painel--aberto;
+     4. links e o grupo "Sua conta", com as ações em forma de botão;
+     5. véu e a rolagem da página travada com html.menu-aberto. */
 @media (max-width: 720px) {
+  /* 1. Altura fixa: o painel e o véu começam logo abaixo da barra. */
+  .navbar .container {
+    height: var(--altura-barra);
+    padding-block: 0;
+  }
+
+  /* 2. A margem negativa alinha o ícone à borda do texto da página. */
   .navbar__alternador {
     display: inline-flex;
-    background: none;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    margin-right: calc(-1 * var(--espaco-3));
+    padding: 0;
     border: none;
-    font-size: var(--texto-lg);
+    background: none;
+    color: var(--cor-texto);
     cursor: pointer;
   }
 
-  .navbar__links {
-    position: absolute;
-    inset-inline: 0;
-    top: 100%;
+  /* 3. Fechado, o painel fica fora da tela e invisível (fora do Tab e do
+     leitor). O visibility só some depois do deslize: o atraso de 250 ms é
+     o tempo de --transicao-padrao. */
+  .navbar__painel {
+    position: fixed;
+    top: calc(var(--altura-barra) + 1px); /* + a borda da barra */
+    right: 0;
+    bottom: 0;
+    z-index: 2;
     flex-direction: column;
+    align-items: stretch;
     gap: 0;
+    width: 80%;
+    overflow-y: auto; /* celular baixo: o painel rola por dentro */
     background: var(--cor-fundo);
-    border-bottom: 1px solid var(--cor-borda);
-    display: none;
+    box-shadow: var(--sombra-elevada);
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform var(--transicao-padrao), visibility 0s linear 250ms;
   }
 
-  .navbar__links--aberto {
-    display: flex;
+  .navbar__painel--aberto {
+    transform: none;
+    visibility: visible;
+    transition: transform var(--transicao-padrao);
+  }
+
+  /* 4. Links de 48 px; a conta é um grupo à parte, com as ações em forma de botão. */
+  .navbar__links {
+    flex-direction: column;
+    gap: 0;
+    padding-block: var(--espaco-2);
   }
 
   .navbar__links a {
-    display: block;
-    padding: var(--espaco-3) var(--espaco-4);
+    display: flex;
+    align-items: center;
+    min-height: 3rem;
+    padding-inline: var(--espaco-6);
+  }
+
+  .navbar__links a[aria-current="page"] {
+    color: var(--cor-primaria);
+    font-weight: 700;
+  }
+
+  .navbar__conta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--espaco-3);
+    padding: var(--espaco-4) var(--espaco-6) var(--espaco-6);
     border-top: 1px solid var(--cor-borda);
+  }
+
+  .navbar__conta .navbar__rotulo {
+    display: block;
+    margin: 0;
+    color: var(--cor-texto-suave);
+  }
+
+  .navbar__acao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 3rem;
+    padding: var(--espaco-3) var(--espaco-6);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-pill);
+    font-weight: 600;
+  }
+
+  .navbar__acao--principal {
+    border-color: transparent;
+    background: var(--cor-primaria);
+    color: var(--cor-texto-invertido);
+  }
+
+  a.navbar__acao--principal:hover {
+    background: var(--cor-primaria-escura);
+    color: var(--cor-texto-invertido);
+  }
+
+  /* 5. O véu fica abaixo do painel (z-index 1 contra 2), dentro da barra. */
+  .navbar__veu {
+    position: fixed;
+    inset: calc(var(--altura-barra) + 1px) 0 0;
+    z-index: 1;
+    background: var(--cor-veu);
+  }
+
+  .menu-aberto {
+    overflow: hidden;
   }
 
   .hero__acoes {
     flex-direction: column;
   }
+
+  .rodape__colunas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--espaco-6);
+  }
+
+  .rodape__sobre {
+    grid-column: 1 / -1;
+  }
 }
 
-/* Formulários em tela larga (spec 008, RF-10, ADR-1): um botão de 420 px para um
-   rótulo de 47 px fica desproporcional. Ele passa a ter o tamanho do conteúdo, no
-   centro da coluna nas páginas de acesso e à esquerda onde o formulário segue o
-   texto (comentário). */
+/* Tela larga, acima de 720 px.
+   Formulários (spec 008, RF-10, ADR-1): um botão de 420 px para um rótulo de 47 px
+   fica desproporcional. Ele passa a ter o tamanho do conteúdo, no centro da coluna
+   nas páginas de acesso e à esquerda onde o formulário segue o texto (comentário).
+   Abertura da home: duas colunas (spec 012, RF-01). */
 @media (min-width: 721px) {
   .formulario .botao {
     align-self: flex-start;
@@ -654,6 +1076,30 @@ ol {
 
   .pagina-formulario .formulario .botao {
     align-self: center;
+  }
+
+  /* Abertura da home em duas colunas: o texto à esquerda e a receita mais nova
+     à direita (spec 012, RF-01). */
+  .hero-dividido:not(.hero-dividido--uma-coluna) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--espaco-12);
+    align-items: center;
+  }
+
+  .hero-dividido:not(.hero-dividido--uma-coluna) .hero-dividido__texto {
+    text-align: left;
+  }
+
+  .hero-dividido:not(.hero-dividido--uma-coluna) :is(.hero__titulo, .hero__descricao, .busca-hero, .hero__conta) {
+    margin-inline: 0;
+  }
+
+  .hero-dividido:not(.hero-dividido--uma-coluna) .hero__descricao {
+    font-size: var(--texto-base);
+  }
+
+  .hero-dividido:not(.hero-dividido--uma-coluna) .numeros {
+    justify-content: flex-start;
   }
 }
 
@@ -668,7 +1114,10 @@ ol {
   }
 
   .cartao-receita,
-  .botao {
+  .botao,
+  .pilula,
+  .navbar__painel,
+  .navbar__painel--aberto {
     transition: none;
   }
 

@@ -215,6 +215,43 @@ def test_excluir_autor_preserva_a_receita_sem_autor() -> None:
 
 
 # -----------------------------------------------------------------------------
+# Categorias com receitas publicadas (spec 012, RF-06, ADR-2)
+# -----------------------------------------------------------------------------
+def test_com_receitas_publicadas_conta_so_as_publicadas() -> None:
+    massas = _categoria(nome="Massas")
+    _receita(categoria=massas, publicado=True)
+    _receita(categoria=massas, publicado=False)
+
+    (categoria,) = Categoria.objects.com_receitas_publicadas()
+
+    assert categoria == massas
+    # O atributo nasce do annotate(); o mypy só conhece os campos do modelo.
+    assert categoria.total_receitas == 1  # type: ignore[attr-defined]
+
+
+def test_com_receitas_publicadas_deixa_de_fora_categoria_so_com_rascunho() -> None:
+    _receita(categoria=_categoria(nome="Rascunhos"), publicado=False)
+    _categoria(nome="Vazia")
+
+    assert list(Categoria.objects.com_receitas_publicadas()) == []
+
+
+def test_com_receitas_publicadas_ordena_pela_contagem_e_pelo_nome() -> None:
+    """Mais receitas primeiro; no empate, ordem alfabética."""
+    sobremesas = _categoria(nome="Sobremesas")
+    lanches = _categoria(nome="Lanches")
+    massas = _categoria(nome="Massas")
+    for _ in range(2):
+        _receita(categoria=sobremesas, publicado=True)
+    _receita(categoria=massas, publicado=True)
+    _receita(categoria=lanches, publicado=True)
+
+    nomes = [c.nome for c in Categoria.objects.com_receitas_publicadas()]
+
+    assert nomes == ["Sobremesas", "Lanches", "Massas"]
+
+
+# -----------------------------------------------------------------------------
 # Validação de imagem de capa (RF-04)
 # -----------------------------------------------------------------------------
 def test_imagem_muito_grande_e_rejeitada() -> None:
@@ -327,8 +364,9 @@ def test_listagem_nao_tem_n_mais_1_com_tags(
         receita.tags.add(_tag(nome=f"tag-{i}-a"), _tag(nome=f"tag-{i}-b"))
 
     # 1 count (paginação) + 1 select principal (join de categoria/autor) + 1
-    # prefetch de tags — não cresce com o número de receitas nem de tags.
-    with django_assert_num_queries(3):
+    # prefetch de tags + 1 das categorias do rodapé (spec 012, ADR-3) — não
+    # cresce com o número de receitas nem de tags.
+    with django_assert_num_queries(4):
         client.get(reverse("receitas:lista"))
 
 

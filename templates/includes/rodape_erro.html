@@ -1,0 +1,21 @@
+{% comment %}
+     ============================================================
+     SEÇÃO: RODAPÉ DAS PÁGINAS DE ERRO
+     Uma linha, sem sessão e sem banco: com o banco fora, a página de erro
+     não pode virar 500 (spec 008, RF-04; spec 012, RF-13). O rodapé em
+     colunas, que lê a sessão e as categorias, é o includes/rodape.html.
+     ============================================================
+{% endcomment %}
+<footer class="rodape rodape--linha">
+  <div class="container">
+    <span>&copy; {% now "Y" %} Blog Culinário — receitas para todos os dias. Por dentro, um projeto Django open source.</span>
+    <a
+      href="https://github.com/ryanvmorais/blog-culinario"
+      target="_blank"
+      rel="noopener"
+    >
+      Ver código no GitHub
+    </a>
+  </div>
+</footer>
+{# fim: RODAPÉ DAS PÁGINAS DE ERRO #}

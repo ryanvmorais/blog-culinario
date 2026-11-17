@@ -36,6 +36,8 @@ TEXTO_SOBRE_FUNDO = [
     ("--cor-erro", "--cor-erro-fundo", 4.5),
     ("--cor-texto", "--cor-borda", 4.5),  # mensagem de informação
     ("--cor-primaria-escura", "--cor-borda", 4.5),  # link na mensagem (spec 009)
+    ("--cor-primaria-escura", "--cor-fundo", 4.5),  # rótulo de seção (spec 012)
+    ("--cor-primaria-escura", "--cor-superficie", 4.5),  # rótulo do destaque
     ("--cor-borda-campo", "--cor-superficie", 3.0),  # WCAG 1.4.11
     ("--cor-borda-campo", "--cor-fundo", 3.0),
 ]
@@ -110,3 +112,12 @@ def test_tema_escuro_muda_o_fundo_e_o_texto() -> None:
 def test_root_declara_os_dois_esquemas_para_controles_nativos() -> None:
     """RF-15: sem ``color-scheme: light dark`` a rolagem fica clara no escuro."""
     assert "color-scheme: light dark;" in CSS_TOKENS
+
+
+def test_veu_do_menu_tem_valor_nos_dois_temas() -> None:
+    """Spec 012, RNF-03: o véu é um token com par no tema escuro."""
+    claro = re.search(r"--cor-veu:\s*([^;]+);", CSS_TOKENS)
+    escuro = re.search(r"--cor-veu:\s*([^;]+);", _bloco_escuro())
+
+    assert claro and escuro
+    assert claro.group(1) != escuro.group(1)

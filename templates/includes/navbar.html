@@ -1,45 +1,62 @@
-{% load static %}
 {% comment %}
      ============================================================
      SEÇÃO: NAVBAR
-     Barra fixa no topo (position: sticky, ver static/css/base.css). O botão
-     de menu só aparece no breakpoint mobile; o toggle é feito por
-     inicializarMenuMobile() em static/js/interacoes.js.
+     Barra fixa no topo (position: sticky, ver static/css/base.css). Uma
+     marcação só para os dois tamanhos (spec 012, ADR-4): acima de 720 px,
+     o <nav> é a barra de links; até 720 px, é um painel que entra pela
+     direita, com o véu por cima da página. Abrir e fechar, o foco e o
+     inert ficam em inicializarMenuMobile(), em static/js/interacoes.js.
      ============================================================
 {% endcomment %}
 <header class="navbar">
   <div class="container">
     <a class="navbar__marca" href="{% url 'nucleo:home' %}">Blog Culinário</a>
 
-    <nav aria-label="Navegação principal">
-      {# Sobre entra quando a spec correspondente for implementada. #}
-      <ul class="navbar__links" id="menu-principal">
-        <li><a href="{% url 'nucleo:home' %}">Início</a></li>
-        <li><a href="{% url 'receitas:lista' %}">Receitas</a></li>
-        {% if user.is_authenticated %}
-          <li>Olá, {{ user.username }}</li>
-          <li>
-            <form method="post" action="{% url 'usuarios:sair' %}">
-              {% csrf_token %}
-              <button type="submit" class="link-botao">Sair</button>
-            </form>
-          </li>
-        {% else %}
-          <li><a href="{% url 'usuarios:entrar' %}">Entrar</a></li>
-          <li><a href="{% url 'usuarios:cadastro' %}">Cadastrar</a></li>
-        {% endif %}
-      </ul>
-    </nav>
-
+    {# Os dois ícones ficam no HTML; o CSS mostra um ou outro pelo aria-expanded (ADR-7). #}
     <button
       type="button"
       class="navbar__alternador"
-      aria-label="Abrir menu de navegação"
       aria-controls="menu-principal"
       aria-expanded="false"
+      aria-label="Abrir menu de navegação"
     >
-      ☰
+      <svg class="navbar__icone navbar__icone--menu" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </svg>
+      <svg class="navbar__icone navbar__icone--fechar" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+        <path d="M6 6l12 12M18 6L6 18" />
+      </svg>
     </button>
+
+    <nav class="navbar__painel" id="menu-principal" aria-label="Navegação principal">
+      {# Sobre entra quando a spec correspondente for implementada. #}
+      <ul class="navbar__links">
+        <li>
+          <a href="{% url 'nucleo:home' %}"{% if request.resolver_match.view_name == "nucleo:home" %} aria-current="page"{% endif %}>Início</a>
+        </li>
+        <li>
+          <a href="{% url 'receitas:lista' %}"{% if request.resolver_match.view_name == "receitas:lista" %} aria-current="page"{% endif %}>Receitas</a>
+        </li>
+      </ul>
+
+      {# Ações da conta, não lugares do site: no celular, um grupo com rótulo (RF-16). #}
+      <div class="navbar__conta">
+        <span class="rotulo navbar__rotulo">Sua conta</span>
+        {% if user.is_authenticated %}
+          <span class="navbar__saudacao">Olá, {{ user.username }}</span>
+          <form method="post" action="{% url 'usuarios:sair' %}">
+            {% csrf_token %}
+            <button type="submit" class="link-botao navbar__acao">Sair</button>
+          </form>
+        {% else %}
+          <a class="navbar__acao" href="{% url 'usuarios:entrar' %}">Entrar</a>
+          <a class="navbar__acao navbar__acao--principal" href="{% url 'usuarios:cadastro' %}">Cadastrar</a>
+        {% endif %}
+      </div>
+    </nav>
   </div>
+
+  {# Escurece a página abaixo da barra com o menu aberto; um toque nele fecha (RF-14, RF-17). #}
+  <div class="navbar__veu" hidden></div>
 </header>
 {# fim: NAVBAR #}

@@ -1,18 +1,47 @@
+{% load navegacao %}
 {% comment %}
      ============================================================
      SEÇÃO: RODAPÉ
+     Quatro colunas: a marca, a navegação, as categorias com receita
+     publicada e os documentos do projeto; abaixo, o "©" centrado, que marca
+     o fim da página (spec 012, RF-12). As páginas de erro usam o
+     includes/rodape_erro.html, que não lê sessão nem banco (RF-13).
      ============================================================
 {% endcomment %}
 <footer class="rodape">
   <div class="container">
-    <span>&copy; {% now "Y" %} Blog Culinário — receitas para todos os dias. Por dentro, um projeto Django open source.</span>
-    <a
-      href="https://github.com/ryanvmorais/blog-culinario"
-      target="_blank"
-      rel="noopener"
-    >
-      Ver código no GitHub
-    </a>
+    <div class="rodape__colunas">
+      <div class="rodape__sobre">
+        <p class="rodape__marca">Blog Culinário</p>
+        <p>Receitas para todos os dias. Por dentro, um projeto Django open source.</p>
+      </div>
+
+      <nav class="rodape__coluna" aria-labelledby="rodape-navegar">
+        <h2 class="rodape__titulo" id="rodape-navegar">Navegar</h2>
+        <ul>
+          <li><a href="{% url 'nucleo:home' %}">Início</a></li>
+          <li><a href="{% url 'receitas:lista' %}">Receitas</a></li>
+          {% if not user.is_authenticated %}
+            <li><a href="{% url 'usuarios:entrar' %}">Entrar</a></li>
+            <li><a href="{% url 'usuarios:cadastro' %}">Cadastrar</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+
+      {% categorias_do_rodape %}
+
+      <nav class="rodape__coluna" aria-labelledby="rodape-projeto">
+        <h2 class="rodape__titulo" id="rodape-projeto">O projeto</h2>
+        <ul>
+          <li><a href="https://github.com/ryanvmorais/blog-culinario" target="_blank" rel="noopener">Código no GitHub</a></li>
+          <li><a href="{% link_repositorio 'docs/stack.md' %}" target="_blank" rel="noopener">Mapa da stack</a></li>
+          <li><a href="{% link_repositorio 'SECURITY.md' %}" target="_blank" rel="noopener">Política de segurança</a></li>
+          <li><a href="{% link_repositorio 'LICENSE' %}" target="_blank" rel="noopener">Licença MIT</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <p class="rodape__base">&copy; {% now "Y" %} Blog Culinário</p>
   </div>
 </footer>
 {# fim: RODAPÉ #}

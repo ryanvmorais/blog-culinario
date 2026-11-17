@@ -1,79 +1,218 @@
 {% extends "base.html" %}
+{% load navegacao %}
 
 {% block titulo %}Blog Culinário — receitas para todos os dias{% endblock %}
 
 {% comment %}
   Por fora, um blog de receitas; por dentro, um projeto Django aberto para
-  estudo. A abertura fala de comida; o Django aparece na seção "Por dentro"
-  (spec 008, RF-01).
+  estudo. A abertura fala de comida e oferece três entradas (busca, categoria
+  e a receita mais nova); o Django aparece na seção "Por dentro", que aponta o
+  arquivo de cada parte (spec 012). Contexto montado pela view nucleo.views.home.
 {% endcomment %}
 
 {% block content %}
   {% comment %}
        ============================================================
-       SEÇÃO: HERO
+       SEÇÃO: ABERTURA
+       Duas colunas acima de 720 px (texto e receita mais nova); sem receita
+       publicada, uma coluna centrada (spec 012, RF-01 a RF-05).
        ============================================================
   {% endcomment %}
-  <section class="hero container">
-    <span class="hero__legenda">Blog culinário</span>
-    <h1 class="hero__titulo">Receitas simples para todos os dias.</h1>
-    <p class="hero__descricao">
-      Do bolo de cenoura ao jantar de terça-feira: receitas com ingredientes e
-      modo de preparo claros, para você cozinhar sem complicação. Cozinhe,
-      comente e conte como ficou.
-    </p>
-    <div class="hero__acoes">
-      <a class="botao botao--primario" href="{% url 'receitas:lista' %}">Ver receitas</a>
+  <section class="hero-dividido container{% if not destaque %} hero-dividido--uma-coluna{% endif %}">
+    <div class="hero-dividido__texto">
+      <span class="hero__legenda">Blog culinário</span>
+      <h1 class="hero__titulo">Receitas simples para todos os dias.</h1>
+      <p class="hero__descricao">
+        Do bolo de cenoura ao jantar de terça-feira: receitas com ingredientes e
+        modo de preparo claros, para você cozinhar sem complicação.
+      </p>
+
+      <form class="busca-hero" method="get" action="{% url 'receitas:lista' %}" role="search">
+        <label for="busca-home">Buscar por título ou ingrediente</label>
+        <div class="busca-hero__linha">
+          <input type="search" id="busca-home" name="q" placeholder="Ex.: cenoura" />
+          <button type="submit" class="botao botao--primario">Buscar</button>
+        </div>
+      </form>
+
+      {# Só números contados do banco; o que está em zero some (RF-03). #}
+      {% if total_receitas or categorias or total_comentarios %}
+        <ul class="numeros" aria-label="O blog em números">
+          {% if total_receitas %}
+            <li><strong>{{ total_receitas }}</strong> receita{{ total_receitas|pluralize }}</li>
+          {% endif %}
+          {% if categorias %}
+            <li><strong>{{ categorias|length }}</strong> categoria{{ categorias|length|pluralize }}</li>
+          {% endif %}
+          {% if total_comentarios %}
+            <li><strong>{{ total_comentarios }}</strong> comentário{{ total_comentarios|pluralize }}</li>
+          {% endif %}
+        </ul>
+      {% endif %}
+
       {% if not user.is_authenticated %}
-        <a class="botao botao--contorno" href="{% url 'usuarios:cadastro' %}">Criar minha conta</a>
+        <p class="hero__conta">
+          Quer comentar uma receita? <a href="{% url 'usuarios:cadastro' %}">Crie sua conta.</a>
+        </p>
       {% endif %}
     </div>
+
+    {% if destaque %}
+      {% comment %}
+        Um link só, o do título: a capa repete o destino e fica fora do Tab e
+        do leitor de tela, como no cartão (spec 008, RF-02). A capa não é lazy:
+        é a maior imagem da primeira tela (spec 012, RNF-05).
+      {% endcomment %}
+      <article class="destaque" aria-labelledby="titulo-destaque">
+        <a href="{% url 'receitas:detalhe' destaque.slug %}" aria-hidden="true" tabindex="-1">
+          {% if destaque.imagem_capa %}
+            {# width e height dão a proporção 4:3 antes do CSS chegar; o tamanho real vem do .destaque__imagem. #}
+            <img
+              class="destaque__imagem"
+              src="{{ destaque.imagem_capa.url }}"
+              alt="{{ destaque.titulo }}"
+              width="1200"
+              height="900"
+              fetchpriority="high"
+            />
+          {% else %}
+            <div class="destaque__imagem"></div>
+          {% endif %}
+        </a>
+        <div class="destaque__corpo">
+          <span class="rotulo">A receita mais nova</span>
+          <h2 class="destaque__titulo" id="titulo-destaque">
+            <a href="{% url 'receitas:detalhe' destaque.slug %}">{{ destaque.titulo }}</a>
+          </h2>
+          <p class="destaque__resumo">{{ destaque.resumo }}</p>
+          <div class="cartao-receita__meta">
+            <span>{{ destaque.categoria.nome }}</span>
+            <span>{{ destaque.tempo_preparo_minutos }} min</span>
+            <span>{{ destaque.porcoes }} porções</span>
+          </div>
+        </div>
+      </article>
+    {% endif %}
   </section>
-  {# fim: HERO #}
+  {# fim: ABERTURA #}
+
+  {% comment %}
+       ============================================================
+       SEÇÃO: CATEGORIAS
+       Só categorias com receita publicada, da maior contagem para a menor;
+       cada pílula leva ao filtro da listagem (spec 012, RF-06).
+       ============================================================
+  {% endcomment %}
+  {% if categorias %}
+    <section class="container secao" aria-labelledby="titulo-categorias">
+      <span class="rotulo">Por categoria</span>
+      <h2 class="secao__titulo" id="titulo-categorias">Comece pelo que tem vontade</h2>
+      <ul class="pilulas">
+        {% for categoria in categorias %}
+          <li>
+            <a class="pilula" href="{% url 'receitas:lista' %}?categoria={{ categoria.slug }}">
+              {{ categoria.nome }}
+              <span class="pilula__contagem"><span aria-hidden="true">·</span> {{ categoria.total_receitas }} receita{{ categoria.total_receitas|pluralize }}</span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+  {# fim: CATEGORIAS #}
 
   {% comment %}
        ============================================================
        SEÇÃO: RECEITAS RECENTES
-       Até 3 receitas publicadas mais recentes (spec 002, RF-06).
+       Até 3 receitas, as seguintes ao destaque. Com uma receita só, ela já
+       está no destaque e a seção some; sem nenhuma, o estado vazio (spec 012,
+       RF-07).
        ============================================================
   {% endcomment %}
-  <section class="container" id="receitas-recentes">
-    <h2>Receitas recentes</h2>
+  {% if recentes or not destaque %}
+    <section class="container secao" id="receitas-recentes" aria-labelledby="titulo-recentes">
+      <span class="rotulo">Recém-saídas do forno</span>
+      <h2 class="secao__titulo" id="titulo-recentes">Receitas recentes</h2>
 
-    {% if receitas_recentes %}
-      <div class="grade-receitas">
-        {% for receita in receitas_recentes %}
-          {% include "includes/cartao_receita.html" %}
-        {% endfor %}
-      </div>
-    {% else %}
-      <p class="estado-vazio">Nenhuma receita publicada ainda.</p>
-    {% endif %}
-  </section>
+      {% if recentes %}
+        <div class="grade-receitas">
+          {% for receita in recentes %}
+            {% include "includes/cartao_receita.html" %}
+          {% endfor %}
+        </div>
+        <div class="secao__rodape">
+          <a class="botao botao--contorno" href="{% url 'receitas:lista' %}">
+            Ver todas as {{ total_receitas }} receitas
+          </a>
+        </div>
+      {% else %}
+        <p class="estado-vazio">Nenhuma receita publicada ainda.</p>
+      {% endif %}
+    </section>
+  {% endif %}
   {# fim: RECEITAS RECENTES #}
 
   {% comment %}
        ============================================================
        SEÇÃO: POR DENTRO
-       Onde o blog diz o que ele é por trás das receitas: um projeto Django
-       educacional e aberto (spec 008, RF-01).
+       O blog é material de estudo: cada nota aponta o arquivo que faz a parte
+       funcionar. Um teste confere que cada caminho citado existe (spec 012,
+       RF-09 e RF-10).
        ============================================================
   {% endcomment %}
-  <section class="container" id="por-dentro">
-    <div class="painel-destaque">
-      <h2>Por dentro, um projeto Django</h2>
-      <p>
-        Este blog também é material de estudo. Por trás das receitas há uma
-        aplicação Django completa, com modelagem de domínio, autenticação,
-        comentários e segurança aplicada, em código aberto e comentado.
+  <section class="container secao" id="por-dentro" aria-labelledby="titulo-por-dentro">
+    <div class="por-dentro">
+      <span class="rotulo">Por dentro</span>
+      <h2 id="titulo-por-dentro">Como este blog foi feito</h2>
+      <p class="por-dentro__intro">
+        Este blog também é material de estudo: uma aplicação Django completa, em
+        código aberto e comentado. Cada nota abaixo aponta para o arquivo que faz
+        a parte funcionar.
       </p>
+
+      <ul class="notas-codigo">
+        <li class="nota-codigo">
+          <h3>Esta página</h3>
+          <p>
+            Uma view de função busca as receitas com <code>select_related</code> e as
+            categorias com a contagem de receitas, por um método de QuerySet com
+            <code>annotate(Count)</code>.
+          </p>
+          <a href="{% link_repositorio 'nucleo/views.py' %}" target="_blank" rel="noopener">nucleo/views.py</a>
+        </li>
+        <li class="nota-codigo">
+          <h3>Busca e filtros</h3>
+          <p>
+            Uma <code>ListView</code> filtra por texto, categoria e tag a partir da URL,
+            com paginação de 9 em 9.
+          </p>
+          <a href="{% link_repositorio 'receitas/views.py' %}" target="_blank" rel="noopener">receitas/views.py</a>
+        </li>
+        <li class="nota-codigo">
+          <h3>Segurança</h3>
+          <p>
+            CSP nativa do Django, limite de tentativas por IP no login, no cadastro e
+            no comentário, e honeypot contra robôs.
+          </p>
+          <a href="{% link_repositorio 'blog_culinario/limitacao.py' %}" target="_blank" rel="noopener">blog_culinario/limitacao.py</a>
+        </li>
+        <li class="nota-codigo">
+          <h3>Specs antes do código</h3>
+          <p>
+            Cada funcionalidade nasce como requisitos, design e tarefas, aprovados
+            antes da primeira linha de código.
+          </p>
+          <a href="{% link_repositorio 'specs/' %}" target="_blank" rel="noopener">specs/</a>
+        </li>
+      </ul>
+
       <a
         class="botao botao--contorno"
         href="https://github.com/ryanvmorais/blog-culinario"
         target="_blank"
         rel="noopener"
       >
-        Ver o código no GitHub
+        Ver o projeto no GitHub
       </a>
     </div>
   </section>

@@ -14,6 +14,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.db import models
+from django.db.models import Count, Q
 
 from .utils import gerar_slug_unico
 
@@ -40,6 +41,39 @@ def validar_tamanho_imagem(arquivo: models.fields.files.FieldFile) -> None:
         raise ValidationError("A imagem deve ter no máximo 5 MB.")
 
 
+class CategoriaQuerySet(models.QuerySet["Categoria"]):
+    """
+    Consultas reutilizáveis de ``Categoria`` (spec 012, ADR-2).
+
+    Vira o manager de ``Categoria`` por ``as_manager()``. Manager sem
+    ``use_in_migrations`` não entra nas migrations: a consulta nova não muda
+    o banco.
+    """
+
+    def com_receitas_publicadas(self) -> CategoriaQuerySet:
+        """
+        Categorias com ao menos uma receita publicada, com a contagem anotada.
+
+        A home (as pílulas) e o rodapé (a coluna "Categorias") leem esta mesma
+        consulta, e por isso mostram as categorias na mesma ordem (spec 012,
+        RF-06 e RF-12).
+
+        Returns:
+            CategoriaQuerySet: categorias com ``total_receitas`` (int) anotado,
+                só as que têm receita publicada, da maior contagem para a
+                menor e, no empate, pelo nome.
+        """
+        # O filtro dentro do Count conta só as publicadas: rascunho não faz a
+        # categoria aparecer na home nem no rodapé.
+        return (
+            self.annotate(
+                total_receitas=Count("receitas", filter=Q(receitas__publicado=True))
+            )
+            .filter(total_receitas__gt=0)
+            .order_by("-total_receitas", "nome")
+        )
+
+
 class Categoria(models.Model):
     """
     Agrupamento temático de receitas (ex.: Sobremesas, Massas, Veganas).
@@ -49,12 +83,16 @@ class Categoria(models.Model):
             podem se chamar igual e ainda receber slugs distintos.
         slug (str): Slug gerado automaticamente a partir do ``nome`` no
             primeiro ``save()`` quando não fornecido; único no banco.
+        objects (CategoriaQuerySet): manager com as consultas de
+            ``CategoriaQuerySet`` (spec 012, ADR-2).
     """
 
     # unique fica no slug, não no nome (RF-01): duas categorias podem ter o
     # mesmo nome de exibição e ainda assim receber slugs distintos.
     nome = models.CharField(max_length=80)
     slug = models.SlugField(max_length=90, unique=True, blank=True)
+
+    objects = CategoriaQuerySet.as_manager()
 
     class Meta:
         verbose_name_plural = "categorias"
