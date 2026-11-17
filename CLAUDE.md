@@ -68,7 +68,7 @@ blog_culinario/cabecalhos.py # middleware do Permissions-Policy; a CSP é o SECU
 blog_culinario/demonstracao.py # modo demonstração: conta pública, mensagens e context processor (spec 009)
 blog_culinario/endereco.py # URL_PUBLICA: validação na subida e url_absoluta() (spec 010)
 blog_culinario/descoberta.py # canonical (context processor), sitemaps, robots.txt, sitemap.xml e security.txt (spec 010)
-nucleo/                    # a home, a view servir_midia (capas), a tag {% capturar %} (templatetags/metadados.py) e os testes transversais (interface, tema escuro, descoberta, cabeçalhos, hospedagem, comentários de template, README em inglês, impessoalidade)
+nucleo/                    # a home, a view servir_midia (capas), a tag {% capturar %} (templatetags/metadados.py) e os testes transversais (interface, tema escuro, descoberta, cabeçalhos, hospedagem, limitação de taxa, comentários de template, README em inglês, impessoalidade)
 receitas/                  # domínio principal: Receita, Categoria, Tag, Comentario; management/commands/semear_dados_demo.py (dados do Lighthouse CI) e seu teste
 usuarios/                  # autenticação (django.contrib.auth); management/commands/criar_conta_demonstracao.py
 templates/                 # base.html + includes/ (navbar, rodapé) + 404, 403 e 500
