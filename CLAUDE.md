@@ -180,3 +180,8 @@ roadmap atual.
 `uv` gerencia o ambiente. Commite `pyproject.toml` **e** `uv.lock`. PRs do
 Dependabot (`.github/dependabot.yml`) são revisados um a um (changelog da
 versão nova, CI verde), não mergeados automaticamente.
+
+O `[tool.uv]` tem `exclude-newer = "7 days"`: nenhuma resolução pega versão
+publicada há menos de 7 dias (a janela do `cooldown` do Dependabot). Correção de
+CVE mais nova que isso entra por exceção no `exclude-newer-package`, com
+comentário e data para sair; nunca tire a carência inteira.

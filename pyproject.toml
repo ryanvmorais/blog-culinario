@@ -41,6 +41,13 @@ dev = [
     "ruff>=0.17.2",
 ]
 
+# --- uv (resolução de dependências) -----------------------------------------
+[tool.uv]
+# Carência de release: o uv ignora versões publicadas há menos de 7 dias (a
+# mesma janela do cooldown do Dependabot). Os pacotes sequestrados ficam horas
+# no ar antes de serem retirados, e um `uv add` ou `uv lock` à mão não os alcança.
+exclude-newer = "7 days"
+
 # --- Lint (ruff, substitui flake8 + isort) ----------------------------------
 [tool.ruff]
 line-length = 88

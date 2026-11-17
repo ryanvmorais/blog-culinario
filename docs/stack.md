@@ -45,10 +45,14 @@ compreensões de lista/dict, o módulo `pathlib`.
 
 **Por que esta:** substitui `pip` + `venv` + `pip-tools` por uma ferramenta só,
 muito mais rápida (escrita em Rust) e com lockfile determinístico — é o
-gerenciador de dependências deste projeto.
+gerenciador de dependências deste projeto. O `exclude-newer = "7 days"` do
+`[tool.uv]` faz o `uv lock` ignorar versões com menos de 7 dias no PyPI (a mesma
+carência do Dependabot), a defesa contra pacote sequestrado: uma versão publicada
+na última semana ainda não entra no lock.
 
 **O que estudar:** `uv sync`, `uv add`/`uv add --dev`, `uv run`, a diferença entre
-`pyproject.toml` (piso mínimo de versão) e `uv.lock` (versão exata resolvida).
+`pyproject.toml` (piso mínimo de versão) e `uv.lock` (versão exata resolvida), e o
+`exclude-newer` (com o `exclude-newer-package` para a exceção pontual).
 
 **Docs:** [Documentação oficial](https://docs.astral.sh/uv/)
 
