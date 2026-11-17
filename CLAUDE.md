@@ -71,7 +71,7 @@ blog_culinario/descoberta.py # canonical (context processor), sitemaps, robots.t
 nucleo/                    # a home, a view servir_midia (capas), a tag {% capturar %} (templatetags/metadados.py) e os testes transversais (interface, tema escuro, descoberta, cabeçalhos, hospedagem, limitação de taxa, comentários de template, README em inglês, impessoalidade)
 receitas/                  # domínio principal: Receita, Categoria, Tag, Comentario; management/commands/semear_dados_demo.py (dados do Lighthouse CI) e seu teste
 usuarios/                  # autenticação (django.contrib.auth); management/commands/criar_conta_demonstracao.py
-templates/                 # base.html + includes/ (navbar, rodapé) + 404, 403 e 500
+templates/                 # base.html + includes/ (navbar, rodapé) + erro.html (layout sem sessão) e 400, 403, 403_csrf, 404 e 500
 static/css/                # design system: tokens.css (variáveis e tema escuro), fontes.css (@font-face) e base.css
 static/fonts/              # Inter e Fraunces (woff2 variável, subconjunto latin, licença OFL)
 static/js/, static/img/    # interacoes.js (JS puro, sem build) e favicon.svg
@@ -116,7 +116,7 @@ simples primeiro, `urls.py` com `app_name` namespaced, templates em
 - **Endereço absoluto só por `url_absoluta()`** (`blog_culinario/endereco.py`),
   que lê `URL_PUBLICA`; nunca do `Host` do pedido (spec 010, RNF-03). Página nova
   que estende o `base.html` ganha canonical e Open Graph sozinha; página de erro
-  esvazia o bloco `endereco_canonico`. O `Expires` do `security.txt` é fixo: o
+  estende o `erro.html`, que não tem canonical. O `Expires` do `security.txt` é fixo: o
   `nucleo/test_descoberta.py` falha 30 dias antes, e aí se move a data.
 
 - **Hospedagem (spec 011):** banco, mídia e cache saem de `DIRETORIO_DADOS`
@@ -156,7 +156,9 @@ Regras que a auditoria de interface de 18/10/2026 deixou, guardadas por
 - **Cartão:** um link por cartão para teclado e leitor (a foto é `aria-hidden`);
   a lista leva um `h2` oculto entre o `h1` e os `h3`.
 - **Mensagens:** na página da receita ficam dentro de `#comentarios`.
-- **Erros:** o 500 é HTML completo, sem herdar o `base.html`.
+- **Erros:** o 400, o 403, o 403_csrf, o 404 e o 500 estendem o `erro.html`, HTML
+  completo sem o `base.html`: a navbar lê a sessão, e com o banco fora o erro
+  viraria 500. Só a marca e o rodapé, sem links de login.
 
 ## Qualidade e automação
 
