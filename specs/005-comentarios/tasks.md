@@ -62,3 +62,15 @@ quando nenhum autor era passado — o teste de ordenação cronológica (que
 chama o builder duas vezes sem autor) quebrou com `IntegrityError` de
 username duplicado. Corrigido gerando um username único por chamada
 (`comentarista-<uuid curto>`).
+
+## Adendo (2026-11-16): tamanho máximo do comentário
+
+> Status do adendo: concluído (2026-11-16). Quebra o adendo do `design.md` (RF-08, RF-09, RNF-03,
+> ADR-5). As etapas continuam a numeração acima.
+
+## Etapa 6 — Tamanho máximo do comentário
+
+- [x] `receitas/forms.py`: constante `TAMANHO_MAXIMO_COMENTARIO = 2000` e o campo `texto` declarado no `FormularioComentario` (`CharField` com `max_length`, o mesmo `Textarea` e rótulo, e as mensagens de vazio e de longo demais em `error_messages`); saem o `widgets` e o `labels` do `Meta`. — RF-08, RNF-03, ADR-5
+- [x] `receitas/views.py`: no ramo inválido do `ComentarioCreateView.post()`, `messages.error()` com o primeiro erro do campo `texto`, no lugar da frase fixa. — RF-08, ADR-5
+- [x] `receitas/tests.py`: `maxlength="2000"` no HTML da receita para o usuário logado; 2.000 caracteres aceitos; 2.001 recusados com a mensagem do RF-08, com o modo demonstração ligado e desligado; o vazio com a mensagem do RF-05. — RF-08, RF-09
+- [x] Portão de qualidade: `uv run ruff check . && uv run black --check . && uv run mypy . && uv run pytest`; `uv run python manage.py makemigrations --check --dry-run` sem migration nova — 348 passed, 3 skipped; ruff/black/mypy verdes; `No changes detected`.

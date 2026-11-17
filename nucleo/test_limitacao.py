@@ -1,5 +1,6 @@
 """
-Testes do adendo da spec 006: contador por rede, teto do cache e login do Admin.
+Testes dos adendos da spec 006: contador por rede, teto do cache, login do
+Admin e registro no log.
 
 Ficam no ``nucleo`` porque cruzam os apps: a chave do contador e o cache valem
 para todo formulário limitado, e o login do Admin divide o contador com o
@@ -8,10 +9,13 @@ login público de ``usuarios``.
 Estratégia de isolamento: ``Client`` e ``RequestFactory`` do Django, sem mock.
 O cache de cada teste já fica numa pasta temporária própria (``conftest.py``),
 com o ``CACHES`` do projeto, ``MAX_ENTRIES`` inclusive; a trava de origem fica
-desligada, então o IP do visitante é o ``REMOTE_ADDR`` do pedido de teste.
+desligada, então o IP do visitante é o ``REMOTE_ADDR`` do pedido de teste. O
+log é lido pelo ``caplog`` do pytest, no logger ``blog_culinario.limitacao``.
 """
 
 from __future__ import annotations
+
+import logging
 
 import pytest
 from django.contrib import admin
@@ -270,3 +274,84 @@ def test_limite_acompanha_o_admin_em_outro_caminho(
     assert resposta.status_code == 302
     assert resposta["Location"] == url
     assert not client.session.get("_auth_user_id")
+
+
+# -----------------------------------------------------------------------------
+# Registro no log (adendo 2, RF-09, RNF-06)
+# -----------------------------------------------------------------------------
+
+# Valores fixos e fáceis de achar numa string: o teste do RNF-06 confere que
+# nem o IP do pedido nem o usuário digitado aparecem na linha do log.
+IP_DO_TESTE = "203.0.113.9"
+USUARIO_DIGITADO = "usuario-digitado-no-teste"
+
+
+def _linhas_do_limite(caplog: pytest.LogCaptureFixture) -> list[str]:
+    """
+    Devolve as mensagens que o ``limitacao.py`` mandou ao log.
+
+    Args:
+        caplog (pytest.LogCaptureFixture): fixture de captura do pytest.
+
+    Returns:
+        list[str]: as mensagens do logger ``blog_culinario.limitacao``.
+    """
+    return [
+        r.getMessage() for r in caplog.records if r.name == "blog_culinario.limitacao"
+    ]
+
+
+def _tentar_login(client: Client) -> None:
+    """
+    Faz uma tentativa de login errada, com IP e usuário fixos.
+
+    Args:
+        client (Client): cliente de teste.
+    """
+    client.post(
+        "/usuarios/entrar/",
+        {"username": USUARIO_DIGITADO, "password": "senha-errada"},
+        REMOTE_ADDR=IP_DO_TESTE,
+    )
+
+
+def test_primeira_recusa_da_janela_vai_para_o_log(
+    client: Client, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Nada abaixo do limite, uma linha na primeira recusa, nenhuma depois."""
+    caplog.set_level(logging.WARNING, logger="blog_culinario.limitacao")
+    for _ in range(LIMITE_LOGIN):
+        _tentar_login(client)
+    assert _linhas_do_limite(caplog) == []
+
+    _tentar_login(client)
+    _tentar_login(client)
+
+    assert _linhas_do_limite(caplog) == ["limite atingido: login /usuarios/entrar/"]
+
+
+def test_linha_do_log_nao_tem_dado_do_visitante(
+    client: Client, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Nem o IP nem o usuário digitado entram na linha (RNF-06)."""
+    caplog.set_level(logging.WARNING, logger="blog_culinario.limitacao")
+    for _ in range(LIMITE_LOGIN + 1):
+        _tentar_login(client)
+
+    (linha,) = _linhas_do_limite(caplog)
+
+    assert IP_DO_TESTE not in linha
+    assert USUARIO_DIGITADO not in linha
+
+
+def test_recusa_do_cadastro_vai_para_o_log(
+    client: Client, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Cada limite se identifica pelo nome: o do cadastro sai como ``cadastro``."""
+    caplog.set_level(logging.WARNING, logger="blog_culinario.limitacao")
+    for _ in range(11):
+        client.post("/usuarios/cadastro/", {"username": "x"})
+
+    assert _linhas_do_limite(caplog) == [
+        "limite atingido: cadastro /usuarios/cadastro/"
+    ]

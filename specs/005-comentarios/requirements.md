@@ -180,3 +180,70 @@ como ADR na fase de design, caso valha revisitar depois.
 - **RF-07:** admin vê a listagem com os filtros esperados; desmarcar
   `aprovado` remove o comentário da página pública (teste de integração
   entre admin e a view pública).
+
+## Adendo (2026-11-16): tamanho máximo do comentário
+
+> Status do adendo: concluído (2026-11-16). O texto acima é o aprovado em 2026-09-12 e fica como
+> está; o adendo acrescenta requisitos, com a numeração continuando a dele.
+
+**Contexto.** O `texto` do comentário é um `TextField` sem limite, e o formulário
+aceita o que o Django deixar passar num pedido (2,5 MB, o `DATA_UPLOAD_MAX_MEMORY_SIZE`
+padrão). A auditoria de segurança de 2026-11-16 apontou o risco (CWE-770, baixo): um
+usuário logado pode publicar um bloco de texto enorme, que é guardado e exibido inteiro
+na página da receita. No modo demonstração nada é gravado, mas quem clona o projeto
+herda o formulário sem teto.
+
+**Objetivos do adendo.**
+
+- Limitar o comentário a 2.000 caracteres, no formulário e no navegador.
+- Dizer ao visitante por que o comentário longo foi recusado, com uma mensagem própria,
+  diferente da do comentário vazio.
+
+**Não-objetivos do adendo.**
+
+- Contador de caracteres na tela (exigiria JavaScript novo).
+- Mudar a coluna do banco: o limite vale no formulário, como as outras regras de
+  conteúdo do RF-05.
+- Rever os comentários que já existem.
+
+### RF-08 — Comentário com até 2.000 caracteres
+
+- **Given** um usuário logado na página de uma receita
+  **When** o formulário de comentário é exibido
+  **Then** o campo de texto não aceita digitar mais de 2.000 caracteres
+  (`maxlength="2000"`).
+- **Given** um comentário com 2.000 caracteres ou menos (depois de tirar os espaços das
+  pontas)
+  **When** o formulário é enviado
+  **Then** o comentário é aceito, como hoje.
+- **Given** um comentário com mais de 2.000 caracteres (um envio que não passou pelo
+  campo do navegador)
+  **When** o formulário é enviado
+  **Then** o comentário não é criado, e a página da receita volta com a mensagem "O
+  comentário pode ter até 2.000 caracteres.".
+- **Given** um comentário vazio ou só com espaços
+  **When** o formulário é enviado
+  **Then** a mensagem continua a do RF-05, "O comentário não pode ficar vazio.".
+- **Given** o modo demonstração ligado (spec 009)
+  **When** chega um comentário longo demais
+  **Then** vale a mesma recusa, com a mesma mensagem.
+
+### RNF-03 — Sem migration
+
+O limite fica no formulário (`FormularioComentario`), sem mudar o modelo: nenhuma
+migration nova, e os comentários gravados continuam válidos.
+
+**Decisões resolvidas do adendo.**
+
+1. **2.000 caracteres** (2026-11-16). Cerca de 300 palavras: sobra para uma dúvida ou
+   uma adaptação da receita, e corta o envio de megabytes.
+2. **O texto longo também se perde na recusa** (2026-11-16). O ADR-3 do design (erro por
+   mensagem, sem reexibir o formulário) continua: com o `maxlength` no campo, só um envio
+   feito fora do navegador chega acima do limite.
+
+### RF-09 — A suíte cobre o adendo
+
+- O campo do formulário sai com `maxlength="2000"` no HTML da receita.
+- 2.000 caracteres são aceitos; 2.001 não criam o comentário e mostram a mensagem do
+  RF-08, com o modo demonstração ligado e desligado.
+- O comentário vazio continua com a mensagem do RF-05.

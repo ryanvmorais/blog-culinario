@@ -322,3 +322,54 @@ cache), e `usuarios/tests.py`, para o cadastro, ao lado dos testes do login. Tod
   IPv4 fica como antes, então os contadores IPv4 do cache seguem valendo no deploy.
 - O login do Admin abaixo do limite é o do Django (RNF-05). O teste manda o `next` como
   o formulário do Admin, que o envia num campo oculto.
+
+## Adendo 2 (2026-11-16): registro no log
+
+> Status do adendo 2: concluído (2026-11-16). Desenha o RF-09, o RF-10 e o RNF-06 do adendo 2 do
+> `requirements.md`. Os ADRs continuam a numeração.
+
+### Visão geral da abordagem do adendo 2
+
+O `limite_excedido()` ganha um logger do próprio módulo
+(`logging.getLogger(__name__)`, o `blog_culinario.limitacao`) e escreve um `WARNING`
+quando o número que o `incr()` devolveu é exatamente `limite + 1`. É a primeira
+tentativa recusada da janela: o `incr()` é atômico entre os workers (spec 011, RF-08) e
+dá a cada pedido um número só seu, então um pedido só por janela vê esse número. O
+`LOGGING` de produção já leva o `WARNING` do logger raiz ao console.
+
+### Componentes do adendo 2
+
+#### `blog_culinario/limitacao.py`
+
+- `logger = logging.getLogger(__name__)` na seção de constantes.
+- Depois do `incr()`: se `tentativas == limite + 1`,
+  `logger.warning("limite atingido: %s %s", chave, request.path)`. O `request.path` não
+  traz a query string, e nenhum dado do visitante entra na linha (RNF-06).
+- O retorno e o resto do contrato ficam iguais (RNF-04).
+
+### ADR-9 — A primeira recusa se reconhece pelo número do contador
+
+**Decisão.** Registrar quando `tentativas == limite + 1`, sem estado novo.
+**Alternativas.** (a) Uma chave extra no cache (`add()` de um marcador "já registrado"
+com a validade da janela). (b) Registrar toda recusa.
+**Porquê.** O número exato já existe e é único por pedido, graças ao `incr()` atômico; a
+chave extra seria mais uma gravação no cache por recusa. Registrar toda recusa inundaria
+o log num ataque (decisão resolvida 2 do adendo 2).
+**Trade-off.** Se o contador expirar entre o `add()` e o `incr()` (o ramo do
+`ValueError`), a janela recomeça e a primeira recusa dela é registrada normalmente:
+nenhuma perda.
+
+### Impacto no código existente do adendo 2
+
+- `blog_culinario/limitacao.py`: o logger e as duas linhas do registro.
+- Nenhuma mudança no `LOGGING`, nas views nem nos testes de hoje.
+
+### Estratégia de testes do adendo 2
+
+Em `nucleo/test_limitacao.py`, com o `caplog` do pytest no logger
+`blog_culinario.limitacao`:
+
+- Cinco tentativas de login sem registro; a sexta gera um `WARNING` com `limite
+  atingido: login /usuarios/entrar/`; a sétima não gera outro.
+- A linha não contém o `REMOTE_ADDR` do pedido nem o nome de usuário enviado.
+- No cadastro, a 11ª tentativa gera a linha com `cadastro` e o caminho dele.

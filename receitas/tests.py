@@ -28,8 +28,9 @@ from django.db.models.deletion import ProtectedError
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
+from pytest_django.fixtures import Settings
 
-from .forms import _ASSINATURA_SALT
+from .forms import _ASSINATURA_SALT, TAMANHO_MAXIMO_COMENTARIO
 from .models import Categoria, Comentario, Receita, Tag
 
 pytestmark = pytest.mark.django_db
@@ -624,6 +625,63 @@ def test_post_com_texto_vazio_nao_cria_comentario(client: Client) -> None:
 
     assert not Comentario.objects.filter(receita=receita).exists()
     assert "O comentário não pode ficar vazio." in resposta.content.decode()
+
+
+# -----------------------------------------------------------------------------
+# Tamanho máximo do comentário (adendo, RF-08)
+# -----------------------------------------------------------------------------
+def _comentar(client: Client, receita: Receita, texto: str) -> str:
+    """
+    Envia um comentário como um leitor logado e devolve a página final.
+
+    Args:
+        client (Client): cliente de teste.
+        receita (Receita): receita comentada.
+        texto (str): texto do comentário.
+
+    Returns:
+        str: o HTML da página da receita depois do redirecionamento.
+    """
+    client.force_login(User.objects.create_user(username="leitor", password="x"))
+    resposta = client.post(
+        reverse("receitas:comentar", kwargs={"slug": receita.slug}),
+        {"texto": texto, "carimbo_tempo": _carimbo_valido()},
+        follow=True,
+    )
+    return resposta.content.decode()
+
+
+def test_campo_de_comentario_limita_no_navegador(client: Client) -> None:
+    """O <textarea> sai com o maxlength, e o navegador não deixa passar dele."""
+    receita = _receita(publicado=True)
+    client.force_login(User.objects.create_user(username="leitor", password="x"))
+
+    resposta = client.get(reverse("receitas:detalhe", kwargs={"slug": receita.slug}))
+
+    assert f'maxlength="{TAMANHO_MAXIMO_COMENTARIO}"' in resposta.content.decode()
+
+
+def test_comentario_no_limite_e_aceito(client: Client) -> None:
+    """2.000 caracteres exatos passam: o limite é inclusivo."""
+    receita = _receita(publicado=True)
+
+    _comentar(client, receita, "a" * TAMANHO_MAXIMO_COMENTARIO)
+
+    assert Comentario.objects.filter(receita=receita).count() == 1
+
+
+@pytest.mark.parametrize("modo_demonstracao", [False, True])
+def test_comentario_longo_demais_e_recusado(
+    client: Client, settings: Settings, modo_demonstracao: bool
+) -> None:
+    """Um caractere além do limite: nada gravado e a mensagem própria."""
+    settings.MODO_DEMONSTRACAO = modo_demonstracao
+    receita = _receita(publicado=True)
+
+    html = _comentar(client, receita, "a" * (TAMANHO_MAXIMO_COMENTARIO + 1))
+
+    assert not Comentario.objects.filter(receita=receita).exists()
+    assert "O comentário pode ter até 2.000 caracteres." in html
 
 
 # -----------------------------------------------------------------------------

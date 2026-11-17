@@ -273,5 +273,9 @@ class ComentarioCreateView(LoginRequiredMixin, View):
                 comentario.save()
             self._confirmar_envio(request)
         else:
-            messages.error(request, "O comentário não pode ficar vazio.")
+            # O texto é o único campo que pode falhar, e cada recusa (vazio ou
+            # longo demais) traz a própria mensagem (spec 005, adendo, ADR-5). O
+            # str() é para o mypy: a ErrorList guarda texto, mas os stubs a tipam
+            # como ValidationError | str.
+            messages.error(request, str(form.errors["texto"][0]))
         return redirect(url_retorno)

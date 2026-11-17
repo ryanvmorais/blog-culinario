@@ -270,3 +270,64 @@ redirecionamento para `next` e as mesmas mensagens de erro de senha.
   IPv4 na forma IPv6 mantêm a chave de hoje.
 - Cache: com mais de 300 contadores ativos, um contador antigo dentro da janela
   continua valendo depois de criados outros.
+
+## Adendo 2 (2026-11-16): registro no log
+
+> Status do adendo 2: concluído (2026-11-16). Acrescenta requisitos ao texto aprovado e ao primeiro
+> adendo, com a numeração continuando a deles.
+
+**Contexto.** Quando o limite recusa um pedido, o visitante vê a mensagem, mas o log do
+serviço não registra nada. Uma tentativa de força bruta no login, no Admin ou no
+cadastro passa sem rastro, e quem mantém o site só descobre pelo efeito. A auditoria de
+segurança de 2026-11-16 apontou a falta (OWASP A09:2025, CWE-778, baixo). O `LOGGING`
+de produção já leva o `WARNING` de qualquer logger ao console, que é o log do serviço
+(spec 011, RF-11).
+
+**Objetivos do adendo 2.**
+
+- Registrar no log, como `WARNING`, que um limite começou a recusar pedidos.
+- Uma linha por janela e por contador, para um ataque não inundar o log.
+
+**Não-objetivos do adendo 2.**
+
+- Registrar o IP, a rede ou o nome de usuário digitado: nenhum dado pessoal no log.
+- Registrar login com senha errada abaixo do limite.
+- Alerta (e-mail, mensagem) ou painel: o registro fica no log do serviço.
+
+### RF-09 — Registro da primeira recusa de cada janela
+
+- **Given** um contador que acabou de passar do limite (a primeira tentativa recusada da
+  janela)
+  **When** o `limite_excedido()` devolve a recusa
+  **Then** o log recebe um `WARNING` com o nome do limite e o caminho do pedido, no
+  formato `limite atingido: login /usuarios/entrar/`.
+- **Given** o mesmo contador, já recusando
+  **When** chegam mais tentativas na mesma janela
+  **Then** nenhuma linha nova vai para o log.
+- **Given** a janela seguinte do mesmo visitante
+  **When** ele passa do limite outra vez
+  **Then** o log recebe uma linha nova.
+- **Given** uma tentativa abaixo do limite
+  **When** o `limite_excedido()` a conta
+  **Then** nada vai para o log.
+
+### RNF-06 — Nenhum dado pessoal no log
+
+A linha do RF-09 traz só o nome do limite (`login`, `cadastro`, `comentario`) e o
+caminho do pedido, sem a query string. IP, rede, nome de usuário, e-mail e conteúdo do
+formulário ficam de fora, como já faz a trava de origem (spec 011, RNF-05).
+
+**Decisões resolvidas do adendo 2.**
+
+1. **Sem IP no log** (2026-11-16). O IP é dado pessoal pela LGPD, e o log do serviço
+   fica guardado pela plataforma. A linha avisa que há um ataque, e o bloqueio por rede,
+   quando preciso, se faz no painel do proxy, que tem o IP.
+2. **Só a primeira recusa da janela** (2026-11-16). Uma linha por recusa transformaria um
+   ataque em milhares de linhas.
+
+### RF-10 — A suíte cobre o adendo 2
+
+- A sexta tentativa de login gera um `WARNING` com `limite atingido: login` e o
+  caminho; a sétima, na mesma janela, não gera outro.
+- A linha não contém o IP do pedido nem o nome de usuário enviado.
+- Tentativas abaixo do limite não geram linha.
