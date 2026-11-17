@@ -21,6 +21,11 @@ _ASSINATURA_SALT = "receitas.comentario.antibot"
 # envio mais rápido que isso é tratado como bot (spec 007, RF-02, ADR-4).
 _TEMPO_MINIMO_SEGUNDOS = 2
 
+# Teto do comentário (spec 005, adendo, decisão resolvida 1): cerca de 300
+# palavras, o bastante para uma dúvida ou uma adaptação da receita. Sem ele, o
+# campo aceitava o que o Django deixasse passar num pedido (2,5 MB).
+TAMANHO_MAXIMO_COMENTARIO = 2000
+
 
 def gerar_carimbo_de_tempo() -> str:
     """
@@ -88,16 +93,25 @@ class FormularioComentario(forms.ModelForm):
     # Time-trap (RF-02): carimbo assinado do instante de renderização,
     # preenchido pela view via `initial` no GET.
     carimbo_tempo = forms.CharField(required=False, widget=forms.HiddenInput())
+    # Declarado em vez de herdado do TextField do modelo, para ganhar o
+    # max_length (o CharField põe o maxlength no <textarea> e mede o texto sem
+    # os espaços das pontas) e as duas mensagens de recusa, que a view mostra
+    # como vierem (spec 005, adendo, RF-08, ADR-5). Sem migration (RNF-03).
+    texto = forms.CharField(
+        max_length=TAMANHO_MAXIMO_COMENTARIO,
+        label="Comentário",
+        widget=forms.Textarea(
+            attrs={"rows": 4, "placeholder": "Deixe seu comentário..."}
+        ),
+        error_messages={
+            "required": "O comentário não pode ficar vazio.",
+            "max_length": "O comentário pode ter até 2.000 caracteres.",
+        },
+    )
 
     class Meta:
         model = Comentario
         fields = ["texto"]
-        widgets = {
-            "texto": forms.Textarea(
-                attrs={"rows": 4, "placeholder": "Deixe seu comentário..."}
-            ),
-        }
-        labels = {"texto": "Comentário"}
 
     def clean_texto(self) -> str:
         """
