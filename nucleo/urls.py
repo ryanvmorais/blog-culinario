@@ -1,4 +1,4 @@
-"""Rotas institucionais: home, sobre e contato."""
+"""Rotas institucionais: a home do blog."""
 
 from __future__ import annotations
 

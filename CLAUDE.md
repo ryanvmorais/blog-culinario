@@ -78,6 +78,7 @@ static/js/, static/img/    # interacoes.js (JS puro, sem build) e favicon.svg
 assets/                    # imagens do README e do social preview
 specs/                     # spec-driven development — ver specs/README.md
 docs/stack.md              # o que compõe a stack, por que e o que estudar
+docs/referencia/           # mergulhos por assunto que o CLAUDE.md resume (lighthouse-ci.md)
 docs/design-system.html    # catálogo visual (tokens, tipografia, componentes); abra direto no navegador — usa o tokens.css e o base.css do site
 .github/                   # CI (ci.yml), pip-audit semanal (pip-audit.yml), CodeQL (codeql.yml), Lighthouse CI (lighthouse.yml + lighthouse/), Dependabot (uv + github-actions), formulário de issue (com o atalho para o aviso privado de segurança) e template de PR
 SECURITY.md                # política de segurança: relato privado pelos avisos do GitHub, prazos e escopo
@@ -169,7 +170,13 @@ próprios workflows) em PR, na `main` e aos domingos; os alertas ficam na aba Se
 do repositório, não o "default setup" do GitHub, que fica desligado: o GitHub não aceita os dois
 ao mesmo tempo.
 
-**Lighthouse CI** (`.github/workflows/lighthouse.yml`): audita 5 páginas públicas (home, lista e detalhe de receita, entrar e cadastro), em mobile e desktop, com 3 medições e mediana. Roda em PR quando muda template, estático, view, model, o comando de dados ou a configuração, no push da `main` e à mão (`workflow_dispatch`); repo público, então sem teto de minutos. **Não é check obrigatório** (o Lighthouse varia em runner compartilhado). O servidor sobe com os dados de `manage.py semear_dados_demo` (idempotente, recusa `DEBUG=False`, capas geradas com o Pillow, sem rede) e com `MODO_DEMONSTRACAO=True`, como a instância pública, e `URL_PUBLICA` no host do próprio runner (a auditoria de canonical reprova outro domínio). Limites em `.github/lighthouse/{mobile,desktop}.json`: **erro** para acessibilidade, boas práticas e SEO < 95, CLS > 0,1, peso por página, e `color-contrast`, `unsized-images`, `target-size` e `errors-in-console` como asserções próprias; **aviso** para a nota de Performance. `@lhci/cli` fixado em `LHCI_VERSION` (o Dependabot não vê um `npx`: ao subir, recalibre os limites). Os números são comparação relativa; os reais só existem em produção. Página nova importante entra nos dois JSON; o `receitas/test_semear_dados_demo.py` guarda que toda URL responde 200 e que mobile e desktop auditam o mesmo.
+**Lighthouse CI** (`.github/workflows/lighthouse.yml`): audita 5 páginas públicas
+em mobile e desktop, com os dados do `semear_dados_demo` e `MODO_DEMONSTRACAO=True`.
+Não é check obrigatório. Páginas, limites e manutenção:
+[docs/referencia/lighthouse-ci.md](docs/referencia/lighthouse-ci.md).
+
+- ⚠️ Página nova importante entra nos dois JSON de `.github/lighthouse/`.
+- ⚠️ `@lhci/cli` fica fixado em `LHCI_VERSION` (o Dependabot não vê um `npx`): ao subir, recalibre os limites.
 
 ## Spec-driven development
 
