@@ -8,6 +8,7 @@ builders de ``receitas/tests.py``.
 
 from __future__ import annotations
 
+import re
 from datetime import timedelta
 from typing import Any
 
@@ -90,6 +91,29 @@ def test_quebra_simples_dentro_do_passo_fica_no_mesmo_passo() -> None:
     """Só a linha em branco separa parágrafos; a quebra simples fica (RF-22)."""
     partes = _partes("1. Misture a farinha\ne o açúcar.\n\n2. Asse.")
     assert partes[0].textos == ["Misture a farinha\ne o açúcar.", "Asse."]
+
+
+def test_passos_um_por_linha_sem_linha_em_branco_viram_passos() -> None:
+    """Lista digitada com quebra simples: cada linha numerada é um passo (RF-22)."""
+    partes = _partes("1. Separe tudo.\n2. Misture.\n3. Asse.")
+    assert partes == [
+        TrechoDoPreparo("passos", ["Separe tudo.", "Misture.", "Asse."], 1)
+    ]
+
+
+def test_linha_sem_numero_antes_dos_passos_colados_fica_como_paragrafo() -> None:
+    """Uma introdução na linha de cima não engole os passos de baixo (RF-22)."""
+    partes = _partes("Para a massa:\n1. Misture.\n2. Sove.")
+    assert [(p.tipo, p.textos) for p in partes] == [
+        ("paragrafo", ["Para a massa:"]),
+        ("passos", ["Misture.", "Sove."]),
+    ]
+
+
+def test_linha_que_continua_o_passo_colado_fica_nele() -> None:
+    """A linha sem número continua o passo de cima, como "2 xícaras" (RF-22)."""
+    partes = _partes("1. Junte\n2 xícaras de farinha.\n2. Asse.")
+    assert partes[0].textos == ["Junte\n2 xícaras de farinha.", "Asse."]
 
 
 def test_numero_sem_espaco_depois_nao_e_passo() -> None:
@@ -347,6 +371,16 @@ def test_mais_receitas_mostra_cartoes_com_capa_lazy(client: Client) -> None:
     assert ">Mais receitas</h2>" in secao
     assert 'class="cartao-receita"' in secao
     assert 'loading="lazy"' in secao
+
+
+@pytest.mark.django_db
+def test_capa_tem_alt_vazio_porque_o_titulo_vem_logo_depois(client: Client) -> None:
+    """Com o título no alt, o leitor de tela lia o nome duas vezes seguidas."""
+    receita = _receita(publicado=True, imagem_capa="receitas/capas/capa.webp")
+    html = _pagina(client, receita)
+    capa = re.search(r'<img class="receita-detalhe__capa"[^>]*>', html)
+    assert capa is not None
+    assert 'alt=""' in capa.group(0)
 
 
 @pytest.mark.django_db

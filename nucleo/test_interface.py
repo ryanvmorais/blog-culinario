@@ -733,3 +733,22 @@ def test_paginas_de_erro_levam_o_rodape_ao_fim_da_tela(template: str) -> None:
     assert "flex-direction: column;" in pagina
     assert "min-height: 100dvh;" in pagina
     assert "flex: 1 0 auto;" in _bloco_css(CSS_BASE, ".pagina-erro > main")
+
+
+def test_tab_no_ultimo_item_do_menu_volta_ao_botao() -> None:
+    """Com a página inerte, o Tab saía do documento para a barra do navegador."""
+    trecho = JS_INTERACOES[JS_INTERACOES.index('painel.addEventListener("keydown"') :]
+    trecho = trecho[: trecho.index("});")]
+    assert 'evento.key !== "Tab"' in trecho
+    assert "evento.shiftKey" in trecho
+    assert "evento.preventDefault();" in trecho
+    assert "botao.focus();" in trecho
+
+
+def test_mensagem_e_erro_focados_ao_abrir_ficam_sem_contorno() -> None:
+    """Só o leitor de tela precisa do foco neles; o contorno ficava colado ao texto."""
+    regra = _bloco_css(
+        CSS_BASE,
+        '.mensagem[tabindex="-1"]:focus,\n.formulario__erro[tabindex="-1"]:focus',
+    )
+    assert "outline: none;" in regra

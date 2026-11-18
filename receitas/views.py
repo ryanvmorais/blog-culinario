@@ -294,11 +294,13 @@ class ComentarioCreateView(LoginRequiredMixin, View):
             slug (str): slug da receita comentada, vindo da URL.
 
         Returns:
-            HttpResponse: redireciona de volta para ``receitas:detalhe``,
-            na âncora ``#comentarios``.
+            HttpResponse: redireciona de volta para ``receitas:detalhe``.
         """
-        url_receita = reverse("receitas:detalhe", kwargs={"slug": slug})
-        url_retorno = f"{url_receita}#comentarios"
+        # Sem a âncora #comentarios: todo caminho deixa uma mensagem, e a
+        # mensagem recebe o foco (autofocus) e leva a tela até a seção. Com a
+        # âncora, o navegador ignora o autofocus, e o leitor de tela recomeçava
+        # do topo sem anunciar a mensagem.
+        url_retorno = reverse("receitas:detalhe", kwargs={"slug": slug})
 
         if eh_envio_suspeito_de_bot(request.POST):
             self._confirmar_envio(request)

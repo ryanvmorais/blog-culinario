@@ -1,0 +1,13 @@
+{% comment %}
+     ============================================================
+     SEÇÃO: ERROS DO FORMULÁRIO INTEIRO
+     O erro que não é de um campo (no Entrar, usuário ou senha incorretos).
+     A primeira mensagem recebe o foco quando a página volta: sem isso, o
+     leitor de tela começava em outro lugar e não dizia que o envio falhou.
+     O tabindex="-1" deixa o parágrafo receber o foco sem entrar no Tab.
+     ============================================================
+{% endcomment %}
+{% for erro in form.non_field_errors %}
+  <p class="formulario__erro"{% if forloop.first %} tabindex="-1" autofocus{% endif %}>{{ erro }}</p>
+{% endfor %}
+{# fim: ERROS DO FORMULÁRIO INTEIRO #}

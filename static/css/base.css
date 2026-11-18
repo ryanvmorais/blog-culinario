@@ -939,6 +939,22 @@ a.navbar__acao:hover {
   color: var(--cor-erro);
 }
 
+/* Mensagem e erro que recebem o foco ao abrir a página, só para o leitor de
+   tela lê-los (tabindex="-1", sem entrar no Tab): não são controles, e o
+   contorno do navegador ficava colado ao texto. Botões, links e campos
+   continuam com o contorno de foco. */
+.mensagem[tabindex="-1"]:focus,
+.formulario__erro[tabindex="-1"]:focus {
+  outline: none;
+}
+
+/* Os erros de um campo num bloco só, com o id que o aria-describedby do campo
+   aponta (usuarios/campo.html); o espaço entre eles é o mesmo do campo. */
+.formulario__erros {
+  display: grid;
+  gap: var(--espaco-1);
+}
+
 /* Honeypot antibot do formulário de comentário (spec 007, ADR-1). Fora da
    tela via posição, não display:none/visibility:hidden -- alguns bots
    simples ignoram só essas duas propriedades ao decidir o que preencher. */

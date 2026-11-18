@@ -28,6 +28,31 @@ _TAMANHO_MAXIMO_IMAGEM = 5 * 1024 * 1024  # 5 MB
 # adendo, RF-22). O grupo 1 é o texto sem o número digitado.
 _PASSO_NUMERADO = re.compile(r"^\s*\d+[.)]\s+(.*)$", re.DOTALL)
 _LINHA_EM_BRANCO = re.compile(r"\n\s*\n")
+# Linha que abre um passo dentro de um bloco sem linha em branco ("1. ...\n2. ...").
+_INICIO_DE_PASSO = re.compile(r"^\s*\d+[.)]\s+\S")
+
+
+def _separar_passos_colados(bloco: str) -> list[str]:
+    """
+    Separa os passos escritos um por linha, sem linha em branco entre eles.
+
+    Quem digita uma lista no Admin costuma quebrar só a linha. Cada linha que
+    começa por número abre um parágrafo novo; as outras continuam o parágrafo
+    de antes, como a segunda linha de um passo comprido.
+
+    Args:
+        bloco (str): um bloco do modo de preparo, já sem linha em branco.
+
+    Returns:
+        list[str]: os parágrafos do bloco, na ordem.
+    """
+    paragrafos: list[list[str]] = []
+    for linha in bloco.split("\n"):
+        if not paragrafos or _INICIO_DE_PASSO.match(linha):
+            paragrafos.append([linha])
+        else:
+            paragrafos[-1].append(linha)
+    return ["\n".join(linhas).strip() for linhas in paragrafos]
 
 
 @dataclass
@@ -292,7 +317,9 @@ class Receita(models.Model):
         Divide o modo de preparo em parágrafos, passos numerados e nota.
 
         Parágrafo é um bloco separado por linha em branco; passo é o parágrafo
-        que começa por número seguido de ponto ou parêntese. Os passos são
+        que começa por número seguido de ponto ou parêntese. Uma linha que
+        começa por número também abre um passo sem a linha em branco antes,
+        porque é assim que se costuma digitar uma lista. Os passos são
         numerados pela posição, não pelo número digitado, e o que vem depois
         do último passo vira nota. Não grava nada: o texto do banco fica como
         está (spec 012, adendo, RF-22, ADR-9).
@@ -302,7 +329,12 @@ class Receita(models.Model):
             passo, um único trecho ``paragrafo`` com todos os parágrafos.
         """
         texto = self.modo_de_preparo.replace("\r\n", "\n").strip()
-        paragrafos = [p.strip() for p in _LINHA_EM_BRANCO.split(texto) if p.strip()]
+        paragrafos = [
+            paragrafo
+            for bloco in _LINHA_EM_BRANCO.split(texto)
+            for paragrafo in _separar_passos_colados(bloco)
+            if paragrafo
+        ]
         passos_vistos = 0
         trechos: list[TrechoDoPreparo] = []
         for paragrafo in paragrafos:

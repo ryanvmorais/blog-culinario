@@ -14,8 +14,9 @@ const CONSULTA_CELULAR = "(max-width: 720px)";
 // o véu e o inert da página, e mantém aria-expanded e aria-label sincronizados
 // para leitor de tela; o CSS troca o ícone pelo aria-expanded (spec 012, ADR-7).
 // Teclado (spec 008, RF-06; spec 012, RF-17): abrir leva o foco ao primeiro
-// link, Esc e o X fecham e devolvem o foco ao botão, e o véu, um link do painel
-// ou um clique fora da barra fecham sem mexer no foco.
+// link, Esc e o X fecham e devolvem o foco ao botão, Tab no último item volta ao
+// X, e o véu, um link do painel ou um clique fora da barra fecham sem mexer no
+// foco.
 // -----------------------------------------------------------------------------
 const inicializarMenuMobile = () => {
   const botao = document.querySelector(".navbar__alternador");
@@ -76,6 +77,20 @@ const inicializarMenuMobile = () => {
   document.addEventListener("keydown", (evento) => {
     if (evento.key === "Escape" && estaAberto()) {
       fecharMenu({ devolverFoco: true });
+    }
+  });
+
+  // Tab no último item do painel volta ao X. Com a página atrás inerte, o foco
+  // saía do documento e caía na barra do navegador; o menu continua não modal
+  // (ADR-6): Shift+Tab ainda chega à marca, na barra.
+  painel.addEventListener("keydown", (evento) => {
+    if (evento.key !== "Tab" || evento.shiftKey || !estaAberto()) {
+      return;
+    }
+    const itens = painel.querySelectorAll("a[href], button:not([disabled])");
+    if (itens.length && document.activeElement === itens[itens.length - 1]) {
+      evento.preventDefault();
+      botao.focus();
     }
   });
 

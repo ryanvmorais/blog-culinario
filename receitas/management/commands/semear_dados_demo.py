@@ -208,7 +208,9 @@ class Command(BaseCommand):
                 titulo=dados["titulo"],
                 defaults={
                     "resumo": dados["resumo"],
-                    "ingredientes": "- 3 ingredientes principais\n- 1 pitada de sal",
+                    # Um item por linha, sem marcador: o cartão de ingredientes já é
+                    # uma lista, e o "- " aparecia escrito na frente de cada item.
+                    "ingredientes": "3 ingredientes principais\n1 pitada de sal",
                     "modo_de_preparo": (
                         "1. Separe e meça tudo antes de começar.\n"
                         "2. Misture na ordem da lista.\n"
