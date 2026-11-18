@@ -424,7 +424,7 @@ aberto.
 
 ## Adendo (2026-11-17): página da receita e listagem
 
-> Status do adendo: aprovado (2026-11-17). O texto acima é o aprovado em 2026-11-17 e fica como está; o
+> Status do adendo: concluído (2026-11-17). O texto acima é o aprovado em 2026-11-17 e fica como está; o
 > adendo acrescenta requisitos, com a numeração continuando a dele.
 
 **Contexto.** Depois do redesenho da home, a página da receita e a listagem ficaram com o
@@ -686,7 +686,7 @@ os passos numerados, o cartão de convite a comentar e a pílula marcada.
 
 ## Adendo 2 (2026-11-17): Entrar, Cadastro e páginas de erro
 
-> Status do adendo 2: aprovado (2026-11-17). O texto acima fica como está; o adendo 2 acrescenta
+> Status do adendo 2: concluído (2026-11-17). O texto acima fica como está; o adendo 2 acrescenta
 > requisitos, com a numeração continuando a dele, e reabre o não-objetivo "Entrar, Cadastro e
 > páginas de erro: ficam como estão" do adendo.
 
