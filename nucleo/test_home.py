@@ -373,7 +373,7 @@ def test_sem_categoria_com_receita_a_secao_some(client: Client) -> None:
 # -----------------------------------------------------------------------------
 # Recentes (RF-07)
 # -----------------------------------------------------------------------------
-def test_recentes_mostram_tres_e_o_botao_com_o_total(client: Client) -> None:
+def test_recentes_mostram_tres_e_o_botao_para_a_listagem(client: Client) -> None:
     for indice in range(6):
         _receita(titulo=f"Prato {indice}")
 
@@ -381,7 +381,8 @@ def test_recentes_mostram_tres_e_o_botao_com_o_total(client: Client) -> None:
 
     assert secao.count('<article class="cartao-receita">') == 3
     assert "Recém-saídas do forno" in secao
-    assert "Ver todas as 6 receitas" in secao
+    assert "Ver todas as receitas" in secao
+    assert "Ver todas as 6 receitas" not in secao
 
 
 def test_com_uma_receita_a_secao_de_recentes_some(client: Client) -> None:
