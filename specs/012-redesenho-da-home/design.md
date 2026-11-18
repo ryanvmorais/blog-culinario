@@ -412,7 +412,7 @@ RF-17):
 
 ## Adendo (2026-11-17): página da receita e listagem
 
-> Status do adendo: aprovado (2026-11-17). O texto acima é o aprovado em 2026-11-17 e fica como está; o
+> Status do adendo: concluído (2026-11-17). O texto acima é o aprovado em 2026-11-17 e fica como está; o
 > adendo acrescenta o desenho dos RF-19 a RF-28, com os ADRs continuando a numeração.
 
 ### Visão geral da abordagem do adendo
@@ -702,7 +702,7 @@ página.
 
 ## Adendo 2 (2026-11-17): Entrar, Cadastro e páginas de erro
 
-> Status do adendo 2: aprovado (2026-11-17). Acrescenta o desenho dos RF-29 a RF-33, com os ADRs
+> Status do adendo 2: concluído (2026-11-17). Acrescenta o desenho dos RF-29 a RF-33, com os ADRs
 > continuando a numeração.
 
 ### Visão geral da abordagem do adendo 2

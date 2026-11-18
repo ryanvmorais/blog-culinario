@@ -58,7 +58,7 @@ origin: concepcao
 
 ## Adendo (2026-11-17): página da receita e listagem
 
-> Status do adendo: aprovado (2026-11-17). Quebra o adendo do `design.md` (RF-19 a RF-28, RNF-07 a RNF-12,
+> Status do adendo: concluído (2026-11-17). Quebra o adendo do `design.md` (RF-19 a RF-28, RNF-07 a RNF-12,
 > ADR-9 a ADR-13). As etapas continuam a numeração acima.
 
 ## Etapa 6 — Passos do modo de preparo
@@ -98,7 +98,7 @@ origin: concepcao
 
 ## Adendo 2 (2026-11-17): Entrar, Cadastro e páginas de erro
 
-> Status do adendo 2: aprovado (2026-11-17). Quebra o adendo 2 do `design.md` (RF-29 a RF-33,
+> Status do adendo 2: concluído (2026-11-17). Quebra o adendo 2 do `design.md` (RF-29 a RF-33,
 > RNF-13 a RNF-15, ADR-14 a ADR-16). As etapas continuam a numeração acima.
 
 ## Etapa 10 — Páginas de acesso
