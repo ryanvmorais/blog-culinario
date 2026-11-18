@@ -142,7 +142,7 @@
         </div>
         <div class="secao__rodape">
           <a class="botao botao--contorno" href="{% url 'receitas:lista' %}">
-            Ver todas as {{ total_receitas }} receitas
+            Ver todas as receitas
           </a>
         </div>
       {% else %}
@@ -165,9 +165,10 @@
       <span class="rotulo">Por dentro</span>
       <h2 id="titulo-por-dentro">Como este blog foi feito</h2>
       <p class="por-dentro__intro">
-        Este blog também é material de estudo: uma aplicação Django completa, em
-        código aberto e comentado. Cada nota abaixo aponta para o arquivo que faz
-        a parte funcionar.
+        Antes de ser um blog de receitas, este é um projeto educacional: uma
+        aplicação Django completa, em código aberto e comentado, feita para quem
+        está aprendendo. Cada nota abaixo aponta para o arquivo que faz a parte
+        funcionar.
       </p>
 
       <ul class="notas-codigo">
@@ -175,16 +176,15 @@
           <h3>Esta página</h3>
           <p>
             Uma view de função busca as receitas com <code>select_related</code> e as
-            categorias com a contagem de receitas, por um método de QuerySet com
-            <code>annotate(Count)</code>.
+            categorias com <code>annotate(Count)</code>, num método de QuerySet.
           </p>
           <a href="{% link_repositorio 'nucleo/views.py' %}" target="_blank" rel="noopener">nucleo/views.py</a>
         </li>
         <li class="nota-codigo">
           <h3>Busca e filtros</h3>
           <p>
-            Uma <code>ListView</code> filtra por texto, categoria e tag a partir da URL,
-            com paginação de 9 em 9.
+            Uma <code>ListView</code> lê o texto, a categoria e a tag dos parâmetros da
+            URL, filtra as receitas e pagina de 9 em 9.
           </p>
           <a href="{% link_repositorio 'receitas/views.py' %}" target="_blank" rel="noopener">receitas/views.py</a>
         </li>
@@ -199,8 +199,8 @@
         <li class="nota-codigo">
           <h3>Specs antes do código</h3>
           <p>
-            Cada funcionalidade nasce como requisitos, design e tarefas, aprovados
-            antes da primeira linha de código.
+            Cada funcionalidade nasce como requisitos, design e tarefas, aprovados um
+            a um antes da primeira linha de código.
           </p>
           <a href="{% link_repositorio 'specs/' %}" target="_blank" rel="noopener">specs/</a>
         </li>
