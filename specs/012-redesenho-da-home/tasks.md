@@ -118,5 +118,5 @@ origin: concepcao
 - [x] `docs/design-system.html`: cartão de acesso com "(opcional)" e a ajuda de senha. — RNF-15
 - [x] `CLAUDE.md`: o mapa de `usuarios/` e as regras de interface do cartão, do campo e da frase de senha. — RNF-15
 - [x] Navegador real, a 390 e 1280 px, nos dois temas: axe-core sem violação e medidas de desenho em Entrar, Cadastro e nas cinco páginas de erro; capturas a 360, 390, 430 e 1280 px contra o protótipo do `design.md`; registrar em "Notas de implementação do adendo 2" do `design.md`. — RNF-14 (axe zerado em 28 combinações; medidas sem achado)
-- [ ] Lighthouse de Entrar e Cadastro (mobile e desktop) dentro dos limites de `.github/lighthouse/`; registrar o resultado. — RNF-11
+- [x] Lighthouse de Entrar e Cadastro (mobile e desktop) dentro dos limites de `.github/lighthouse/`; registrar o resultado. — RNF-11 (Lighthouse CI do PR: asserções aprovadas nas 5 páginas, Entrar e Cadastro inclusive, em mobile e desktop)
 - [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. — 481 passed, 3 skipped; ruff/black/mypy verdes
