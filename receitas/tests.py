@@ -6,7 +6,8 @@ listagem/detalhe (spec 002), comentários (spec 005), limite de taxa (spec
 Estratégia de isolamento: tudo aqui é ORM/HTTP de teste do Django rodando
 contra o banco de teste do pytest-django (``@pytest.mark.django_db``) — sem
 mock. Não há I/O externo (rede, storage remoto) neste domínio ainda; o
-upload de imagem usa ``SimpleUploadedFile`` em memória. O cache é limpo antes
+upload de imagem usa ``SimpleUploadedFile``, e a capa salva vai para o
+``MEDIA_ROOT`` temporário do ``conftest.py``. O cache é limpo antes
 de cada teste (fixture autouse) para os contadores de limitação de taxa não
 vazarem de um teste para o outro.
 """
@@ -15,6 +16,7 @@ from __future__ import annotations
 
 import time
 from datetime import timedelta
+from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
@@ -276,6 +278,15 @@ def test_extensao_de_imagem_invalida_e_rejeitada() -> None:
 
     with pytest.raises(ValidationError):
         receita.full_clean()
+
+
+def test_capa_salva_nos_testes_fica_fora_da_media_do_projeto(tmp_path: Path) -> None:
+    """A capa salva no teste vai para a pasta temporária, não para a ``media/``."""
+    capa = SimpleUploadedFile("capa.jpg", b"0", content_type="image/jpeg")
+
+    receita = _receita(imagem_capa=capa)
+
+    assert Path(receita.imagem_capa.path).is_relative_to(tmp_path)
 
 
 def test_receita_sem_imagem_e_valida() -> None:
