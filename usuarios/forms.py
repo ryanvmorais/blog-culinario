@@ -1,11 +1,11 @@
-"""Formulário de cadastro de usuário (spec 004)."""
+"""Formulários de cadastro e de login (spec 004; acessibilidade da spec 012)."""
 
 from __future__ import annotations
 
 from typing import Any
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 
 # As quatro regras do AUTH_PASSWORD_VALIDATORS numa frase (spec 012, adendo 2,
@@ -18,7 +18,66 @@ AJUDA_SENHA = (
 )
 
 
-class FormularioCadastro(UserCreationForm):
+# -----------------------------------------------------------------------------
+# Acessibilidade dos formulários de acesso
+# -----------------------------------------------------------------------------
+class FormularioAcessivelMixin(forms.BaseForm):
+    """
+    Liga cada erro ao seu campo e decide onde o foco começa.
+
+    O Django marca o campo inválido com ``aria-invalid``, mas a mensagem fica
+    num parágrafo solto: o leitor de tela dizia "entrada inválida" sem o
+    motivo. Aqui o ``aria-describedby`` do campo passa a apontar também para o
+    bloco de erros (``<id>_erro``, escrito pelo ``usuarios/campo.html``).
+
+    O foco automático que o Django põe no nome de usuário sai: com ele, o
+    leitor de tela começava no campo e pulava o título e a conta de
+    demonstração. Com erro de campo, o foco vai para o primeiro campo
+    inválido; com erro do formulário inteiro (senha errada), ele fica com o
+    template, que foca a mensagem.
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Monta o formulário sem o foco automático do Django.
+
+        Args:
+            *args (Any): argumentos posicionais do formulário de base.
+            **kwargs (Any): argumentos nomeados do formulário de base.
+        """
+        super().__init__(*args, **kwargs)
+        for campo in self.fields.values():
+            campo.widget.attrs.pop("autofocus", None)
+
+    def full_clean(self) -> None:
+        """
+        Valida e, havendo erro, liga as mensagens aos campos e escolhe o foco.
+
+        Roda depois da validação do Django, quando os erros já existem e os
+        campos ainda não foram desenhados.
+        """
+        super().full_clean()
+        if not self.is_bound or not self.auto_id:
+            return
+        invalidos = [nome for nome in self.fields if nome in self.errors]
+        for nome in invalidos:
+            campo = self[nome]
+            descricoes = [f"{campo.auto_id}_erro"]
+            if campo.help_text:
+                descricoes.insert(0, f"{campo.auto_id}_helptext")
+            campo.field.widget.attrs["aria-describedby"] = " ".join(descricoes)
+        if invalidos and not self.non_field_errors():
+            self.fields[invalidos[0]].widget.attrs["autofocus"] = True
+
+
+# -----------------------------------------------------------------------------
+# Formulários
+# -----------------------------------------------------------------------------
+class FormularioEntrar(FormularioAcessivelMixin, AuthenticationForm):
+    """Login nativo do Django, com os erros ligados aos campos e sem autofoco."""
+
+
+class FormularioCadastro(FormularioAcessivelMixin, UserCreationForm):
     """
     Cadastro de conta: username + senha (herdados) e email opcional.
 

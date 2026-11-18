@@ -10,7 +10,7 @@
     {# O cartão reúne título, aviso, campos e a troca de página num objeto só (spec 012, adendo 2, RF-29). #}
     <div class="cartao-acesso">
       <h1>Criar conta</h1>
-      {% include "includes/mensagens.html" %}
+      {% include "includes/mensagens.html" with focar=True %}
 
       {% if modo_demonstracao %}
         {# Antes do formulário, para ninguém preencher à toa (spec 009, RF-02). #}
@@ -22,6 +22,7 @@
 
       <form class="formulario" method="post" novalidate>
         {% csrf_token %}
+        {% include "usuarios/erros_do_formulario.html" %}
         {% for field in form %}
           {% include "usuarios/campo.html" %}
         {% endfor %}

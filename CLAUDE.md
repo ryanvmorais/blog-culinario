@@ -165,6 +165,11 @@ Regras que a auditoria de interface de 18/10/2026 deixou, guardadas por
   usam o `usuarios/campo.html`, que marca o "(opcional)"), nunca o `label_tag`.
 - **Senha:** a ajuda é a frase fixa `AJUDA_SENHA` (`usuarios/forms.py`); mudou o
   `AUTH_PASSWORD_VALIDATORS`, reescreva-a (o `usuarios/test_paginas_de_acesso.py` avisa).
+- **Foco para leitor de tela** (conferido com NVDA): nada de `autofocus` ao abrir
+  uma página; com erro, o foco vai ao primeiro campo inválido ou à mensagem do
+  formulário, e o erro entra no `aria-describedby` do campo (`FormularioAcessivelMixin`).
+  Mensagem depois de um envio recebe o foco (`mensagens.html` com `focar=True`), e o
+  redirect não leva âncora: com `#algo` no endereço, o navegador ignora o `autofocus`.
 
 ## Qualidade e automação
 

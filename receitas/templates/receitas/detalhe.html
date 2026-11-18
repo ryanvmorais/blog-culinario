@@ -10,7 +10,8 @@
 {% block content %}
   <article class="container receita">
     {% if receita.imagem_capa %}
-      <img class="receita-detalhe__capa" src="{{ receita.imagem_capa.url }}" alt="{{ receita.titulo }}" />
+      {# alt vazio: o h1 logo abaixo já diz o nome; com o título no alt, o leitor de tela o lia duas vezes seguidas. #}
+      <img class="receita-detalhe__capa" src="{{ receita.imagem_capa.url }}" alt="" />
     {% endif %}
 
     <a class="cartao-receita__categoria" href="{% url 'receitas:lista' %}?categoria={{ receita.categoria.slug }}">
@@ -89,7 +90,7 @@
   {% endcomment %}
   <section class="container secao" id="comentarios">
     <h2>Comentários</h2>
-    {% include "includes/mensagens.html" %}
+    {% include "includes/mensagens.html" with focar=True %}
 
     {% for comentario in comentarios %}
       <article class="comentario">

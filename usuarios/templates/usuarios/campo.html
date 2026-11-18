@@ -17,8 +17,13 @@
     {# <div>, não <p>: a ajuda pode ser uma lista. O id é o que o aria-describedby do campo aponta. #}
     <div class="formulario__ajuda" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</div>
   {% endif %}
-  {% for erro in field.errors %}
-    <p class="formulario__erro">{{ erro }}</p>
-  {% endfor %}
+  {% if field.errors %}
+    {# O id é o que o aria-describedby do campo aponta: o leitor de tela lê o motivo junto com o campo (FormularioAcessivelMixin). #}
+    <div class="formulario__erros" id="{{ field.auto_id }}_erro">
+      {% for erro in field.errors %}
+        <p class="formulario__erro">{{ erro }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
 </div>
 {# fim: CAMPO DAS PÁGINAS DE ACESSO #}

@@ -15,12 +15,13 @@ vazar de um teste para o outro.
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 import pytest
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
-from django.test import Client
+from django.test import Client, override_settings
 from django.urls import reverse
 
 from receitas.models import Categoria, Receita
@@ -179,3 +180,104 @@ def test_senha_fora_da_regra_segue_recusada(client: Client) -> None:
 
     assert not User.objects.filter(username="chef-teste").exists()
     assert 'class="formulario__erro"' in html
+
+
+# -----------------------------------------------------------------------------
+# Foco e erros para leitor de tela (achados do teste com NVDA)
+# -----------------------------------------------------------------------------
+def _campo(html: str, nome: str) -> str:
+    """
+    Devolve a tag ``<input>`` de um campo.
+
+    Args:
+        html (str): HTML da página.
+        nome (str): atributo ``name`` do campo.
+
+    Returns:
+        str: a tag inteira do campo.
+    """
+    campo = re.search(rf'<input[^>]*name="{nome}"[^>]*>', html)
+    assert campo is not None, nome
+    return campo.group(0)
+
+
+@pytest.mark.parametrize("rota", ["usuarios:entrar", "usuarios:cadastro"])
+def test_pagina_de_acesso_abre_sem_foco_automatico(client: Client, rota: str) -> None:
+    """Com o autofoco, o leitor de tela pulava o título e a conta de demonstração."""
+    html = client.get(reverse(rota)).content.decode()
+
+    assert "autofocus" not in html
+
+
+def test_senha_errada_leva_o_foco_a_mensagem(client: Client) -> None:
+    """Sem o foco na mensagem, o leitor de tela não dizia que o login falhou."""
+    User.objects.create_user("chef", password="senha-longa-1")
+
+    html = client.post(
+        reverse("usuarios:entrar"), {"username": "chef", "password": "errada"}
+    ).content.decode()
+
+    erro = re.search(r'<p class="formulario__erro"[^>]*>', html)
+    assert erro is not None
+    assert 'tabindex="-1"' in erro.group(0)
+    assert "autofocus" in erro.group(0)
+    assert html.count("autofocus") == 1
+
+
+def test_envio_vazio_liga_cada_erro_ao_campo_e_foca_o_primeiro(client: Client) -> None:
+    """O campo inválido anuncia o motivo, não só "entrada inválida"."""
+    html = client.post(reverse("usuarios:entrar"), {}).content.decode()
+
+    usuario = _campo(html, "username")
+    senha = _campo(html, "password")
+    assert 'aria-describedby="id_username_erro"' in usuario
+    assert 'aria-invalid="true"' in usuario
+    assert "autofocus" in usuario
+    assert 'aria-describedby="id_password_erro"' in senha
+    assert "autofocus" not in senha
+    assert '<div class="formulario__erros" id="id_username_erro">' in html
+
+
+def test_erro_na_senha_do_cadastro_mantem_a_ajuda_ligada(client: Client) -> None:
+    """Com erro, a senha continua apontando para a frase das regras."""
+    html = client.post(reverse("usuarios:cadastro"), {}).content.decode()
+
+    assert 'aria-describedby="id_password1_helptext id_password1_erro"' in _campo(
+        html, "password1"
+    )
+    assert "autofocus" in _campo(html, "username")
+
+
+@override_settings(MODO_DEMONSTRACAO=True)
+def test_mensagem_depois_do_envio_recebe_o_foco(client: Client) -> None:
+    """A mensagem chega depois de recarregar; sem foco, o leitor de tela a pulava."""
+    resposta = client.post(
+        reverse("usuarios:cadastro"),
+        {
+            "username": "chef-demo",
+            "password1": "uma-senha-bem-longa-9",
+            "password2": "uma-senha-bem-longa-9",
+        },
+        follow=True,
+    )
+    html = resposta.content.decode()
+
+    mensagem = re.search(r'<p class="mensagem mensagem--info"[^>]*>', html)
+    assert mensagem is not None
+    assert 'tabindex="-1"' in mensagem.group(0)
+    assert "autofocus" in mensagem.group(0)
+
+
+def test_mensagens_so_recebem_o_foco_onde_a_pagina_pede() -> None:
+    """O topo das outras páginas segue sem foco; acesso e comentários pedem."""
+    raiz = Path(__file__).resolve().parent.parent
+    pedem = [
+        raiz / "usuarios/templates/usuarios/login.html",
+        raiz / "usuarios/templates/usuarios/cadastro.html",
+        raiz / "receitas/templates/receitas/detalhe.html",
+    ]
+    for template in pedem:
+        texto = template.read_text(encoding="utf-8")
+        assert '{% include "includes/mensagens.html" with focar=True %}' in texto
+    base = (raiz / "templates/base.html").read_text(encoding="utf-8")
+    assert '{% include "includes/mensagens.html" %}' in base

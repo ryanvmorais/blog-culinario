@@ -59,7 +59,9 @@ def _pilulas(html: str) -> list[tuple[str, str, bool]]:
     ):
         href = re.search(r'href="([^"]*)"', atributos)
         assert href
-        texto = " ".join(re.sub(r"<[^>]+>", "", corpo).split())
+        # O texto visível: o " receitas" só do leitor de tela tem teste próprio.
+        visivel = re.sub(r'<span class="so-leitor-de-tela">.*?</span>', "", corpo)
+        texto = " ".join(re.sub(r"<[^>]+>", "", visivel).split())
         pilulas.append((texto, href.group(1), 'aria-current="page"' in atributos))
     return pilulas
 
@@ -156,6 +158,17 @@ def test_sem_categoria_publicada_as_pilulas_somem(client: Client) -> None:
     """Sem receita publicada, não há região de categorias (RF-26)."""
     _receita(titulo="Só rascunho", publicado=False)
     assert "lista-categorias" not in _listagem(client)
+
+
+def test_contagem_diz_receitas_ao_leitor_de_tela(client: Client) -> None:
+    """Sem a palavra, o leitor de tela lia "Doces 2", como parte do nome."""
+    _tres_categorias()
+
+    html = client.get(reverse("receitas:lista")).content.decode()
+
+    assert '3<span class="so-leitor-de-tela">&nbsp;receitas</span>' in html
+    assert '2<span class="so-leitor-de-tela">&nbsp;receitas</span>' in html
+    assert '1<span class="so-leitor-de-tela">&nbsp;receita</span>' in html
 
 
 def test_total_de_todas_bate_com_a_contagem_do_banco(client: Client) -> None:

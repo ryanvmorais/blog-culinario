@@ -50,14 +50,15 @@
           <li>
             <a class="pilula" href="{% url 'receitas:lista' %}{% if querystring_sem_categoria %}?{{ querystring_sem_categoria }}{% endif %}"{% if not categoria_selecionada %} aria-current="page"{% endif %}>
               Todas
-              <span class="pilula__contagem"><span aria-hidden="true">·</span> {{ total_publicadas }}</span>
+              {# "receitas" só para o leitor de tela: sem a palavra, "Massas 2" soava como parte do nome. O &nbsp; não se perde no texto oculto, como o espaço comum. #}
+              <span class="pilula__contagem"><span aria-hidden="true">·</span> {{ total_publicadas }}<span class="so-leitor-de-tela">&nbsp;receita{{ total_publicadas|pluralize }}</span></span>
             </a>
           </li>
           {% for categoria in categorias %}
             <li>
               <a class="pilula" href="{% url 'receitas:lista' %}?{% if querystring_sem_categoria %}{{ querystring_sem_categoria }}&amp;{% endif %}categoria={{ categoria.slug }}"{% if categoria.slug == categoria_selecionada %} aria-current="page"{% endif %}>
                 {{ categoria.nome }}
-                <span class="pilula__contagem"><span aria-hidden="true">·</span> {{ categoria.total_receitas }}</span>
+                <span class="pilula__contagem"><span aria-hidden="true">·</span> {{ categoria.total_receitas }}<span class="so-leitor-de-tela">&nbsp;receita{{ categoria.total_receitas|pluralize }}</span></span>
               </a>
             </li>
           {% endfor %}

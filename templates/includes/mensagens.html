@@ -3,12 +3,17 @@
      SEÇÃO: MENSAGENS
      Feedback de django.contrib.messages (spec 004, RF-06). Sobrevive a um
      redirect (login/logout/cadastro) porque o framework guarda na sessão.
+     Com focar=True (páginas de acesso e comentários da receita), a primeira
+     mensagem recebe o foco quando a página abre: a mensagem chega depois de
+     um envio e de um recarregamento, e o role="status" não é anunciado numa
+     página nova, então o leitor de tela começava do topo e a pulava. O
+     tabindex="-1" deixa o parágrafo receber o foco sem entrar no Tab.
      ============================================================
 {% endcomment %}
 {% if messages %}
   <div class="container mensagens" role="status">
     {% for message in messages %}
-      <p class="mensagem mensagem--{{ message.tags }}">{{ message }}</p>
+      <p class="mensagem mensagem--{{ message.tags }}"{% if focar and forloop.first %} tabindex="-1" autofocus{% endif %}>{{ message }}</p>
     {% endfor %}
   </div>
 {% endif %}

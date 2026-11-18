@@ -864,3 +864,30 @@ Nenhum.
 - **axe-core 4.14.0** (mesmo SHA-256 da spec): zero violações nas 28 combinações (7 páginas, 2
   larguras, 2 temas).
 - **Medidas de desenho** (`auditar_proporcoes.py`): nenhum achado nas 7 páginas, a 390 e 1280 px.
+
+## Correções depois da conclusão (2026-11-17)
+
+Uma passada com leitor de tela (NVDA 2026.3, Chrome) no blog inteiro, depois dos dois adendos,
+levou a correções de acessibilidade, num PR de correção, sem requisito novo:
+
+1. **Foco nos formulários de acesso.** Entrar e Cadastro abrem sem `autofocus`: com o foco no
+   usuário, o leitor de tela pulava o título e a conta de demonstração. O
+   `FormularioAcessivelMixin` (`usuarios/forms.py`) tira o autofoco do Django, liga o bloco de
+   erros de cada campo (`<id>_erro`, em `usuarios/campo.html`) ao `aria-describedby` e, havendo
+   erro de campo, foca o primeiro inválido. O erro do formulário inteiro (usuário ou senha
+   incorretos) recebe o foco por `usuarios/erros_do_formulario.html`: antes, a página voltava
+   sem anunciar que o login falhou.
+2. **Mensagem depois de um envio.** O `includes/mensagens.html` aceita `focar=True` (páginas de
+   acesso e comentários da receita) e foca a primeira mensagem. O envio de comentário deixa de
+   voltar para `#comentarios`: com a âncora, o navegador ignora o `autofocus`, e o leitor de tela
+   recomeçava do topo sem ler a mensagem.
+3. **Menores.** A contagem das pílulas da listagem diz "receitas" ao leitor de tela; a capa da
+   receita tem `alt=""`, porque o `h1` logo abaixo já diz o nome; e, com o menu do celular
+   aberto, o Tab no último item volta ao botão de fechar em vez de sair para o navegador.
+4. **Passos colados (RF-22).** Uma linha que começa por número abre um passo mesmo sem linha em
+   branco antes, porque é assim que se costuma digitar uma lista no Admin; antes, "1. …\n2. …"
+   virava um passo só. A regra da linha em branco continua valendo para os outros parágrafos.
+   O `semear_dados_demo` deixou de escrever "- " na frente de cada ingrediente.
+
+Conferido de novo com o NVDA nas mesmas cenas e com o axe-core 4.14.0 (zero violações em Entrar,
+Cadastro, listagem, receita e home, a 390 e 1280 px, nos dois temas).

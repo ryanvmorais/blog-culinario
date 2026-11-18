@@ -26,7 +26,7 @@ from blog_culinario.limitacao import (
     limite_excedido,
 )
 
-from .forms import FormularioCadastro
+from .forms import FormularioCadastro, FormularioEntrar
 
 
 class CadastroView(FormView):
@@ -92,6 +92,8 @@ class EntrarView(LoginView):
     """Login nativo do Django, com template, mensagem e limite de tentativas."""
 
     template_name = "usuarios/login.html"
+    # Erros ligados aos campos e sem o autofoco do Django (FormularioAcessivelMixin).
+    form_class = FormularioEntrar
 
     def post(
         self, request: HttpRequest, *args: object, **kwargs: object
