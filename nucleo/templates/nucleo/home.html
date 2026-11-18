@@ -166,8 +166,8 @@
       <h2 id="titulo-por-dentro">Como este blog foi feito</h2>
       <p class="por-dentro__intro">
         Antes de ser um blog de receitas, este é um projeto educacional: uma
-        aplicação Django completa, em código aberto e comentado, feita para quem
-        está aprendendo. Cada nota abaixo aponta para o arquivo que faz a parte
+        aplicação Django completa, com código aberto e comentado, feita para quem
+        está aprendendo. Cada nota abaixo aponta para o arquivo que faz essa parte
         funcionar.
       </p>
 
@@ -176,7 +176,7 @@
           <h3>Esta página</h3>
           <p>
             Uma view de função busca as receitas com <code>select_related</code> e as
-            categorias com <code>annotate(Count)</code>, num método de QuerySet.
+            categorias com <code>annotate(Count)</code>.
           </p>
           <a href="{% link_repositorio 'nucleo/views.py' %}" target="_blank" rel="noopener">nucleo/views.py</a>
         </li>
@@ -184,7 +184,7 @@
           <h3>Busca e filtros</h3>
           <p>
             Uma <code>ListView</code> lê o texto, a categoria e a tag dos parâmetros da
-            URL, filtra as receitas e pagina de 9 em 9.
+            URL, filtra as receitas e pagina o resultado de 9 em 9.
           </p>
           <a href="{% link_repositorio 'receitas/views.py' %}" target="_blank" rel="noopener">receitas/views.py</a>
         </li>
@@ -199,8 +199,8 @@
         <li class="nota-codigo">
           <h3>Specs antes do código</h3>
           <p>
-            Cada funcionalidade nasce como requisitos, design e tarefas, aprovados um
-            a um antes da primeira linha de código.
+            Cada funcionalidade nasce como requisitos, design e tarefas, aprovados
+            antes do código.
           </p>
           <a href="{% link_repositorio 'specs/' %}" target="_blank" rel="noopener">specs/</a>
         </li>
