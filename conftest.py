@@ -4,7 +4,9 @@ Configuração do pytest compartilhada por todos os apps.
 O cache do projeto é em arquivo, na pasta de dados (``blog_culinario/cache.py``,
 spec 011). Sem o que está aqui, a suíte criaria a ``django_cache/`` real e
 gravaria nela os contadores da limitação de taxa, e um teste herdaria os do
-anterior.
+anterior. A mídia segue a mesma regra: um teste que salva uma receita com capa
+gravaria o arquivo na ``media/`` real, e cada rodada da suíte deixaria lá
+alguns megabytes a mais.
 """
 
 from __future__ import annotations
@@ -86,3 +88,19 @@ def _cache_em_pasta_temporaria(settings: Settings, tmp_path: Path) -> None:
         tmp_path (Path): pasta temporária do teste, criada pelo pytest.
     """
     settings.CACHES = _caches(tmp_path / "django_cache")
+
+
+@pytest.fixture(autouse=True)
+def _midia_em_pasta_temporaria(settings: Settings, tmp_path: Path) -> None:
+    """
+    Põe o ``MEDIA_ROOT`` de cada teste numa pasta temporária própria.
+
+    O ``FileSystemStorage`` padrão ouve o sinal ``setting_changed`` e passa a
+    gravar na pasta nova; o pytest apaga as pastas temporárias antigas sozinho.
+
+    Args:
+        settings (Settings): fixture do pytest-django que troca uma
+            configuração só durante o teste.
+        tmp_path (Path): pasta temporária do teste, criada pelo pytest.
+    """
+    settings.MEDIA_ROOT = tmp_path / "media"
