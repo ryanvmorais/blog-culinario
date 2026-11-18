@@ -1,6 +1,6 @@
 ---
 feature: Redesenho da home
-status: em andamento
+status: concluído
 date: 2026-11-17
 related:
   - 002-listagem-detalhe-receitas/requirements.md
@@ -93,5 +93,5 @@ origin: concepcao
 - [x] `docs/design-system.html`: ficha, cartão de ingredientes, passos numerados, convite a comentar e pílula marcada. — RNF-12
 - [x] `CLAUDE.md`: o mapa de `receitas/` com os testes novos, se mudar o que ele descreve. — RNF-12
 - [x] Navegador real, a 390 e a 1280 px, nos dois temas: axe-core sem violação e medidas de botão e alinhamento na receita e na listagem; o cartão de ingredientes fixo ao rolar e rolando por dentro com muitos ingredientes; registrar em "Notas de implementação do adendo" do `design.md`. — RNF-10, RF-21 (axe zerado em 12 combinações depois do desvio 1; cartão fixo a 88 px; nenhuma rolagem lateral)
-- [ ] Lighthouse da listagem e da receita (mobile e desktop) dentro dos limites de `.github/lighthouse/`; registrar o resultado. — RNF-11
+- [x] Lighthouse da listagem e da receita (mobile e desktop) dentro dos limites de `.github/lighthouse/`; registrar o resultado. — RNF-11 — Lighthouse CI da `main` (9005e01): desktop 100 nas quatro notas; mobile 99 de desempenho e 100 nas outras três, LCP 2,1 s na listagem e 2,0 s na receita, CLS 0
 - [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. — 462 passed, 3 skipped; ruff/black/mypy verdes

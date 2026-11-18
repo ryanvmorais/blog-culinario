@@ -1,6 +1,6 @@
 ---
 feature: Redesenho da home
-status: em andamento
+status: concluído
 date: 2026-11-17
 related:
   - 002-listagem-detalhe-receitas/requirements.md
@@ -178,6 +178,9 @@ da abertura).
 ### RF-07 — As recentes depois do destaque
 
 **Substitui** spec 002, RF-06, primeiro cenário.
+
+> Mudança posterior (PR #85, 2026-11-17): o botão passou a "Ver todas as receitas", sem a
+> contagem, que já aparece nos números do topo da home. O texto abaixo fica como aprovado.
 
 - **Given** mais de uma receita publicada
   **When** a home abre
