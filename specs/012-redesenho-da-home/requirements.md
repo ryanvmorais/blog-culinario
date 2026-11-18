@@ -683,3 +683,132 @@ os passos numerados, o cartão de convite a comentar e a pílula marcada.
   com 9.
 - Consultas fixas nas duas páginas (RNF-08), CSP sem nada inline e contraste dos fundos novos
   (RNF-09).
+
+## Adendo 2 (2026-11-17): Entrar, Cadastro e páginas de erro
+
+> Status do adendo 2: aprovado (2026-11-17). O texto acima fica como está; o adendo 2 acrescenta
+> requisitos, com a numeração continuando a dele, e reabre o não-objetivo "Entrar, Cadastro e
+> páginas de erro: ficam como estão" do adendo.
+
+**Contexto.** Depois do redesenho da home, da receita e da listagem, as páginas de acesso e as de
+erro ficaram com o desenho da spec 008:
+
+- **Entrar e Cadastro.** Os campos ficam soltos no fundo da página, os rótulos terminam em
+  dois-pontos ("Usuário:"), nada diz que o e-mail pode ficar vazio, as regras de senha aparecem
+  como quatro frases longas do Django e a confirmação repete "Informe a mesma senha informada
+  anteriormente, para verificação.".
+- **Páginas de erro.** O conteúdo é curto e o rodapé para logo abaixo dele, com fundo vazio até o
+  fim da janela.
+
+O desenho foi validado num protótipo a 390 e 1280 px, com o HTML e o CSS do blog, antes deste
+adendo 2.
+
+**Objetivos do adendo 2.**
+
+- Dar às páginas de acesso o cartão das outras telas, com o formulário como um objeto só.
+- Deixar os rótulos e as ajudas curtos, sem perder nenhuma regra.
+- Levar o rodapé das páginas de erro ao fim da tela.
+
+**Não-objetivos do adendo 2.**
+
+- **Validação:** as regras de senha (`AUTH_PASSWORD_VALIDATORS`), o nome de usuário e as
+  mensagens de erro do Django não mudam; muda só como as regras aparecem.
+- **Views, URLs e limitação de taxa:** ficam como estão (spec 004 e spec 006).
+- **Aviso e conta da demonstração:** mesmo texto e mesma caixa (spec 009); só passam para dentro
+  do cartão.
+- **Conteúdo das páginas de erro:** textos e botões não mudam, e o rodapé continua o de uma linha,
+  sem sessão e sem banco (RF-13).
+- **Mostrar a senha e conferir a senha enquanto se digita:** fora deste adendo.
+
+**Personas do adendo 2.**
+
+- Como **visitante que quer comentar**, quero criar a conta sem ler um parágrafo de regras e saber
+  quais campos posso deixar vazios.
+- Como **visitante que caiu num endereço que não existe**, quero uma página de erro que pareça
+  inteira, com o rodapé no lugar.
+
+### RF-29 — Entrar e Cadastro num cartão
+
+- **Given** um visitante em Entrar ou em Cadastro
+  **When** a página abre, no celular ou no desktop
+  **Then** o título, o aviso da demonstração (quando ligado), as mensagens, os campos, o botão e a
+  frase de troca de página ("Ainda não tem conta?" ou "Já tem conta?") ficam num cartão no centro
+  da tela, com a superfície, a borda e a sombra dos cartões do site
+  **And** a frase de troca fica no pé do cartão, separada por uma linha
+  **And** os campos continuam com até 420 px de largura.
+
+### RF-30 — Rótulos sem dois-pontos e o campo opcional marcado
+
+- **Given** um formulário do site (Entrar, Cadastro ou comentário)
+  **When** a página abre
+  **Then** os rótulos não terminam em dois-pontos ("Usuário", "Senha", "Comentário").
+- **Given** o Cadastro
+  **When** a página abre
+  **Then** o e-mail se chama "E-mail" e traz "(opcional)" ao lado, mais leve que o rótulo
+  **And** nenhum campo obrigatório traz "(opcional)".
+
+### RF-31 — Regras de senha numa frase
+
+- **Given** o Cadastro
+  **When** a página abre
+  **Then** a ajuda da senha é uma frase só: "Pelo menos 8 caracteres. Evite senhas comuns, só com
+  números ou parecidas com o seu usuário ou e-mail."
+  **And** o campo aponta para ela pelo `aria-describedby`.
+- **Given** o Cadastro
+  **When** a página abre
+  **Then** a confirmação se chama "Confirme a senha" e não tem ajuda.
+- **Given** uma senha fora das regras
+  **When** o cadastro é enviado
+  **Then** a conta não é criada e o erro do Django aparece sob o campo, como hoje.
+
+### RF-32 — Rodapé das páginas de erro no fim da tela
+
+- **Given** uma página de erro (400, 403, 403 de CSRF, 404 ou 500)
+  **When** o conteúdo é mais baixo que a janela
+  **Then** o rodapé fica encostado no fim da janela, e o conteúdo continua onde estava
+  **And** com o conteúdo mais alto que a janela, a página rola como hoje.
+
+### RNF-13 — Sem dependência, JavaScript ou token novos
+
+O adendo 2 não acrescenta pacote, script nem token: o cartão usa `--cor-superficie`,
+`--cor-borda`, `--raio-lg` e `--sombra-cartao`, que já têm par no tema escuro. Nada inline nos
+templates (`nucleo/test_cabecalhos.py`). A borda do cartão continua no modo de alto contraste,
+que apaga a sombra e o fundo.
+
+### RNF-14 — Acessibilidade
+
+Cada campo tem `<label for>`; a ajuda da senha continua ligada ao campo pelo `aria-describedby`.
+O axe-core não acusa violação em Entrar, Cadastro e nas cinco páginas de erro, a 390 e 1280 px,
+nos dois temas, e nenhuma delas rola de lado.
+
+### RNF-15 — Catálogo em dia
+
+O `docs/design-system.html` mostra o cartão de acesso, com o rótulo "(opcional)" e a ajuda de
+senha.
+
+**Perguntas em aberto do adendo 2:** nenhuma.
+
+**Decisões resolvidas do adendo 2:**
+
+1. **Cartão único, no centro** (decisão do mantenedor, 2026-11-17). O cartão com uma coluna de
+   contexto à esquerda no desktop foi descartado: um texto a mais para manter, e no celular ele
+   empurrava o formulário para baixo.
+2. **Regras de senha numa frase** (decisão do mantenedor, 2026-11-17). A lista curta ocupava mais
+   altura; a lista que marca enquanto se digita só conseguia conferir duas das quatro regras no
+   navegador e pedia JavaScript novo.
+3. **Rodapé no fim da tela, conteúdo no lugar** (decisão do mantenedor, 2026-11-17). O conteúdo
+   centrado na altura da janela foi descartado: no desktop, o título descia para o meio da tela.
+4. **Adendo à 012, não spec nova** (decisão do mantenedor, 2026-11-17): é a segunda rodada do
+   mesmo redesenho.
+5. **Rótulo sem dois-pontos também no comentário** (decisão de projeto, 2026-11-17): o site fica
+   com uma regra só para rótulos.
+
+### RF-33 — A suíte cobre o adendo 2
+
+- Acesso (`usuarios/test_paginas_de_acesso.py`): o cartão com título, formulário e frase de troca
+  nas duas páginas; os rótulos sem dois-pontos, "(opcional)" só no e-mail e o rótulo do
+  comentário; a frase da senha ligada ao campo, sem a lista do Django; a confirmação sem ajuda; os
+  validadores conferidos contra a frase; a senha fora da regra recusada.
+- CSS (`nucleo/test_interface.py`): o cartão só com tokens e com borda, a coluna que soma o
+  respiro do cartão e a coluna flexível das páginas de erro, com o `<body class="pagina-erro">` nas
+  cinco.

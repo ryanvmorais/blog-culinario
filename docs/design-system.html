@@ -1056,6 +1056,52 @@
           </div>
 
           <h3 class="ds-rotulo">
+            Cartão de acesso — .cartao-acesso, campo por
+            usuarios/templates/usuarios/campo.html (rótulo sem dois-pontos e
+            "(opcional)" no campo que pode ficar vazio; spec 012, adendo 2)
+          </h3>
+          <div class="ds-exemplo ds-exemplo--fundo">
+            <div class="pagina-formulario" style="margin-inline: auto">
+              <div class="cartao-acesso">
+                <!-- h2 com a medida do h1: o catálogo já tem o seu h1. -->
+                <h2 style="font-size: var(--texto-2xl); margin-bottom: 0">
+                  Criar conta
+                </h2>
+                <form class="formulario" onsubmit="return false;">
+                  <div class="formulario__campo">
+                    <label for="ds-acesso-usuario">Usuário</label>
+                    <input type="text" id="ds-acesso-usuario" />
+                  </div>
+                  <div class="formulario__campo">
+                    <label for="ds-acesso-email">
+                      E-mail <span class="formulario__opcional">(opcional)</span>
+                    </label>
+                    <input type="email" id="ds-acesso-email" />
+                  </div>
+                  <div class="formulario__campo">
+                    <label for="ds-acesso-senha">Senha</label>
+                    <input
+                      type="password"
+                      id="ds-acesso-senha"
+                      aria-describedby="ds-acesso-senha_helptext"
+                    />
+                    <div class="formulario__ajuda" id="ds-acesso-senha_helptext">
+                      Pelo menos 8 caracteres. Evite senhas comuns, só com
+                      números ou parecidas com o seu usuário ou e-mail.
+                    </div>
+                  </div>
+                  <button type="submit" class="botao botao--primario">
+                    Criar conta
+                  </button>
+                </form>
+                <p class="cartao-acesso__troca">
+                  Já tem conta? <a href="#componentes">Entrar</a>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="ds-rotulo">
             Busca da listagem — .busca-hero, o mesmo desenho da home
             (receitas/templates/receitas/lista.html)
           </h3>

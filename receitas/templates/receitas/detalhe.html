@@ -118,7 +118,8 @@
           {{ formulario_comentario.endereco_web }}
         </div>
         <div class="formulario__campo">
-          {{ formulario_comentario.texto.label_tag }}
+          {# Rótulo sem dois-pontos, como nas páginas de acesso (spec 012, adendo 2, RF-30). #}
+          <label for="{{ formulario_comentario.texto.id_for_label }}">{{ formulario_comentario.texto.label }}</label>
           {{ formulario_comentario.texto }}
         </div>
         <button type="submit" class="botao botao--primario">Comentar</button>

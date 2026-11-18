@@ -19,7 +19,8 @@
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
     <link rel="stylesheet" href="{% static 'css/base.css' %}" />
   </head>
-  <body>
+  {# A classe leva o rodapé ao fim da tela quando o conteúdo é curto (spec 012, adendo 2, RF-32). #}
+  <body class="pagina-erro">
     {# Caminho fixo, sem a tag url: o 500 renderiza mesmo com as rotas quebradas. #}
     <header class="navbar">
       <div class="container">

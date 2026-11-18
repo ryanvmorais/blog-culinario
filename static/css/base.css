@@ -116,20 +116,16 @@ ol {
 
 /* Coluna de formulário isolado (entrar, criar conta): centrada na tela, com o
    título e a frase de troca de página no centro. Os rótulos dos campos seguem à
-   esquerda, que é como se lê um formulário (spec 008, RF-17, ADR-5). */
+   esquerda, que é como se lê um formulário (spec 008, RF-17, ADR-5). A largura
+   soma o respiro do cartão (seção 8) para os campos continuarem com 420 px. */
 .pagina-formulario {
-  max-width: calc(420px + 2 * var(--espaco-4));
+  max-width: calc(420px + 2 * var(--espaco-6) + 2 * var(--espaco-4));
   text-align: center;
 }
 
 .pagina-formulario .formulario {
   margin-inline: auto;
   text-align: left;
-}
-
-.pagina-formulario > p {
-  margin-inline: auto;
-  margin-top: var(--espaco-4);
 }
 
 /* Aviso curto e isolado ("nenhuma receita", "ainda não há comentários"): no centro
@@ -908,6 +904,13 @@ a.navbar__acao:hover {
   font-size: var(--texto-sm);
 }
 
+/* "(opcional)" ao lado do rótulo, mais leve que ele: avisa sem competir com o
+   nome do campo (spec 012, adendo 2, RF-30). */
+.formulario__opcional {
+  font-weight: 400;
+  color: var(--cor-texto-suave);
+}
+
 .formulario__campo input,
 .formulario__campo textarea {
   padding: var(--espaco-3);
@@ -1035,6 +1038,31 @@ a.navbar__acao:hover {
   font-family: var(--fonte-mono);
 }
 
+/* Cartão das páginas de acesso (spec 012, adendo 2, RF-29): título, aviso,
+   campos e a troca de página num objeto só, com a superfície, a borda e a
+   sombra dos cartões de receita. A borda segue no modo de alto contraste, que
+   apaga a sombra e o fundo. */
+.cartao-acesso {
+  padding: var(--espaco-8) var(--espaco-6);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-lg);
+  background: var(--cor-superficie);
+  box-shadow: var(--sombra-cartao);
+}
+
+/* O aviso e o formulário já trazem a margem de cima; a do título dobraria. */
+.cartao-acesso h1 {
+  margin-bottom: 0;
+}
+
+/* "Já tem conta?" fica no pé do cartão, separado por uma linha que vai de uma
+   borda à outra: a margem negativa desfaz o respiro lateral do cartão. */
+.cartao-acesso__troca {
+  margin: var(--espaco-6) calc(-1 * var(--espaco-6)) 0;
+  padding: var(--espaco-6) var(--espaco-6) 0;
+  border-top: 1px solid var(--cor-borda);
+}
+
 
 /* 9. Rodapé --------------------------------------------------------------- */
 .rodape {
@@ -1045,7 +1073,23 @@ a.navbar__acao:hover {
   font-size: var(--texto-sm);
 }
 
-/* 9.1 Rodapé de uma linha das páginas de erro (includes/rodape_erro.html). */
+/* 9.1 Rodapé de uma linha das páginas de erro (includes/rodape_erro.html).
+   A página de erro tem pouco conteúdo: sem a coluna flexível, o rodapé parava
+   no meio da tela, com fundo vazio embaixo. O <main> cresce e empurra o rodapé
+   até o fim da janela; com conteúdo maior que a tela, nada muda (spec 012,
+   adendo 2, RF-32). O dvh acompanha a barra de endereço do celular; o vh fica
+   para o navegador que não o conhece. */
+.pagina-erro {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.pagina-erro > main {
+  flex: 1 0 auto;
+}
+
 .rodape--linha .container {
   display: flex;
   flex-wrap: wrap;
