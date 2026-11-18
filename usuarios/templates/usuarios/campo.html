@@ -1,0 +1,24 @@
+{% comment %}
+     ============================================================
+     SEÇÃO: CAMPO DAS PÁGINAS DE ACESSO
+     Um campo do Entrar ou do Cadastro (spec 012, adendo 2, RF-30 e ADR-14):
+     rótulo sem dois-pontos, "(opcional)" quando o campo pode ficar vazio,
+     ajuda e erros. O <label> é escrito aqui, não pelo label_tag, porque o
+     label_tag põe os dois-pontos e não marca o campo opcional.
+     ============================================================
+{% endcomment %}
+<div class="formulario__campo">
+  <label for="{{ field.id_for_label }}">
+    {{ field.label }}{% if not field.field.required %}
+      <span class="formulario__opcional">(opcional)</span>{% endif %}
+  </label>
+  {{ field }}
+  {% if field.help_text %}
+    {# <div>, não <p>: a ajuda pode ser uma lista. O id é o que o aria-describedby do campo aponta. #}
+    <div class="formulario__ajuda" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</div>
+  {% endif %}
+  {% for erro in field.errors %}
+    <p class="formulario__erro">{{ erro }}</p>
+  {% endfor %}
+</div>
+{# fim: CAMPO DAS PÁGINAS DE ACESSO #}

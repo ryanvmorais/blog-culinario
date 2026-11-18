@@ -7,35 +7,28 @@
 
 {% block content %}
   <section class="container cabecalho-pagina pagina-formulario">
-    <h1>Criar conta</h1>
-    {% include "includes/mensagens.html" %}
+    {# O cartão reúne título, aviso, campos e a troca de página num objeto só (spec 012, adendo 2, RF-29). #}
+    <div class="cartao-acesso">
+      <h1>Criar conta</h1>
+      {% include "includes/mensagens.html" %}
 
-    {% if modo_demonstracao %}
-      {# Antes do formulário, para ninguém preencher à toa (spec 009, RF-02). #}
-      <p class="mensagem mensagem--info aviso-demonstracao" role="note">
-        <strong>Cadastro de demonstração:</strong> nenhuma conta é criada. Para ver o blog
-        por dentro, <a href="{% url 'usuarios:entrar' %}">entre com a conta de demonstração</a>.
-      </p>
-    {% endif %}
+      {% if modo_demonstracao %}
+        {# Antes do formulário, para ninguém preencher à toa (spec 009, RF-02). #}
+        <p class="mensagem mensagem--info aviso-demonstracao" role="note">
+          <strong>Cadastro de demonstração:</strong> nenhuma conta é criada. Para ver o blog
+          por dentro, <a href="{% url 'usuarios:entrar' %}">entre com a conta de demonstração</a>.
+        </p>
+      {% endif %}
 
-    <form class="formulario" method="post" novalidate>
-      {% csrf_token %}
-      {% for field in form %}
-        <div class="formulario__campo">
-          {{ field.label_tag }}
-          {{ field }}
-          {% if field.help_text %}
-            {# <div>, não <p>: a ajuda de senha é uma <ul>. O id é o que o aria-describedby do campo aponta. #}
-            <div class="formulario__ajuda" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</div>
-          {% endif %}
-          {% for erro in field.errors %}
-            <p class="formulario__erro">{{ erro }}</p>
-          {% endfor %}
-        </div>
-      {% endfor %}
-      <button type="submit" class="botao botao--primario">Criar conta</button>
-    </form>
+      <form class="formulario" method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+          {% include "usuarios/campo.html" %}
+        {% endfor %}
+        <button type="submit" class="botao botao--primario">Criar conta</button>
+      </form>
 
-    <p>Já tem conta? <a href="{% url 'usuarios:entrar' %}">Entrar</a></p>
+      <p class="cartao-acesso__troca">Já tem conta? <a href="{% url 'usuarios:entrar' %}">Entrar</a></p>
+    </div>
   </section>
 {% endblock %}

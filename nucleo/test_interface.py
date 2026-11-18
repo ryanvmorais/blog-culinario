@@ -695,3 +695,41 @@ def test_pilula_marcada_usa_so_tokens() -> None:
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b", marcada)
     hover = _bloco_css(CSS_BASE, '.pilula[aria-current="page"]:hover')
     assert "background: var(--cor-primaria-escura);" in hover
+
+
+# -----------------------------------------------------------------------------
+# Spec 012, adendo 2: Entrar, Cadastro e páginas de erro
+# -----------------------------------------------------------------------------
+def test_cartao_de_acesso_usa_so_tokens_e_mantem_a_borda() -> None:
+    """RF-29, RNF-13: superfície e sombra por token; a borda segue no alto contraste."""
+    cartao = _bloco_css(CSS_BASE, ".cartao-acesso")
+    assert "background: var(--cor-superficie);" in cartao
+    assert "border: 1px solid var(--cor-borda);" in cartao
+    assert "box-shadow: var(--sombra-cartao);" in cartao
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", cartao)
+    assert "border-top: 1px solid var(--cor-borda);" in _bloco_css(
+        CSS_BASE, ".cartao-acesso__troca"
+    )
+
+
+def test_coluna_de_acesso_soma_o_respiro_do_cartao() -> None:
+    """RF-29: com o cartão, os campos continuam com 420 px de largura."""
+    coluna = _bloco_css(CSS_BASE, ".pagina-formulario")
+    assert "calc(420px + 2 * var(--espaco-6) + 2 * var(--espaco-4))" in coluna
+    assert "padding: var(--espaco-8) var(--espaco-6);" in _bloco_css(
+        CSS_BASE, ".cartao-acesso"
+    )
+
+
+@pytest.mark.parametrize(
+    "template", ["400.html", "403.html", "403_csrf.html", "404.html", "500.html"]
+)
+def test_paginas_de_erro_levam_o_rodape_ao_fim_da_tela(template: str) -> None:
+    """RF-32: a coluna flexível do erro.html empurra o rodapé até o fim da janela."""
+    assert '<body class="pagina-erro">' in render_to_string(template)
+
+    pagina = _bloco_css(CSS_BASE, ".pagina-erro")
+    assert "display: flex;" in pagina
+    assert "flex-direction: column;" in pagina
+    assert "min-height: 100dvh;" in pagina
+    assert "flex: 1 0 auto;" in _bloco_css(CSS_BASE, ".pagina-erro > main")
