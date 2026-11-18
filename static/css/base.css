@@ -479,6 +479,7 @@ a.navbar__acao:hover {
 }
 
 .por-dentro__intro {
+  max-width: none; /* acompanha a largura das notas abaixo, em vez dos 68ch de leitura do `p` */
   color: var(--cor-texto-suave);
 }
 
