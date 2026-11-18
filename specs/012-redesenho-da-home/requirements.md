@@ -179,6 +179,9 @@ da abertura).
 
 **Substitui** spec 002, RF-06, primeiro cenário.
 
+> Mudança posterior (PR #85, 2026-11-17): o botão passou a "Ver todas as receitas", sem a
+> contagem, que já aparece nos números do topo da home. O texto abaixo fica como aprovado.
+
 - **Given** mais de uma receita publicada
   **When** a home abre
   **Then** a seção com o rótulo "Recém-saídas do forno" e o `h2` "Receitas recentes" mostra
