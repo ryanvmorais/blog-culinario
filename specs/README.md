@@ -53,7 +53,7 @@ Nenhuma fase avança sem o "ok" explícito do mantenedor.
 | [009-modo-demonstracao](009-modo-demonstracao/requirements.md) | Modo demonstração: cadastro e comentário validam sem gravar, conta pública no login | concluído |
 | [010-descoberta](010-descoberta/requirements.md) | Descoberta: `URL_PUBLICA`, canonical e Open Graph, `robots.txt`, `sitemap.xml` e `security.txt` na demonstração | concluído |
 | [011-hospedagem](011-hospedagem/requirements.md) | Hospedagem na Railway: receita de build, HTTPS atrás do proxy, dados num volume, mídia com `DEBUG=False`, limitação de taxa entre workers e trava de origem | concluído |
-| [012-redesenho-da-home](012-redesenho-da-home/requirements.md) | Redesenho da home (busca, categorias com contagem, receita em destaque, "Por dentro" com o código), rodapé em colunas e menu do celular em painel lateral; adendo: página da receita e listagem | em andamento |
+| [012-redesenho-da-home](012-redesenho-da-home/requirements.md) | Redesenho da home (busca, categorias com contagem, receita em destaque, "Por dentro" com o código), rodapé em colunas e menu do celular em painel lateral; adendo: página da receita e listagem | concluído |
 
 ## Notas de manutenção
 

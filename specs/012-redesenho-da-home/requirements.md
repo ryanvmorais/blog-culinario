@@ -1,6 +1,6 @@
 ---
 feature: Redesenho da home
-status: em andamento
+status: concluído
 date: 2026-11-17
 related:
   - 002-listagem-detalhe-receitas/requirements.md
