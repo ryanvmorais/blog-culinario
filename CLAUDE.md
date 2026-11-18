@@ -70,7 +70,7 @@ blog_culinario/endereco.py # URL_PUBLICA: validação na subida e url_absoluta()
 blog_culinario/descoberta.py # canonical (context processor), sitemaps, robots.txt, sitemap.xml e security.txt (spec 010)
 nucleo/                    # a home (spec 012), a view servir_midia (capas), as tags {% capturar %} (templatetags/metadados.py), {% link_repositorio %} e {% categorias_do_rodape %} (templatetags/navegacao.py) e os testes transversais (home, menu e rodapé, interface, tema escuro, descoberta, cabeçalhos, hospedagem, limitação de taxa, comentários de template, README em inglês, impessoalidade)
 receitas/                  # domínio principal: Receita, Categoria, Tag, Comentario; management/commands/semear_dados_demo.py (dados do Lighthouse CI) e seu teste; test_pagina_receita.py e test_listagem.py (spec 012, adendo)
-usuarios/                  # autenticação (django.contrib.auth); management/commands/criar_conta_demonstracao.py
+usuarios/                  # autenticação (django.contrib.auth); Entrar e Cadastro no .cartao-acesso, campo por templates/usuarios/campo.html (spec 012, adendo 2); management/commands/criar_conta_demonstracao.py
 templates/                 # base.html + includes/ (navbar com o painel do celular, rodapé em colunas, rodapé de uma linha das páginas de erro) + erro.html (layout sem sessão) e 400, 403, 403_csrf, 404 e 500
 static/css/                # design system: tokens.css (variáveis e tema escuro), fontes.css (@font-face) e base.css
 static/fonts/              # Inter e Fraunces (woff2 variável, subconjunto latin, licença OFL)
@@ -159,7 +159,12 @@ Regras que a auditoria de interface de 18/10/2026 deixou, guardadas por
 - **Mensagens:** na página da receita ficam dentro de `#comentarios`.
 - **Erros:** o 400, o 403, o 403_csrf, o 404 e o 500 estendem o `erro.html`, HTML
   completo sem o `base.html`: a navbar lê a sessão, e com o banco fora o erro
-  viraria 500. Só a marca e o rodapé, sem links de login.
+  viraria 500. Só a marca e o rodapé, sem links de login. O `<body class="pagina-erro">`
+  leva o rodapé ao fim da tela (spec 012, adendo 2).
+- **Rótulo de campo** sem dois-pontos: escreva o `<label>` (as páginas de acesso
+  usam o `usuarios/campo.html`, que marca o "(opcional)"), nunca o `label_tag`.
+- **Senha:** a ajuda é a frase fixa `AJUDA_SENHA` (`usuarios/forms.py`); mudou o
+  `AUTH_PASSWORD_VALIDATORS`, reescreva-a (o `usuarios/test_paginas_de_acesso.py` avisa).
 
 ## Qualidade e automação
 

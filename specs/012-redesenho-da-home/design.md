@@ -699,3 +699,168 @@ página.
 - **Medidas de desenho** (`auditar_proporcoes.py`): botões sem achado. Duas sugestões de
   alinhamento ficam como estão por decisão aprovada: a busca da listagem à esquerda (RF-25) e o
   aviso de comentários à esquerda no cartão (spec 008, RF-17).
+
+## Adendo 2 (2026-11-17): Entrar, Cadastro e páginas de erro
+
+> Status do adendo 2: aprovado (2026-11-17). Acrescenta o desenho dos RF-29 a RF-33, com os ADRs
+> continuando a numeração.
+
+### Visão geral da abordagem do adendo 2
+
+Entrar e Cadastro ganham um `<div class="cartao-acesso">` dentro da coluna `.pagina-formulario`
+de hoje, com tudo o que a página mostra. Cada campo passa a sair de um include,
+`usuarios/campo.html`, que escreve o `<label>` sem dois-pontos e marca o campo opcional (ADR-14).
+O `FormularioCadastro` troca as ajudas e o rótulo da confirmação; a regra de senha vira uma frase
+fixa, amarrada aos validadores por um teste (ADR-15). As páginas de erro ganham uma classe no
+`<body>` do `erro.html` que faz da página uma coluna flexível (ADR-16). Nenhuma view, URL, modelo
+ou token muda.
+
+### Layout de módulos do adendo 2
+
+| Arquivo | O que muda |
+|---|---|
+| `usuarios/forms.py` | `AJUDA_SENHA`; rótulo "E-mail"; ajuda da senha, rótulo e ajuda da confirmação |
+| `usuarios/templates/usuarios/campo.html` | Novo: rótulo, "(opcional)", campo, ajuda e erros (ADR-14) |
+| `usuarios/templates/usuarios/login.html`, `cadastro.html` | Conteúdo no `.cartao-acesso`; campos pelo include |
+| `receitas/templates/receitas/detalhe.html` | Rótulo do comentário sem dois-pontos |
+| `templates/erro.html` | `<body class="pagina-erro">` (ADR-16) |
+| `static/css/base.css` | `.pagina-formulario` mais larga, `.formulario__opcional`, `.cartao-acesso`, `.cartao-acesso__troca` e `.pagina-erro`; sai o `.pagina-formulario > p` |
+| `docs/design-system.html` | Cartão de acesso (RNF-15) |
+| `usuarios/test_paginas_de_acesso.py`, `nucleo/test_interface.py` | Testes novos (RF-33) |
+
+### Componentes do adendo 2
+
+#### Protótipo validado do adendo 2
+
+Validado a 390 e 1280 px com o HTML e o CSS do blog, antes do adendo 2:
+
+```text
+Cadastro, 390 px                      Página de erro, 1280 px
+┌──────────────────────────────┐      ┌──────────────────────────────────────┐
+│ ┌──────────────────────────┐ │      │ Blog Culinário                        │
+│ │       Criar conta (h1)   │ │      ├──────────────────────────────────────┤
+│ │ ┌ aviso da demonstração ┐│ │      │              [Erro 404]               │
+│ │ └───────────────────────┘│ │      │       Esta página não existe.         │
+│ │ Usuário                  │ │      │       texto                           │
+│ │ [                      ] │ │      │   [Ver receitas] [Voltar ao início]   │
+│ │ E-mail (opcional)        │ │      │                                       │
+│ │ [                      ] │ │      │   (o <main> cresce)                   │
+│ │ Senha                    │ │      │                                       │
+│ │ [                      ] │ │      ├──────────────────────────────────────┤
+│ │ Pelo menos 8 caracteres… │ │      │ © … Blog Culinário    Ver código      │
+│ │ Confirme a senha         │ │      └──────────────────────────────────────┘
+│ │ [                      ] │ │        fim da janela
+│ │ [      Criar conta     ] │ │
+│ ├──────────────────────────┤ │
+│ │   Já tem conta? Entrar   │ │
+│ └──────────────────────────┘ │
+└──────────────────────────────┘
+```
+
+#### Cartão de acesso (`.cartao-acesso`)
+
+Respiro de `--espaco-8` em cima e embaixo e `--espaco-6` dos lados, borda de 1 px em
+`--cor-borda`, `--raio-lg`, `--cor-superficie` e `--sombra-cartao`. A coluna `.pagina-formulario`
+passa a medir `420px + 2 × --espaco-6 + 2 × --espaco-4`, e os campos continuam com 420 px. O
+`h1` perde a margem de baixo: o aviso e o formulário já trazem a de cima. A frase de troca
+(`.cartao-acesso__troca`) tem margem negativa dos lados, para a linha de cima ir de uma borda à
+outra. O alinhamento é o da spec 008 (ADR-5): título, botão e frase no centro; rótulos à esquerda.
+O botão segue a regra de hoje: largura toda no celular, tamanho do rótulo acima de 720 px.
+
+#### Campo (`usuarios/campo.html`)
+
+Recebe o `field` do laço do template. Escreve `<label for="{{ field.id_for_label }}">` com
+`{{ field.label }}` e, se `field.field.required` for falso, um
+`<span class="formulario__opcional">(opcional)</span>` em `--cor-texto-suave`, peso 400. Depois, o
+campo, a ajuda num `<div>` com o id `<auto_id>_helptext` (o alvo do `aria-describedby` que o
+Django põe no campo) e os erros, como no template de hoje.
+
+#### Página de erro (`.pagina-erro`)
+
+O `<body>` vira `display: flex; flex-direction: column` com `min-height: 100vh` e, para quem o
+conhece, `100dvh`, que acompanha a barra de endereço do celular. O `<main>` recebe
+`flex: 1 0 auto` e empurra o rodapé até o fim da janela. Os textos, os botões e o rodapé de uma
+linha não mudam (RF-13).
+
+### Interfaces do adendo 2
+
+- `usuarios.forms.AJUDA_SENHA: str`, a frase do RF-31, importada pelo teste.
+- `usuarios/campo.html`, incluído com `{% include "usuarios/campo.html" %}` dentro de
+  `{% for field in form %}`; não recebe outro contexto.
+
+### ADR-14 — O rótulo sai de um include, não do `label_suffix`
+
+**Decisão.** O `<label>` é escrito num include, `usuarios/campo.html`, a partir do `field.label`.
+**Alternativas.** (a) `label_suffix=""` nos formulários: no `FormularioCadastro` e numa subclasse
+do `AuthenticationForm` para o Entrar. (b) Um filtro de template que tira os dois-pontos.
+**Porquê.** O "(opcional)" precisa de marcação dentro do `<label>`, que o `label_tag` não monta,
+então o template teria que escrever o rótulo de qualquer forma. Com o include, as duas páginas
+deixam de repetir o mesmo bloco de campo. (a) pediria uma classe só para o rótulo do Entrar; (b)
+mexeria em texto já renderizado.
+**Trade-off.** Um formulário novo que use `{{ field.label_tag }}` volta a ter dois-pontos; o
+`usuarios/test_paginas_de_acesso.py` confere os três formulários de hoje.
+
+### ADR-15 — A regra de senha é uma frase fixa, amarrada aos validadores
+
+**Decisão.** `AJUDA_SENHA` é um texto fixo em `usuarios/forms.py`, e um teste compara a lista do
+`AUTH_PASSWORD_VALIDATORS` com as quatro regras que a frase descreve.
+**Alternativas.** (a) A ajuda gerada pelo Django (`password_validators_help_text_html`), só com
+outro CSS. (b) Gerar a frase a partir dos validadores.
+**Porquê.** O Django gera uma frase longa por validador, e o problema do RF-31 é o tamanho do
+texto, não a forma. (b) pediria um texto curto para cada validador, o que é a mesma frase fixa
+espalhada em mais lugares.
+**Trade-off.** A frase não acompanha sozinha uma mudança de validador; o teste falha e diz o que
+reescrever.
+
+### ADR-16 — O rodapé desce pela coluna flexível do `<body>`, só no `erro.html`
+
+**Decisão.** Uma classe `pagina-erro` no `<body>` do `erro.html`, com a coluna flexível e o
+`<main>` que cresce.
+**Alternativas.** (a) A mesma regra no `body` do site todo. (b) `position: fixed` ou `sticky` no
+rodapé. (c) Uma altura mínima no `<main>` calculada com a altura da barra e do rodapé.
+**Porquê.** O pedido é das páginas de erro; (a) mudaria o layout do `base.html`, com o menu do
+celular e o painel, sem necessidade. (b) cobriria o conteúdo numa tela baixa, e (c) quebraria
+quando o rodapé mudasse de altura, como no celular, em que ele ocupa três linhas.
+**Trade-off.** Outra página curta do site (um estado vazio) continua com o rodapé no meio da tela.
+
+### Impacto no código existente do adendo 2
+
+- **`.pagina-formulario > p`** sai do `base.css`: a frase de troca passou para o
+  `.cartao-acesso__troca`, dentro do cartão.
+- **`nucleo/test_interface.py`:** o teste da coluna centrada (spec 008, RF-17) continua valendo;
+  os testes novos conferem o cartão e a classe do `<body>` das páginas de erro.
+- **Lighthouse CI:** Entrar e Cadastro já estão em `.github/lighthouse/`; os limites são
+  conferidos no PR.
+
+### Estratégia de testes do adendo 2
+
+- **Integração, com o `Client`** (`usuarios/test_paginas_de_acesso.py`): o cartão nas duas
+  páginas; o texto de cada `<label>` (sem dois-pontos, "(opcional)" só no e-mail), também no
+  comentário de uma receita, com a leitora autenticada; o `aria-describedby` da senha apontando
+  para a frase; a confirmação sem ajuda; a senha só de números recusada com o erro sob o campo.
+- **Configuração:** os nomes e as opções do `AUTH_PASSWORD_VALIDATORS` contra a frase (ADR-15).
+- **CSS lido do arquivo** (`nucleo/test_interface.py`): o cartão só com tokens e com borda, a
+  largura da coluna e a coluna flexível com o `<body class="pagina-erro">` nos cinco templates.
+- **No navegador** (fora da suíte, registrado nas notas): axe-core, medidas de desenho e capturas
+  a 360, 390, 430 e 1280 px, nos dois temas, com os erros do formulário à vista.
+
+### Desvios do adendo 2
+
+Nenhum.
+
+### Notas de implementação do adendo 2
+
+- **Suíte:** 481 testes, 3 pulados (`usuarios/test_paginas_de_acesso.py` novo e 3 testes novos
+  em `nucleo/test_interface.py`, um deles com os cinco templates de erro).
+  `makemigrations --check`: nenhuma migration.
+- **Frase da senha:** o protótipo dizia "parecidas com o seu usuário"; o texto final acrescenta "ou
+  e-mail", porque o `UserAttributeSimilarityValidator` também compara a senha com o e-mail.
+- **Navegador real** (Chrome, banco descartável com o `semear_dados_demo` e o modo demonstração):
+  Entrar, Cadastro e as cinco páginas de erro a 390 e 1280 px, nos dois temas, sem rolagem
+  lateral, com um `h1`, sem pulo de nível nos títulos, sem campo sem rótulo e sem alvo de toque
+  menor que 24 px. As páginas de erro medem a altura exata da janela (844 px no celular, 800 px no
+  desktop): o rodapé encosta no fim. Capturas a 360, 390, 430 e 1280 px e com os erros do
+  Cadastro e do Entrar à vista, conferidas contra o protótipo validado.
+- **axe-core 4.14.0** (mesmo SHA-256 da spec): zero violações nas 28 combinações (7 páginas, 2
+  larguras, 2 temas).
+- **Medidas de desenho** (`auditar_proporcoes.py`): nenhum achado nas 7 páginas, a 390 e 1280 px.

@@ -95,3 +95,28 @@ origin: concepcao
 - [x] Navegador real, a 390 e a 1280 px, nos dois temas: axe-core sem violação e medidas de botão e alinhamento na receita e na listagem; o cartão de ingredientes fixo ao rolar e rolando por dentro com muitos ingredientes; registrar em "Notas de implementação do adendo" do `design.md`. — RNF-10, RF-21 (axe zerado em 12 combinações depois do desvio 1; cartão fixo a 88 px; nenhuma rolagem lateral)
 - [x] Lighthouse da listagem e da receita (mobile e desktop) dentro dos limites de `.github/lighthouse/`; registrar o resultado. — RNF-11 — Lighthouse CI da `main` (9005e01): desktop 100 nas quatro notas; mobile 99 de desempenho e 100 nas outras três, LCP 2,1 s na listagem e 2,0 s na receita, CLS 0
 - [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. — 462 passed, 3 skipped; ruff/black/mypy verdes
+
+## Adendo 2 (2026-11-17): Entrar, Cadastro e páginas de erro
+
+> Status do adendo 2: aprovado (2026-11-17). Quebra o adendo 2 do `design.md` (RF-29 a RF-33,
+> RNF-13 a RNF-15, ADR-14 a ADR-16). As etapas continuam a numeração acima.
+
+## Etapa 10 — Páginas de acesso
+
+- [x] `usuarios/forms.py`: `AJUDA_SENHA`, rótulo "E-mail", ajuda da senha, rótulo "Confirme a senha" e confirmação sem ajuda. — RF-30, RF-31, ADR-15
+- [x] `usuarios/templates/usuarios/campo.html`: rótulo sem dois-pontos, "(opcional)" no campo não obrigatório, ajuda com o id do `aria-describedby` e erros. — RF-30, ADR-14
+- [x] `login.html` e `cadastro.html`: conteúdo no `.cartao-acesso`, campos pelo include e a frase de troca no `.cartao-acesso__troca`. — RF-29
+- [x] `receitas/templates/receitas/detalhe.html`: rótulo do comentário sem dois-pontos. — RF-30
+- [x] `static/css/base.css`: `.pagina-formulario` com o respiro do cartão, `.formulario__opcional`, `.cartao-acesso` e `.cartao-acesso__troca`, só com tokens; sai o `.pagina-formulario > p`. — RF-29, RF-30, RNF-13
+- [x] `usuarios/test_paginas_de_acesso.py` e `nucleo/test_interface.py`: cartão, rótulos, frase da senha, validadores, senha recusada e o CSS do cartão. — RF-33
+- [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. — 481 passed, 3 skipped; ruff/black/mypy verdes
+
+## Etapa 11 — Páginas de erro, catálogo e conferência
+
+- [x] `templates/erro.html` e `static/css/base.css`: `<body class="pagina-erro">` com a coluna flexível e o `<main>` que cresce. — RF-32, ADR-16
+- [x] `nucleo/test_interface.py`: a classe nos cinco templates de erro e a regra de CSS. — RF-33
+- [x] `docs/design-system.html`: cartão de acesso com "(opcional)" e a ajuda de senha. — RNF-15
+- [x] `CLAUDE.md`: o mapa de `usuarios/` e as regras de interface do cartão, do campo e da frase de senha. — RNF-15
+- [x] Navegador real, a 390 e 1280 px, nos dois temas: axe-core sem violação e medidas de desenho em Entrar, Cadastro e nas cinco páginas de erro; capturas a 360, 390, 430 e 1280 px contra o protótipo do `design.md`; registrar em "Notas de implementação do adendo 2" do `design.md`. — RNF-14 (axe zerado em 28 combinações; medidas sem achado)
+- [ ] Lighthouse de Entrar e Cadastro (mobile e desktop) dentro dos limites de `.github/lighthouse/`; registrar o resultado. — RNF-11
+- [x] Portão de qualidade: `uv run ruff check .` → `uv run black --check .` → `uv run mypy .` → `uv run pytest`. — 481 passed, 3 skipped; ruff/black/mypy verdes
