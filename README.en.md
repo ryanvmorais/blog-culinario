@@ -6,11 +6,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-6.1-092E20?logo=django&logoColor=white)
-![deps](https://img.shields.io/badge/deps-uv-DE5FE9?logo=uv&logoColor=white)
 [![CI](https://img.shields.io/github/actions/workflow/status/ryanvmorais/blog-culinario/ci.yml?label=CI&logo=githubactions&logoColor=white)](https://github.com/ryanvmorais/blog-culinario/actions/workflows/ci.yml)
-![lint](https://img.shields.io/badge/lint-ruff-261230?logo=ruff&logoColor=white)
-![style](https://img.shields.io/badge/style-black-000000?logo=black&logoColor=white)
-![types](https://img.shields.io/badge/types-mypy-2A6DB2)
 ![license](https://img.shields.io/badge/license-MIT-green?logo=opensourceinitiative&logoColor=white)
 
 🔗 **[See the live demo](https://blog-culinario.ryanmorais.com.br/)** (the site itself is in Portuguese)
@@ -32,8 +28,9 @@ This project was structured to consolidate core software engineering pillars:
 - **Custom Design System:** template inheritance (`base.html` + blocks) and plain CSS in `static/css/tokens.css`, with no frontend framework and no build step. Fonts are hosted in the project, the light and dark themes follow the system using color variables only, and a visual catalog lives in `docs/design-system.html`.
 - **Built-in Authentication:** `django.contrib.auth` with no external library, with a per-IP limit on login attempts, on both the site login and the Admin login.
 - **Applied Security:** honeypot and time-trap on the comment form, image upload validation, Django's native Content-Security-Policy and `Permissions-Policy`, secrets kept out of the code.
+- **Performance and Production:** `select_related` and `prefetch_related` against the N+1 problem in the lists, and one-year HSTS with preload, HTTPS redirect and secure cookies in production.
 - **Audited Interface:** accessibility checked in a real browser (axe-core, keyboard, contrast, dark theme) and guarded by tests, starting from spec 008.
-- **Automated Quality:** a `pytest` test suite and a CI pipeline that runs the same quality gate used locally.
+- **Automated Quality:** a suite of more than 300 `pytest` tests and a CI pipeline that runs the same quality gate used locally.
 
 ---
 
@@ -132,9 +129,9 @@ The same gate runs automatically in CI (`.github/workflows/ci.yml`) on every PR 
 
 ---
 
-### 📋 Practice activities (Evolution Challenges):
+### 📋 Practice activities (Extension Challenges):
 
-To exercise what you learned and master Django, try implementing these new features:
+To practice what you learned and master Django, try implementing these new features:
 
 1. **🔍 Filter by Preparation Time:** add a filterable `tempo_de_preparo` (preparation time) field to the recipe list.
    - **What You Learn:** `QuerySet.filter()` combined with a search form.
@@ -160,7 +157,7 @@ See all the projects and videos on the channel at [aprenda-com-ryan-morais](http
 
 ### 💡 Got a question or a suggestion?
 
-Did you find something that could be more didactic, have trouble with a setup step, or think of an improvement that would make this project even more useful as a reference? I'm here to help!
+Did you find something that could be clearer for learners, have trouble with a setup step, or think of an improvement that would make this project even more useful as a reference? I'm here to help!
 
 - **Open an [Issue](https://github.com/ryanvmorais/blog-culinario/issues):** describe your question or suggestion. It is the best way to build a solid reference for the community and to help other developers who may have the same question.
 - **Contribute code:** want to propose an improvement? See the step-by-step in [CONTRIBUTING.md](CONTRIBUTING.md).

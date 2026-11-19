@@ -6,11 +6,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-6.1-092E20?logo=django&logoColor=white)
-![deps](https://img.shields.io/badge/deps-uv-DE5FE9?logo=uv&logoColor=white)
 [![CI](https://img.shields.io/github/actions/workflow/status/ryanvmorais/blog-culinario/ci.yml?label=CI&logo=githubactions&logoColor=white)](https://github.com/ryanvmorais/blog-culinario/actions/workflows/ci.yml)
-![lint](https://img.shields.io/badge/lint-ruff-261230?logo=ruff&logoColor=white)
-![style](https://img.shields.io/badge/style-black-000000?logo=black&logoColor=white)
-![types](https://img.shields.io/badge/types-mypy-2A6DB2)
 ![license](https://img.shields.io/badge/license-MIT-green?logo=opensourceinitiative&logoColor=white)
 
 🔗 **[Ver demo ao vivo](https://blog-culinario.ryanmorais.com.br/)**
@@ -32,8 +28,9 @@ Este projeto foi estruturado para consolidar pilares fundamentais de engenharia 
 - **Design System Próprio:** herança de templates (`base.html` + blocks) e CSS puro em `static/css/tokens.css`, sem framework de frontend nem build step. Fontes hospedadas no projeto, tema claro e escuro do sistema só por variáveis de cor, e um catálogo visual em `docs/design-system.html`.
 - **Autenticação Nativa:** `django.contrib.auth` sem lib externa, com limite de tentativas de login por IP, no login do site e no do Admin.
 - **Segurança Aplicada:** honeypot e time-trap no formulário de comentário, validação de upload de imagem, Content-Security-Policy nativa do Django e `Permissions-Policy`, segredos fora do código.
+- **Desempenho e Produção:** `select_related` e `prefetch_related` contra o problema N+1 nas listas, e HSTS de um ano com preload, redirecionamento para HTTPS e cookies seguros em produção.
 - **Interface Auditada:** acessibilidade conferida em navegador real (axe-core, teclado, contraste, tema escuro) e guardada por testes, a partir da spec 008.
-- **Qualidade Automatizada:** suíte de testes com `pytest` e um pipeline de CI que roda o mesmo portão de qualidade usado localmente.
+- **Qualidade Automatizada:** suíte de mais de 300 testes com `pytest` e um pipeline de CI que roda o mesmo portão de qualidade usado localmente.
 
 ---
 
