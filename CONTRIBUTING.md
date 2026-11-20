@@ -37,7 +37,3 @@ uma spec em `specs/` primeiro — veja `specs/README.md` para o formato.
   estudo, e consistência importa mais que preferência pessoal.
 
 Dúvidas? Abra uma [Issue](https://github.com/ryanvmorais/blog-culinario/issues).
-
----
-Atenciosamente,
-**Quem mantém o Blog Culinário**
