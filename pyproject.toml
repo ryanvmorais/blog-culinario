@@ -28,7 +28,7 @@ dependencies = [
 # clona para estudar roda o runserver e não precisa do gunicorn.
 [project.optional-dependencies]
 prod = [
-    "gunicorn>=26.2.0",
+    "gunicorn>=27.0.1",
 ]
 
 [dependency-groups]
