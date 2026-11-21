@@ -18,7 +18,7 @@ version = "0.1.0"
 description = "Blog culinário multipáginas em Django — projeto educacional para aprender a construir aplicações web com Python."
 requires-python = ">=3.12"
 dependencies = [
-    "django>=6.1.2",
+    "django>=6.1.3",
     "django-environ>=0.14.0",
     "pillow>=13.0.0",
     "whitenoise>=6.12.0",
@@ -35,10 +35,10 @@ prod = [
 dev = [
     "black>=26.10.1",
     "django-stubs>=6.1.2",
-    "mypy>=2.4.0",
-    "pytest>=9.1.1",
+    "mypy>=2.4.1",
+    "pytest>=9.2.0",
     "pytest-django>=4.14.0",
-    "ruff>=0.17.2",
+    "ruff>=0.17.5",
 ]
 
 # --- uv (resolução de dependências) -----------------------------------------
