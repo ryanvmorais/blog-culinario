@@ -56,8 +56,8 @@ jobs:
       # Fixada de propósito: cada versão do @lhci/cli embute uma versão do
       # Lighthouse, e a versão muda as notas. O Dependabot não enxerga um npx:
       # atualize aqui à mão e recalibre os limites em .github/lighthouse/.
-      # 0.15.1 = Lighthouse 12.6.1.
-      LHCI_VERSION: "0.15.1"
+      # 0.16.1 = Lighthouse 13.6.0; pede Node 22.19 ou mais novo.
+      LHCI_VERSION: "0.16.1"
       # O settings exige SECRET_KEY em todo ambiente (spec 011, RF-15); valor
       # descartável, só para o settings importar no CI (não é produção).
       SECRET_KEY: ci-placeholder-nao-usar-em-producao-MQ5e-SKRD_O0QqcJ
