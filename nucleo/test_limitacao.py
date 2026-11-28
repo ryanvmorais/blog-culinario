@@ -16,10 +16,13 @@ log é lido pelo ``caplog`` do pytest, no logger ``blog_culinario.limitacao``.
 from __future__ import annotations
 
 import logging
+import pickle
+import time
 
 import pytest
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.test import Client, RequestFactory
 from django.urls import path, reverse
 from pytest_django.fixtures import Settings
@@ -30,6 +33,7 @@ from blog_culinario.limitacao import (
     limite_excedido,
 )
 from blog_culinario.site_admin import SiteAdminComLimite
+from receitas.tests import _carimbo_valido, _receita
 
 pytestmark = pytest.mark.django_db
 
@@ -274,6 +278,106 @@ def test_limite_acompanha_o_admin_em_outro_caminho(
     assert resposta.status_code == 302
     assert resposta["Location"] == url
     assert not client.session.get("_auth_user_id")
+
+
+# -----------------------------------------------------------------------------
+# Teto e janela de cada formulário (spec 006, RF-01 a RF-03, adendo RF-05)
+# -----------------------------------------------------------------------------
+
+# Os números ficam escritos aqui, e não importados das views: comparados com a
+# própria constante, um limite ou uma janela trocados passariam sem falha.
+
+
+def _validade_do_contador(chave: str) -> float:
+    """
+    Lê quantos segundos faltam para o contador do visitante de teste expirar.
+
+    Args:
+        chave (str): namespace do limite (``"login"``, ``"cadastro"``...).
+
+    Returns:
+        float: segundos até a validade gravada no arquivo do contador.
+    """
+    # _key_to_file é interno do FileBasedCache e não está nos stubs do Django.
+    arquivo = cache._key_to_file(f"limite:{chave}:127.0.0.1")  # type: ignore[attr-defined]
+    with open(arquivo, "rb") as conteudo:
+        validade: float = pickle.load(conteudo)
+    return validade - time.time()
+
+
+def _postar_comentario(client: Client) -> None:
+    """
+    Comenta numa receita nova com um leitor autenticado e o carimbo válido.
+
+    Args:
+        client (Client): cliente de teste.
+    """
+    client.force_login(User.objects.create_user(username="leitor", password="x"))
+    receita = _receita(publicado=True)
+    client.post(
+        reverse("receitas:comentar", kwargs={"slug": receita.slug}),
+        {"texto": "Ficou ótimo!", "carimbo_tempo": _carimbo_valido()},
+    )
+
+
+@pytest.mark.parametrize(
+    ("chave", "janela", "enviar"),
+    [
+        ("login", 300, lambda c: c.post(reverse("usuarios:entrar"), {})),
+        ("login", 300, lambda c: c.post(reverse("admin:login"), {})),
+        ("cadastro", 3600, lambda c: c.post(reverse("usuarios:cadastro"), {})),
+        ("comentario", 60, _postar_comentario),
+    ],
+    ids=["login", "login-do-admin", "cadastro", "comentario"],
+)
+def test_cada_formulario_conta_na_propria_janela(
+    client: Client, chave: str, janela: int, enviar: object
+) -> None:
+    """A primeira tentativa abre o contador com a janela do formulário."""
+    assert callable(enviar)
+    enviar(client)
+
+    assert _validade_do_contador(chave) == pytest.approx(janela, abs=5)
+
+
+def test_login_publico_aceita_a_quinta_tentativa_e_recusa_a_sexta(
+    client: Client,
+) -> None:
+    _criar_equipe()
+    url = reverse("usuarios:entrar")
+    _errar_login(client, url, vezes=4)
+    certo = {"username": "equipe", "password": SENHA_DA_EQUIPE}
+
+    client.post(url, certo)
+    assert client.session.get("_auth_user_id")
+
+    client.logout()
+    resposta = client.post(url, certo, follow=True)
+    assert not client.session.get("_auth_user_id")
+    assert "Muitas tentativas de login" in resposta.content.decode()
+
+
+def test_cadastro_aceita_o_decimo_envio_e_recusa_o_decimo_primeiro(
+    client: Client,
+) -> None:
+    def dados(nome: str) -> dict[str, str]:
+        return {
+            "username": nome,
+            "password1": "uma-senha-bem-forte-123",
+            "password2": "uma-senha-bem-forte-123",
+        }
+
+    url = reverse("usuarios:cadastro")
+    for _ in range(9):
+        client.post(url, {"username": "x"})
+
+    client.post(url, dados("decimo"))
+    assert User.objects.filter(username="decimo").exists()
+
+    client.logout()
+    resposta = client.post(url, dados("decimo-primeiro"), follow=True)
+    assert not User.objects.filter(username="decimo-primeiro").exists()
+    assert "Muitas tentativas de cadastro" in resposta.content.decode()
 
 
 # -----------------------------------------------------------------------------

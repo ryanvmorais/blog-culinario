@@ -9,7 +9,8 @@ parte (``subprocess``), com o ambiente montado pelo teste, porque o pacote de
 configurações lê o ambiente ao ser importado e recarregá-lo dentro do pytest
 deixaria o ambiente de um teste para os outros. Toda variável do projeto vai
 explícita no ambiente do processo filho, vazia quando o teste não a usa: o
-``.env`` local só preenche o que falta, então não interfere. Sem rede.
+``.env`` local só preenche o que falta, então não interfere. A variável que o
+teste quer ausente fica ausente: o processo filho não lê o ``.env``. Sem rede.
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ import logging
 import os
 import pickle
 import re
+import shutil
 import subprocess
 import sys
 import threading
@@ -56,6 +58,14 @@ VARIAVEIS_DO_PROJETO = (
 # Domínio de exemplo do serviço atrás do proxy, nos testes de HTTPS e de CSRF.
 HOST_PUBLICO = "blog.exemplo.com.br"
 
+# Primeiras linhas do código do processo filho quando uma variável fica
+# ausente: o base.py leria o .env de quem roda os testes e preencheria a que
+# falta, e o teste de "variável ausente" mediria o .env, não o código.
+_SEM_ENV_LOCAL = (
+    "import environ\n"
+    "environ.Env.read_env = classmethod(lambda cls, *args, **kwargs: None)\n"
+)
+
 # Ambiente mínimo com que as configurações de produção sobem.
 AMBIENTE_PRODUCAO: dict[str, str | None] = {
     "DJANGO_SETTINGS_MODULE": "blog_culinario.settings.prod",
@@ -80,7 +90,8 @@ def _rodar_python(
             ``argumentos`` traz um script (``manage.py``).
         ambiente (dict[str, str | None]): variáveis do projeto para o processo
             filho; as que faltarem vão vazias, e as marcadas com ``None`` ficam
-            fora do ambiente (variável ausente, não vazia).
+            fora do ambiente (variável ausente, não vazia, e sem o ``.env``
+            local para preenchê-la).
         *argumentos (str): no lugar de ``-c codigo``, os argumentos do Python
             (ex.: ``"manage.py", "check", "--deploy"``).
 
@@ -97,6 +108,8 @@ def _rodar_python(
             env[nome] = valor
     # Saída em UTF-8 também no Windows, para as mensagens em português.
     env["PYTHONUTF8"] = "1"
+    if not argumentos and None in ambiente.values():
+        codigo = _SEM_ENV_LOCAL + codigo
     comando = [sys.executable, *(argumentos or ("-c", codigo))]
     return subprocess.run(
         comando,
@@ -155,31 +168,33 @@ def _receita_de_build() -> dict[str, Any]:
     return conteudo
 
 
+# Os comandos são comparados inteiros: conferir opção por opção deixava passar
+# um --dry-run a mais, um grupo de dependências de desenvolvimento ou um
+# DJANGO_SETTINGS_MODULE de desenvolvimento antes do gunicorn.
+
+
 def test_build_instala_pelo_lock_sem_dev_e_com_o_extra_prod() -> None:
     comandos = _receita_de_build()["steps"]["build"]["commands"]
-    instalacao = comandos[0]
-    assert instalacao.startswith("uv sync")
-    for opcao in ("--locked", "--no-dev", "--extra prod"):
-        assert opcao in instalacao
+    assert comandos[0] == "uv sync --locked --no-dev --extra prod"
 
 
 def test_collectstatic_roda_no_build_com_as_configuracoes_de_producao() -> None:
     # Só as configurações de produção gravam o manifesto do WhiteNoise; sem ele,
     # toda página com estático responde 500.
     comandos = _receita_de_build()["steps"]["build"]["commands"]
-    collectstatic = [c for c in comandos if "collectstatic" in c]
-    assert len(collectstatic) == 1
-    assert "DJANGO_SETTINGS_MODULE=blog_culinario.settings.prod" in collectstatic[0]
-    assert "--noinput" in collectstatic[0]
+    assert comandos[1:] == [
+        "DJANGO_SETTINGS_MODULE=blog_culinario.settings.prod"
+        " python manage.py collectstatic --noinput"
+    ]
 
 
 def test_start_migra_antes_do_gunicorn_na_porta_da_plataforma() -> None:
     inicio = _receita_de_build()["deploy"]["startCommand"]
-    assert "export DJANGO_SETTINGS_MODULE=blog_culinario.settings.prod &&" in inicio
-    assert "migrate --noinput &&" in inicio
-    assert inicio.index("migrate") < inicio.index("gunicorn")
-    assert "gunicorn blog_culinario.wsgi:application" in inicio
-    assert "--bind 0.0.0.0:${PORT:-8000}" in inicio
+    assert inicio == (
+        "export DJANGO_SETTINGS_MODULE=blog_culinario.settings.prod"
+        " && python manage.py migrate --noinput"
+        " && gunicorn blog_culinario.wsgi:application --bind 0.0.0.0:${PORT:-8000}"
+    )
 
 
 def test_wsgi_sem_a_variavel_carrega_as_configuracoes_de_producao() -> None:
@@ -205,31 +220,12 @@ def test_manage_py_segue_nas_configuracoes_de_desenvolvimento() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _env_local_define(nome: str) -> bool:
-    """
-    Diz se o ``.env`` da raiz define uma variável.
-
-    O ``base.py`` lê o ``.env`` só para preencher o que falta no ambiente, então
-    um teste de variável ausente não vale quando o ``.env`` a define.
-
-    Args:
-        nome (str): nome da variável.
-
-    Returns:
-        bool: ``True`` se há uma linha ``NOME=`` no ``.env``.
-    """
-    arquivo = BASE_DIR / ".env"
-    if not arquivo.exists():
-        return False
-    linhas = arquivo.read_text(encoding="utf-8").splitlines()
-    return any(linha.strip().startswith(f"{nome}=") for linha in linhas)
-
-
 @pytest.mark.parametrize(
     ("valor", "esperado"),
     [
         ("exemplo.com, www.exemplo.com,", ["exemplo.com", "www.exemplo.com"]),
         ("  exemplo.com  ", ["exemplo.com"]),
+        ("exemplo.com, ,www.exemplo.com", ["exemplo.com", "www.exemplo.com"]),
         ("", []),
     ],
 )
@@ -241,8 +237,6 @@ def test_allowed_hosts_sem_espacos_nem_itens_vazios(
 
 
 def test_allowed_hosts_ausente_derruba_a_subida() -> None:
-    if _env_local_define("ALLOWED_HOSTS"):
-        pytest.skip("o .env local define ALLOWED_HOSTS")
     ambiente = {**AMBIENTE_PRODUCAO, "ALLOWED_HOSTS": None}
     codigo = "from django.conf import settings\nsettings.DEBUG\n"
     resultado = _rodar_python(codigo, ambiente)
@@ -255,8 +249,6 @@ def test_allowed_hosts_ausente_derruba_a_subida() -> None:
 @pytest.mark.parametrize("valor", [None, ""])
 def test_sem_chave_secreta_nenhum_ambiente_sobe(valor: str | None, modulo: str) -> None:
     # Nem o desenvolvimento tem chave fixa: ela valeria em todo clone (RF-15).
-    if valor is None and _env_local_define("SECRET_KEY"):
-        pytest.skip("o .env local define SECRET_KEY")
     ambiente = {
         **AMBIENTE_PRODUCAO,
         "DJANGO_SETTINGS_MODULE": f"blog_culinario.settings.{modulo}",
@@ -266,7 +258,6 @@ def test_sem_chave_secreta_nenhum_ambiente_sobe(valor: str | None, modulo: str) 
     resultado = _rodar_python(codigo, ambiente)
     assert resultado.returncode != 0
     assert "ImproperlyConfigured" in resultado.stderr
-    assert "django-insecure" not in resultado.stdout
 
 
 @pytest.mark.parametrize(
@@ -283,10 +274,52 @@ def test_admin_url_normaliza_e_nunca_fica_vazio(
     valor: str | None, esperado: str
 ) -> None:
     # Vazio, o Admin tomaria a raiz no lugar da home (RF-14).
-    if valor is None and _env_local_define("ADMIN_URL"):
-        pytest.skip("o .env local define ADMIN_URL")
     ambiente = {**AMBIENTE_PRODUCAO, "ADMIN_URL": valor}
     assert _configuracoes(ambiente, "ADMIN_URL")["ADMIN_URL"] == esperado
+
+
+def test_producao_guarda_a_senha_com_o_pbkdf2() -> None:
+    # A suíte troca o hash pelo MD5 (conftest.py); as configurações reais, lidas
+    # aqui num processo à parte, seguem com o padrão do Django.
+    hashers = _configuracoes(AMBIENTE_PRODUCAO, "PASSWORD_HASHERS")["PASSWORD_HASHERS"]
+    assert hashers[0] == "django.contrib.auth.hashers.PBKDF2PasswordHasher"
+
+
+@pytest.mark.parametrize(
+    ("atual", "anterior", "esperado"),
+    [
+        ("", "", []),
+        (" segredo-a ", "", ["segredo-a"]),
+        ("", "segredo-b", ["segredo-b"]),
+        ("segredo-a", " segredo-b ", ["segredo-a", "segredo-b"]),
+    ],
+)
+def test_segredos_de_origem_sem_espacos_nem_vazios(
+    atual: str, anterior: str, esperado: list[str]
+) -> None:
+    # Um segredo vazio na tupla deixaria passar o pedido sem o cabeçalho de
+    # origem: o "" recebido é igual ao "" aceito (RF-09).
+    ambiente = {
+        **AMBIENTE_PRODUCAO,
+        "ORIGEM_SEGREDO": atual,
+        "ORIGEM_SEGREDO_ANTERIOR": anterior,
+    }
+    valores = _configuracoes(ambiente, "ORIGEM_SEGREDOS")
+    assert valores["ORIGEM_SEGREDOS"] == esperado
+
+
+def test_url_publica_do_ambiente_sai_normalizada() -> None:
+    ambiente = {**AMBIENTE_PRODUCAO, "URL_PUBLICA": " https://exemplo.com.br/ "}
+    valores = _configuracoes(ambiente, "URL_PUBLICA")
+    assert valores["URL_PUBLICA"] == "https://exemplo.com.br"
+
+
+def test_url_publica_invalida_no_ambiente_derruba_a_subida() -> None:
+    ambiente = {**AMBIENTE_PRODUCAO, "URL_PUBLICA": "https://exemplo.com.br/blog"}
+    codigo = "from django.conf import settings\nsettings.DEBUG\n"
+    resultado = _rodar_python(codigo, ambiente)
+    assert resultado.returncode != 0
+    assert "ImproperlyConfigured: URL_PUBLICA deve ser" in resultado.stderr
 
 
 def test_admin_responde_no_caminho_do_admin_url() -> None:
@@ -321,6 +354,21 @@ def test_diretorio_de_dados_relativo_fica_dentro_da_raiz() -> None:
     assert Path(valores["MEDIA_ROOT"]) == BASE_DIR / "dados" / "media"
 
 
+def test_producao_liga_o_hsts_de_um_ano_com_subdominios_e_preload() -> None:
+    # O check --deploy só acusa o HSTS desligado; o valor de um ano (spec 011,
+    # ADR-12) fica conferido aqui.
+    nomes = (
+        "SECURE_HSTS_SECONDS",
+        "SECURE_HSTS_INCLUDE_SUBDOMAINS",
+        "SECURE_HSTS_PRELOAD",
+    )
+    assert _configuracoes(AMBIENTE_PRODUCAO, *nomes) == {
+        "SECURE_HSTS_SECONDS": 31_536_000,
+        "SECURE_HSTS_INCLUDE_SUBDOMAINS": True,
+        "SECURE_HSTS_PRELOAD": True,
+    }
+
+
 def test_producao_le_o_proxy_registra_erros_e_silencia_o_mail_e001() -> None:
     nomes = ("SECURE_PROXY_SSL_HEADER", "LOGGING", "SILENCED_SYSTEM_CHECKS")
     valores = _configuracoes(AMBIENTE_PRODUCAO, *nomes)
@@ -328,6 +376,15 @@ def test_producao_le_o_proxy_registra_erros_e_silencia_o_mail_e001() -> None:
     assert valores["LOGGING"]["root"] == {"handlers": ["console"], "level": "WARNING"}
     assert valores["LOGGING"]["loggers"]["django.request"]["level"] == "ERROR"
     assert valores["SILENCED_SYSTEM_CHECKS"] == ["mail.E001"]
+
+
+def test_producao_serve_estaticos_pelo_manifesto_do_whitenoise() -> None:
+    # O collectstatic do build grava o manifesto; sem este storage, o HTML
+    # aponta para os nomes sem hash e o cache longo do WhiteNoise não vale.
+    storages = _configuracoes(AMBIENTE_PRODUCAO, "STORAGES")["STORAGES"]
+    assert storages["staticfiles"] == {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    }
 
 
 def test_desenvolvimento_nao_le_o_proxy_nem_silencia_checagem() -> None:
@@ -519,13 +576,17 @@ def test_contagem_de_outro_processo_aparece(tmp_path: Path) -> None:
     assert backend.get("contador") == 2
 
 
-def test_incr_mantem_a_validade_da_chave(tmp_path: Path) -> None:
+def test_incr_mantem_a_validade_da_chave(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     # O incr() herdado regravaria com o TIMEOUT padrão (300 s) e a janela de 60 s
-    # recomeçaria a cada tentativa.
+    # recomeçaria a cada tentativa. O relógio anda 30 s sem o teste dormir: o
+    # cache e o FileBasedCache leem a hora pelo time.time().
     backend = _cache_na_pasta(tmp_path)
     backend.add("contador", 0, timeout=60)
     validade_original = _validade_gravada(backend, "contador")
-    time.sleep(0.05)
+    agora = time.time()
+    monkeypatch.setattr(time, "time", lambda: agora + 30)
     backend.incr("contador")
     assert abs(_validade_gravada(backend, "contador") - validade_original) < 0.01
 
@@ -537,6 +598,32 @@ def test_incr_de_chave_ausente_ou_expirada_levanta_value_error(tmp_path: Path) -
     backend.set("expirada", 1, timeout=0)  # timeout 0 grava já expirada
     with pytest.raises(ValueError):
         backend.incr("expirada")
+
+
+def test_incr_de_chave_sem_validade_segue_sem_validade(tmp_path: Path) -> None:
+    backend = _cache_na_pasta(tmp_path)
+    backend.set("eterna", 1, timeout=None)
+    assert backend.incr("eterna") == 2
+    assert _validade_gravada(backend, "eterna") is None
+
+
+def test_incr_de_arquivo_vazio_levanta_value_error(tmp_path: Path) -> None:
+    # Um arquivo cortado na gravação (o processo morreu no meio) conta como
+    # chave ausente, não como erro do servidor.
+    backend = _cache_na_pasta(tmp_path)
+    backend.add("contador", 0, timeout=60)
+    Path(backend._key_to_file("contador")).write_bytes(b"")  # type: ignore[attr-defined]
+    with pytest.raises(ValueError, match="not found"):
+        backend.incr("contador")
+
+
+def test_trava_recria_a_pasta_apagada(tmp_path: Path) -> None:
+    pasta = tmp_path / "cache"
+    backend = _cache_na_pasta(pasta)
+    backend.add("primeiro", 0, timeout=60)
+    shutil.rmtree(pasta)
+    assert backend.add("contador", 0, timeout=60) is True
+    assert backend.incr("contador") == 1
 
 
 def test_clear_nao_apaga_a_trava(tmp_path: Path) -> None:
@@ -611,6 +698,16 @@ def test_pedido_com_o_segredo_atual_ou_anterior_passa(valor: str) -> None:
     assert resposta.status_code == 200
 
 
+@COM_TRAVA
+@ATRAS_DO_PROXY
+@pytest.mark.django_db
+def test_pedido_sem_o_segredo_nao_chega_ao_redirect_de_https() -> None:
+    # A trava fica no topo do MIDDLEWARE (RF-09): o pedido HTTP que não veio
+    # pela Cloudflare recebe o 403, não o 301 do SecurityMiddleware.
+    resposta = Client().get("/", headers={"host": HOST_PUBLICO})
+    assert resposta.status_code == 403
+
+
 def _pedido(rf: RequestFactory, **meta: str) -> HttpRequest:
     """
     Monta um GET com o ``request.META`` pedido.
@@ -677,10 +774,19 @@ def test_limite_separa_visitantes_so_com_a_trava(
 # ---------------------------------------------------------------------------
 
 
+# Arquivo ao lado do MEDIA_ROOT, que nenhum caminho de /media/ pode servir.
+ARQUIVO_FORA_DA_MIDIA = "fora-da-midia.txt"
+CONTEUDO_FORA_DA_MIDIA = "conteudo-que-nao-pode-sair"
+
+
 @pytest.fixture
 def midia(settings: Any, tmp_path: Path) -> Path:
     """
     Põe o ``MEDIA_ROOT`` numa pasta temporária com uma capa e uma subpasta.
+
+    Ao lado da pasta de mídia fica o ``ARQUIVO_FORA_DA_MIDIA``: um ``../`` que
+    escapasse da pasta acharia um arquivo de verdade, e o 404 dos testes de
+    caminho mede a recusa, não a falta do arquivo.
 
     Args:
         settings (Any): fixture do pytest-django que troca configurações.
@@ -691,6 +797,7 @@ def midia(settings: Any, tmp_path: Path) -> Path:
     """
     pasta = tmp_path / "media"
     (pasta / "capas").mkdir(parents=True)
+    (tmp_path / ARQUIVO_FORA_DA_MIDIA).write_text(CONTEUDO_FORA_DA_MIDIA)
     Image.new("RGB", (4, 4), "orange").save(pasta / "capas" / "bolo.jpg", "JPEG")
     settings.MEDIA_ROOT = pasta
     return pasta
@@ -726,16 +833,20 @@ def test_capa_webp_sai_como_image_webp(midia: Path) -> None:
         "/media/capas/nao-existe.jpg",
         "/media/capas/",
         "/media/capas",
-        "/media/../conftest.py",
-        "/media/capas/%2e%2e/%2e%2e/conftest.py",
+        f"/media/../{ARQUIVO_FORA_DA_MIDIA}",
+        f"/media/capas/../../{ARQUIVO_FORA_DA_MIDIA}",
+        f"/media/capas/%2e%2e/%2e%2e/{ARQUIVO_FORA_DA_MIDIA}",
     ],
 )
 def test_caminho_invalido_responde_404_sem_listar(midia: Path, caminho: str) -> None:
+    # O alvo do ../ existe: sem a recusa, ele seria servido.
+    assert (midia.parent / ARQUIVO_FORA_DA_MIDIA).is_file()
     resposta = Client().get(caminho)
     assert resposta.status_code == 404
     pagina = resposta.content.decode()
     assert "Erro 404" in pagina
     assert "bolo.jpg" not in pagina
+    assert CONTEUDO_FORA_DA_MIDIA not in pagina
 
 
 @pytest.mark.django_db
