@@ -30,7 +30,7 @@ Este projeto foi estruturado para consolidar pilares fundamentais de engenharia 
 - **Segurança Aplicada:** honeypot e time-trap no formulário de comentário, validação de upload de imagem, Content-Security-Policy nativa do Django e `Permissions-Policy`, segredos fora do código.
 - **Desempenho e Produção:** `select_related` e `prefetch_related` contra o problema N+1 nas listas, e HSTS de um ano com preload, redirecionamento para HTTPS e cookies seguros em produção.
 - **Interface Auditada:** acessibilidade conferida em navegador real (axe-core, teclado, contraste, tema escuro) e guardada por testes, a partir da spec 008.
-- **Qualidade Automatizada:** suíte de mais de 300 testes com `pytest` e um pipeline de CI que roda o mesmo portão de qualidade usado localmente.
+- **Qualidade Automatizada:** suíte de mais de 500 testes com `pytest` e um pipeline de CI que roda o mesmo portão de qualidade usado localmente.
 
 ---
 

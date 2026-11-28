@@ -30,7 +30,7 @@ This project was structured to consolidate core software engineering pillars:
 - **Applied Security:** honeypot and time-trap on the comment form, image upload validation, Django's native Content-Security-Policy and `Permissions-Policy`, secrets kept out of the code.
 - **Performance and Production:** `select_related` and `prefetch_related` against the N+1 problem in the lists, and one-year HSTS with preload, HTTPS redirect and secure cookies in production.
 - **Audited Interface:** accessibility checked in a real browser (axe-core, keyboard, contrast, dark theme) and guarded by tests, starting from spec 008.
-- **Automated Quality:** a suite of more than 300 `pytest` tests and a CI pipeline that runs the same quality gate used locally.
+- **Automated Quality:** a suite of more than 500 `pytest` tests and a CI pipeline that runs the same quality gate used locally.
 
 ---
 
