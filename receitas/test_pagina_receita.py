@@ -21,7 +21,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import Receita, TrechoDoPreparo
-from .tests import _categoria, _comentario, _receita
+from .tests import _categoria, _comentario, _receita, _tag
 
 User = get_user_model()
 
@@ -114,6 +114,33 @@ def test_linha_que_continua_o_passo_colado_fica_nele() -> None:
     """A linha sem número continua o passo de cima, como "2 xícaras" (RF-22)."""
     partes = _partes("1. Junte\n2 xícaras de farinha.\n2. Asse.")
     assert partes[0].textos == ["Junte\n2 xícaras de farinha.", "Asse."]
+
+
+@pytest.mark.parametrize(
+    ("texto", "passos"),
+    [
+        ("1) Separe.\n2) Misture.", ["Separe.", "Misture."]),
+        ("  1. Separe.\n  2. Misture.", ["Separe.", "Misture."]),
+        (
+            "1. Junte\n1.5 kg de farinha.\n2. Asse.",
+            ["Junte\n1.5 kg de farinha.", "Asse."],
+        ),
+    ],
+    ids=["parentese", "recuo", "decimal-continua"],
+)
+def test_passos_colados_com_parentese_recuo_ou_decimal(
+    texto: str, passos: list[str]
+) -> None:
+    """Na lista sem linha em branco valem o "1)" e o recuo; "1.5" não abre passo."""
+    assert _partes(texto) == [TrechoDoPreparo("passos", passos, 1)]
+
+
+def test_linha_so_com_espacos_separa_paragrafos() -> None:
+    """Uma linha com espaços conta como linha em branco, como no editor (RF-22)."""
+    partes = _partes("Misture tudo.\n   \nAsse por 40 minutos.")
+    assert partes == [
+        TrechoDoPreparo("paragrafo", ["Misture tudo.", "Asse por 40 minutos."], 1)
+    ]
 
 
 def test_numero_sem_espaco_depois_nao_e_passo() -> None:
@@ -278,6 +305,54 @@ def test_passos_viram_lista_ordenada_e_a_fonte_vira_nota(client: Client) -> None
 
 
 @pytest.mark.django_db
+def test_segundo_grupo_de_passos_continua_a_numeracao_na_pagina(client: Client) -> None:
+    """O ``start`` do <ol> vem do trecho: a calda começa no passo 3 (RF-22, ADR-9)."""
+    receita = _receita(
+        publicado=True,
+        modo_de_preparo=(
+            "1. Faça a massa.\n\n2. Descanse.\n\nPara a calda:\n\n1. Derreta."
+        ),
+    )
+    html = _pagina(client, receita)
+    assert '<ol class="passos" start="1">' in html
+    assert '<ol class="passos" start="3">' in html
+
+
+@pytest.mark.django_db
+def test_quebra_simples_vira_br_no_passo_e_no_paragrafo(client: Client) -> None:
+    """A linha quebrada dentro de um passo ou parágrafo continua quebrada (RF-22)."""
+    receita = _receita(
+        publicado=True,
+        modo_de_preparo="1. Misture a farinha\ne o açúcar.\n\nDica: sirva\nmorno.",
+    )
+    html = _pagina(client, receita)
+    assert "<li>Misture a farinha<br>e o açúcar.</li>" in html
+    assert '<p class="preparo-nota">Dica: sirva<br>morno.</p>' in html
+
+
+@pytest.mark.django_db
+def test_categoria_e_etiquetas_levam_ao_filtro_da_listagem(client: Client) -> None:
+    """A categoria e cada tag da receita são links para a listagem filtrada."""
+    receita = _receita(publicado=True, categoria=_categoria(nome="Doces"))
+    receita.tags.add(_tag(nome="sem glúten"))
+    html = _pagina(client, receita)
+    lista = reverse("receitas:lista")
+    assert (
+        f'<a class="cartao-receita__categoria" href="{lista}?categoria=doces">' in html
+    )
+    etiquetas = _trecho(html, '<ul class="etiquetas">', "</ul>")
+    assert (
+        f'<a class="etiqueta" href="{lista}?tag=sem-gluten">sem glúten</a>' in etiquetas
+    )
+
+
+@pytest.mark.django_db
+def test_receita_sem_tag_nao_mostra_a_lista_de_etiquetas(client: Client) -> None:
+    """O par do teste acima: sem tag, nada de lista vazia."""
+    assert 'class="etiquetas"' not in _pagina(client, _receita(publicado=True))
+
+
+@pytest.mark.django_db
 def test_preparo_sem_passo_numerado_fica_em_paragrafos(client: Client) -> None:
     """Sem passo numerado, nada de lista: parágrafos, como antes (RF-22)."""
     preparo = _trecho(
@@ -299,6 +374,9 @@ def test_anonimo_sem_comentarios_ve_o_convite_com_botao(client: Client) -> None:
     )
     assert "Ainda não há comentários. Seja o primeiro a comentar!" in convite
     assert f'href="{destino}">Entrar para comentar</a>' in convite
+    # Uma vez só: o parágrafo de quem tem login não aparece junto do cartão.
+    html = _pagina(client, receita)
+    assert html.count("Ainda não há comentários.") == 1
 
 
 @pytest.mark.django_db
