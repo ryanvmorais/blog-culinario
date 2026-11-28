@@ -33,6 +33,11 @@ uma spec em `specs/` primeiro — veja `specs/README.md` para o formato.
   funções públicas, type hints completos).
 - Nunca desative uma proteção de segurança (CSRF, validação de senha, etc.)
   sem justificar o porquê no PR.
+- Todo teste novo ou alterado precisa ser visto falhando uma vez: antes do
+  commit, quebre de propósito a linha que ele protege (inverta a condição,
+  troque o valor), confira que o teste fica vermelho, desfaça a quebra e conte
+  no PR o que foi quebrado. Teste do tipo "não acontece X" ganha também um caso
+  em que X acontece.
 - Mantenha a coerência com o restante do projeto — este é um material de
   estudo, e consistência importa mais que preferência pessoal.
 
