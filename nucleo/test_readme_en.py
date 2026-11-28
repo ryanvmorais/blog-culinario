@@ -99,28 +99,75 @@ def _linhas_da_tabela(caminho: Path, primeira_celula: str) -> int:
     return total
 
 
+def _itens_numerados(caminho: Path) -> int:
+    """
+    Conta os itens de lista numerada no nível raiz, fora dos blocos de código.
+
+    Args:
+        caminho (Path): O arquivo Markdown.
+
+    Returns:
+        int: Quantos itens ``1. ``, ``2. ``... o arquivo tem.
+    """
+    return sum(1 for linha in _fora_dos_blocos(caminho) if ITEM_NUMERADO.match(linha))
+
+
+# Markdown de controle: dois títulos de verdade, um "#" de shell dentro do bloco,
+# uma tabela de duas linhas e dois itens numerados ("1.5" não é item).
+_AMOSTRA = """\
+# Título
+
+| Ferramenta | Para quê |
+| --- | --- |
+| Django | web |
+| uv | ambiente |
+
+```bash
+# comentário de shell
+```
+
+## Seção
+
+1. primeiro
+2. segundo
+1.5 kg não é item
+"""
+
+
 # -----------------------------------------------------------------------------
 # Testes
 # -----------------------------------------------------------------------------
 
 
+def test_leitores_contam_a_amostra(tmp_path: Path) -> None:
+    """Controle positivo: um leitor quebrado daria 0 nos dois READMEs, e 0 == 0."""
+    amostra = tmp_path / "AMOSTRA.md"
+    amostra.write_text(_AMOSTRA, encoding="utf-8")
+
+    assert _niveis(amostra) == [1, 2]
+    assert _linhas_da_tabela(amostra, "Ferramenta") == 2
+    assert _itens_numerados(amostra) == 2
+
+
 def test_os_dois_readmes_tem_os_mesmos_titulos_na_mesma_ordem() -> None:
-    assert _niveis(INGLES) == _niveis(PORTUGUES)
+    niveis = _niveis(PORTUGUES)
+
+    assert niveis[0] == 1 and len(niveis) > 1
+    assert _niveis(INGLES) == niveis
 
 
 def test_os_dois_readmes_tem_as_mesmas_linhas_na_tabela_de_tecnologias() -> None:
-    assert _linhas_da_tabela(INGLES, "Tool") == _linhas_da_tabela(
-        PORTUGUES, "Ferramenta"
-    )
+    linhas = _linhas_da_tabela(PORTUGUES, "Ferramenta")
+
+    assert linhas > 0
+    assert _linhas_da_tabela(INGLES, "Tool") == linhas
 
 
 def test_os_dois_readmes_tem_a_mesma_quantidade_de_itens_numerados() -> None:
-    def contar(caminho: Path) -> int:
-        return sum(
-            1 for linha in _fora_dos_blocos(caminho) if ITEM_NUMERADO.match(linha)
-        )
+    itens = _itens_numerados(PORTUGUES)
 
-    assert contar(INGLES) == contar(PORTUGUES)
+    assert itens > 0
+    assert _itens_numerados(INGLES) == itens
 
 
 def test_cada_readme_linka_o_outro_nas_primeiras_linhas() -> None:

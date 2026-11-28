@@ -14,6 +14,7 @@ vazarem de um teste para o outro.
 
 from __future__ import annotations
 
+import re
 import time
 from datetime import timedelta
 from pathlib import Path
@@ -38,6 +39,13 @@ from .models import Categoria, Comentario, Receita, Tag
 pytestmark = pytest.mark.django_db
 
 User = get_user_model()
+
+# A mensagem inteira, com o nível: o falso sucesso do honeypot e do time-trap só
+# engana o robô se sair igual ao sucesso de verdade (spec 007, ADR-4).
+_MENSAGEM_DE_SUCESSO = (
+    '<p class="mensagem mensagem--success" tabindex="-1" autofocus>'
+    "Comentário publicado!</p>"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -173,6 +181,24 @@ def test_tag_com_nome_repetido_gera_slug_com_sufixo() -> None:
     assert segunda.slug == "sem-gluten-2"
 
 
+def test_salvar_de_novo_mantem_o_slug() -> None:
+    """Editar o nome no Admin não troca o endereço: o slug nasce uma vez só."""
+    categoria = _categoria(nome="Doces")
+    tag = _tag(nome="vegana")
+    receita = _receita(titulo="Bolo de cenoura", categoria=categoria)
+
+    categoria.nome, tag.nome, receita.titulo = "Doces finos", "vegano", "Bolo da vó"
+    for objeto in (categoria, tag, receita):
+        objeto.save()
+        objeto.refresh_from_db()
+
+    assert (categoria.slug, tag.slug, receita.slug) == (
+        "doces",
+        "vegana",
+        "bolo-de-cenoura",
+    )
+
+
 # -----------------------------------------------------------------------------
 # Relacionamentos e defaults (RF-03, RNF-01)
 # -----------------------------------------------------------------------------
@@ -240,9 +266,11 @@ def test_com_receitas_publicadas_deixa_de_fora_categoria_so_com_rascunho() -> No
 
 def test_com_receitas_publicadas_ordena_pela_contagem_e_pelo_nome() -> None:
     """Mais receitas primeiro; no empate, ordem alfabética."""
+    # Massas nasce antes de Lanches: no empate, a ordem do banco (pk) daria
+    # Massas primeiro, e só o desempate pelo nome põe Lanches na frente.
     sobremesas = _categoria(nome="Sobremesas")
-    lanches = _categoria(nome="Lanches")
     massas = _categoria(nome="Massas")
+    lanches = _categoria(nome="Lanches")
     for _ in range(2):
         _receita(categoria=sobremesas, publicado=True)
     _receita(categoria=massas, publicado=True)
@@ -256,6 +284,15 @@ def test_com_receitas_publicadas_ordena_pela_contagem_e_pelo_nome() -> None:
 # -----------------------------------------------------------------------------
 # Validação de imagem de capa (RF-04)
 # -----------------------------------------------------------------------------
+def test_imagem_no_limite_de_5_mb_e_aceita() -> None:
+    """5 MB exatos passam: o teto é inclusivo (o par do teste de um byte acima)."""
+    capa = SimpleUploadedFile(
+        "capa.jpg", b"0" * (5 * 1024 * 1024), content_type="image/jpeg"
+    )
+
+    _receita(imagem_capa=capa).full_clean()  # não deve levantar
+
+
 def test_imagem_muito_grande_e_rejeitada() -> None:
     arquivo_grande = SimpleUploadedFile(
         "capa.jpg",
@@ -264,20 +301,33 @@ def test_imagem_muito_grande_e_rejeitada() -> None:
     )
     receita = _receita(imagem_capa=arquivo_grande)
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as erro:
         receita.full_clean()
+    assert erro.value.message_dict == {
+        "imagem_capa": ["A imagem deve ter no máximo 5 MB."]
+    }
 
 
-def test_extensao_de_imagem_invalida_e_rejeitada() -> None:
+@pytest.mark.parametrize("nome", ["capa.jpg", "capa.jpeg", "capa.png", "capa.webp"])
+def test_extensao_de_imagem_permitida_e_aceita(nome: str) -> None:
+    """Uma por extensão da lista: tirar qualquer uma recusaria a capa (RF-04)."""
+    capa = SimpleUploadedFile(nome, b"0", content_type="application/octet-stream")
+
+    _receita(imagem_capa=capa).full_clean()  # não deve levantar
+
+
+@pytest.mark.parametrize("nome", ["capa.txt", "capa.gif", "capa.jpg.txt"])
+def test_extensao_de_imagem_invalida_e_rejeitada(nome: str) -> None:
     arquivo_invalido = SimpleUploadedFile(
-        "capa.txt",
+        nome,
         b"nao e uma imagem",
         content_type="text/plain",
     )
     receita = _receita(imagem_capa=arquivo_invalido)
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as erro:
         receita.full_clean()
+    assert list(erro.value.message_dict) == ["imagem_capa"]
 
 
 def test_capa_salva_nos_testes_fica_fora_da_media_do_projeto(tmp_path: Path) -> None:
@@ -386,7 +436,10 @@ def test_listagem_nao_tem_n_mais_1_com_tags(
 # Busca e filtros (RF-01 a RF-06, RNF-02)
 # -----------------------------------------------------------------------------
 def test_busca_por_titulo_encontra_receita(client: Client) -> None:
-    receita = _receita(titulo="Bolo de cenoura", publicado=True)
+    """O termo "cenoura" só aparece no título (o par do teste por ingrediente)."""
+    receita = _receita(
+        titulo="Bolo de cenoura", ingredientes="farinha\novos", publicado=True
+    )
 
     resposta = client.get(reverse("receitas:lista"), {"q": "cenoura"})
 
@@ -432,6 +485,8 @@ def test_filtro_por_categoria_inexistente_retorna_lista_vazia(client: Client) ->
 
     assert resposta.status_code == 200
     assert list(resposta.context["receitas"]) == []
+    # O estado vazio do filtro, não o do blog sem receitas.
+    assert "Nenhuma receita encontrada" in resposta.content.decode()
 
 
 def test_filtro_por_tag_existente(client: Client) -> None:
@@ -453,6 +508,8 @@ def test_filtro_por_tag_inexistente_retorna_lista_vazia(client: Client) -> None:
 
     assert resposta.status_code == 200
     assert list(resposta.context["receitas"]) == []
+    # O estado vazio do filtro, não o do blog sem receitas.
+    assert "Nenhuma receita encontrada" in resposta.content.decode()
 
 
 def test_busca_e_categoria_combinam_com_e_logico(client: Client) -> None:
@@ -483,22 +540,83 @@ def test_busca_e_categoria_combinam_com_e_logico(client: Client) -> None:
     assert titulos == [alvo.titulo]
 
 
+@pytest.mark.parametrize(
+    "parametros",
+    [{"q": "  cenoura  "}, {"categoria": " doces "}, {"tag": " vegana "}],
+    ids=["busca", "categoria", "tag"],
+)
+def test_espacos_nas_pontas_do_filtro_sao_ignorados(
+    client: Client, parametros: dict[str, str]
+) -> None:
+    """Um filtro colado com espaço acha o mesmo que sem ele (RF-01 a RF-03)."""
+    alvo = _receita(
+        titulo="Bolo de cenoura", categoria=_categoria(nome="Doces"), publicado=True
+    )
+    alvo.tags.add(_tag(nome="vegana"))
+    _receita(
+        titulo="Lasanha",
+        categoria=_categoria(nome="Massas"),
+        ingredientes="massa, molho",
+        publicado=True,
+    )
+
+    resposta = client.get(reverse("receitas:lista"), parametros)
+
+    assert [r.titulo for r in resposta.context["receitas"]] == ["Bolo de cenoura"]
+
+
+def test_busca_com_resultado_diz_o_termo_e_oferece_limpar(client: Client) -> None:
+    """Só com a busca ativa, a abertura diz o termo, como na categoria (RF-13)."""
+    _receita(titulo="Bolo de cenoura", publicado=True)
+
+    html = client.get(reverse("receitas:lista"), {"q": "cenoura"}).content.decode()
+
+    assert 'para <strong>"cenoura"</strong>' in html
+    assert "Limpar filtro" in html
+
+
+def _trecho(html: str, inicio: str, fim: str) -> str:
+    """
+    Recorta o HTML entre a primeira ocorrência de ``inicio`` e o ``fim`` seguinte.
+
+    Args:
+        html (str): a página inteira.
+        inicio (str): marca onde o recorte começa.
+        fim (str): marca onde o recorte termina, procurada depois do início.
+
+    Returns:
+        str: o pedaço do HTML, sem a marca final.
+    """
+    comeco = html.index(inicio)
+    return html[comeco : html.index(fim, comeco)]
+
+
 def test_estado_vazio_mostra_mensagem_com_termo_buscado(client: Client) -> None:
     resposta = client.get(reverse("receitas:lista"), {"q": "abobora"})
 
-    assert "Nenhuma receita encontrada" in resposta.content.decode()
-    assert "abobora" in resposta.content.decode()
+    # Só o parágrafo do estado vazio: o campo de busca também ecoa o termo.
+    vazio = _trecho(resposta.content.decode(), '<p class="estado-vazio">', "<a ")
+    assert " ".join(vazio.split()) == (
+        '<p class="estado-vazio"> Nenhuma receita encontrada para "abobora".'
+    )
+    # Sem resultado, a abertura não diz "0 receitas": o estado vazio já diz.
+    assert "Limpar filtro" not in resposta.content.decode()
 
 
 def test_paginacao_preserva_filtro_de_categoria_na_querystring(client: Client) -> None:
     categoria = _categoria()
     for i in range(10):
         _receita(titulo=f"Receita {i}", categoria=categoria, publicado=True)
+    lista = reverse("receitas:lista")
 
-    resposta = client.get(reverse("receitas:lista"), {"categoria": categoria.slug})
+    primeira = client.get(lista, {"categoria": categoria.slug}).content.decode()
+    segunda = client.get(lista, {"categoria": categoria.slug, "page": "2"})
 
-    conteudo = resposta.content.decode()
-    assert f"categoria={categoria.slug}" in conteudo
+    # Dentro da paginação: as pílulas e os cartões também levam ?categoria=.
+    proxima = _trecho(primeira, '<nav class="paginacao', "</nav>")
+    anterior = _trecho(segunda.content.decode(), '<nav class="paginacao', "</nav>")
+    assert f'href="?page=2&categoria={categoria.slug}"' in proxima
+    assert f'href="?page=1&categoria={categoria.slug}"' in anterior
 
 
 # -----------------------------------------------------------------------------
@@ -586,8 +704,13 @@ def test_comentario_aprovado_aparece_na_pagina(client: Client) -> None:
 
 def test_comentarios_aparecem_do_mais_antigo_ao_mais_novo(client: Client) -> None:
     receita = _receita(publicado=True)
-    primeiro = _comentario(receita=receita, texto="Primeiro comentário")
+    # O segundo nasce depois e o primeiro tem a data recuada: no mesmo tick do
+    # relógio as duas empatariam, e a ordem invertida passaria pela ordem do pk.
     segundo = _comentario(receita=receita, texto="Segundo comentário")
+    primeiro = _comentario(receita=receita, texto="Primeiro comentário")
+    Comentario.objects.filter(pk=primeiro.pk).update(
+        criado_em=timezone.now() - timedelta(days=1)
+    )
 
     resposta = client.get(reverse("receitas:detalhe", kwargs={"slug": receita.slug}))
 
@@ -658,8 +781,26 @@ def test_post_valido_cria_comentario_e_redireciona(client: Client) -> None:
         follow=True,
     )
 
-    assert Comentario.objects.filter(receita=receita, texto="Ficou incrível!").exists()
-    assert "Comentário publicado!" in resposta.content.decode()
+    # O autor é nulo no modelo (SET_NULL): sem conferir, a view que esquecesse o
+    # request.user gravaria um comentário "Usuário removido".
+    (comentario,) = Comentario.objects.filter(receita=receita)
+    assert comentario.texto == "Ficou incrível!"
+    assert comentario.autor == autor
+    assert _MENSAGEM_DE_SUCESSO in resposta.content.decode()
+
+
+def test_post_em_receita_rascunho_responde_404_e_nao_grava(client: Client) -> None:
+    """O slug de um rascunho não aceita comentário, mesmo com o envio válido."""
+    receita = _receita(publicado=False)
+    client.force_login(User.objects.create_user(username="leitor", password="x"))
+
+    resposta = client.post(
+        reverse("receitas:comentar", kwargs={"slug": receita.slug}),
+        {"texto": "Comentário num rascunho", "carimbo_tempo": _carimbo_valido()},
+    )
+
+    assert resposta.status_code == 404
+    assert not Comentario.objects.exists()
 
 
 def test_post_com_texto_vazio_nao_cria_comentario(client: Client) -> None:
@@ -674,7 +815,10 @@ def test_post_com_texto_vazio_nao_cria_comentario(client: Client) -> None:
     )
 
     assert not Comentario.objects.filter(receita=receita).exists()
-    assert "O comentário não pode ficar vazio." in resposta.content.decode()
+    assert (
+        'class="mensagem mensagem--error" tabindex="-1" autofocus>'
+        "O comentário não pode ficar vazio.</p>"
+    ) in resposta.content.decode()
 
 
 # -----------------------------------------------------------------------------
@@ -791,11 +935,20 @@ def test_bloqueia_a_partir_do_sexto_comentario_no_mesmo_ip(client: Client) -> No
     resposta = client.post(
         reverse("receitas:comentar", kwargs={"slug": receita.slug}),
         {"texto": "Este deveria ser bloqueado", "carimbo_tempo": _carimbo_valido()},
+        follow=True,
     )
 
     assert Comentario.objects.filter(receita=receita).count() == 5
     assert not Comentario.objects.filter(texto="Este deveria ser bloqueado").exists()
-    assert resposta.status_code == 302
+    assert resposta.redirect_chain == [
+        (reverse("receitas:detalhe", kwargs={"slug": receita.slug}), 302)
+    ]
+    # As 5 mensagens de sucesso anteriores ainda estão na fila (os envios não
+    # seguiram o redirect); o foco fica na primeira, e esta vem por último.
+    assert (
+        '<p class="mensagem mensagem--error">'
+        "Você está comentando rápido demais. Aguarde um instante.</p>"
+    ) in resposta.content.decode()
 
 
 def test_dois_ips_nao_compartilham_o_limite_de_comentarios(client: Client) -> None:
@@ -844,7 +997,42 @@ def test_honeypot_preenchido_nao_cria_comentario_mas_finge_sucesso(
     )
 
     assert not Comentario.objects.filter(receita=receita).exists()
-    assert "Comentário publicado!" in resposta.content.decode()
+    assert _MENSAGEM_DE_SUCESSO in resposta.content.decode()
+
+
+def test_honeypot_so_com_espacos_nao_e_robo(client: Client) -> None:
+    """O autopreenchimento que deixa um espaço no campo oculto não barra o leitor."""
+    receita = _receita(publicado=True)
+    client.force_login(User.objects.create_user(username="leitor", password="x"))
+
+    client.post(
+        reverse("receitas:comentar", kwargs={"slug": receita.slug}),
+        {
+            "texto": "Com o campo oculto em branco",
+            "endereco_web": "   ",
+            "carimbo_tempo": _carimbo_valido(),
+        },
+    )
+
+    assert Comentario.objects.filter(receita=receita).exists()
+
+
+def test_campo_armadilha_fica_fora_do_tab_do_autopreenchimento_e_do_leitor(
+    client: Client,
+) -> None:
+    """O teclado, o gerenciador de senhas e o leitor de tela pulam o campo."""
+    receita = _receita(publicado=True)
+    client.force_login(User.objects.create_user(username="leitor", password="x"))
+
+    html = client.get(
+        reverse("receitas:detalhe", kwargs={"slug": receita.slug})
+    ).content.decode()
+
+    armadilha = _trecho(html, '<div class="campo-armadilha"', "</div>")
+    assert armadilha.startswith('<div class="campo-armadilha" aria-hidden="true">')
+    (campo,) = re.findall(r'<input [^>]*name="endereco_web"[^>]*>', armadilha)
+    assert 'tabindex="-1"' in campo
+    assert 'autocomplete="off"' in campo
 
 
 def test_carimbo_recente_demais_bloqueia_o_envio(client: Client) -> None:
@@ -860,23 +1048,87 @@ def test_carimbo_recente_demais_bloqueia_o_envio(client: Client) -> None:
     )
 
     assert not Comentario.objects.filter(receita=receita).exists()
-    assert "Comentário publicado!" in resposta.content.decode()
+    assert _MENSAGEM_DE_SUCESSO in resposta.content.decode()
 
 
-def test_carimbo_ausente_ou_adulterado_e_tratado_como_suspeito(client: Client) -> None:
-    """Sem carimbo ou com um valor forjado, o envio é tratado como bot."""
+def test_carimbo_servido_pela_pagina_deixa_o_leitor_comentar(
+    client: Client, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """O carimbo do formulário volta no POST e, 2 s depois, o comentário entra."""
+    # Os outros testes montam o carimbo à mão; sem este, a página que deixasse de
+    # servi-lo faria todo leitor real cair no time-trap, com o falso sucesso.
+    relogio = [1_800_000_000.0]
+    monkeypatch.setattr(time, "time", lambda: relogio[0])
+    receita = _receita(publicado=True)
+    client.force_login(User.objects.create_user(username="leitor", password="x"))
+    html = client.get(
+        reverse("receitas:detalhe", kwargs={"slug": receita.slug})
+    ).content.decode()
+    (carimbo,) = re.findall(r'name="carimbo_tempo" value="([^"]+)"', html)
+
+    relogio[0] += 2
+    client.post(
+        reverse("receitas:comentar", kwargs={"slug": receita.slug}),
+        {"texto": "Pelo formulário de verdade", "carimbo_tempo": carimbo},
+    )
+
+    assert Comentario.objects.filter(
+        receita=receita, texto="Pelo formulário de verdade"
+    ).exists()
+
+
+@pytest.mark.parametrize(("decorridos", "grava"), [(1.999, False), (2.0, True)])
+def test_tempo_minimo_do_envio_e_de_2_segundos(
+    client: Client, monkeypatch: pytest.MonkeyPatch, decorridos: float, grava: bool
+) -> None:
+    """Abaixo de 2 s é robô; com 2 s exatos, o comentário entra (spec 007, RF-02)."""
+    # Relógio parado: com o tempo real, o envio "de 2 s" chegaria com 2,00x s e
+    # passaria também numa comparação que recusasse os 2 s exatos.
+    agora = 1_800_000_000.0
+    monkeypatch.setattr(time, "time", lambda: agora)
+    receita = _receita(publicado=True)
+    client.force_login(User.objects.create_user(username="leitor", password="x"))
+
+    client.post(
+        reverse("receitas:comentar", kwargs={"slug": receita.slug}),
+        {
+            "texto": "No limite do relógio",
+            "carimbo_tempo": signing.dumps(agora - decorridos, salt=_ASSINATURA_SALT),
+        },
+    )
+
+    assert Comentario.objects.filter(receita=receita).exists() is grava
+
+
+@pytest.mark.parametrize(
+    "carimbo",
+    [
+        None,
+        "valor-forjado",
+        signing.dumps(time.time() - 60, salt="outra.parte.do.projeto"),
+        signing.dumps(time.time() - 60),
+    ],
+    ids=["ausente", "forjado", "outro-salt", "sem-salt"],
+)
+def test_carimbo_ausente_ou_adulterado_e_tratado_como_suspeito(
+    client: Client, carimbo: str | None
+) -> None:
+    """Sem carimbo, forjado ou assinado fora do formulário: o envio é de bot (ADR-2)."""
     receita = _receita(publicado=True)
     autor = User.objects.create_user(username="leitor", password="senha-forte-123")
     client.force_login(autor)
+    dados = {"texto": "Sem carimbo válido"}
+    if carimbo is not None:
+        dados["carimbo_tempo"] = carimbo
 
     resposta = client.post(
         reverse("receitas:comentar", kwargs={"slug": receita.slug}),
-        {"texto": "Sem carimbo", "carimbo_tempo": "valor-forjado"},
+        dados,
         follow=True,
     )
 
     assert not Comentario.objects.filter(receita=receita).exists()
-    assert "Comentário publicado!" in resposta.content.decode()
+    assert _MENSAGEM_DE_SUCESSO in resposta.content.decode()
 
 
 def test_envio_humano_normal_ainda_cria_comentario(client: Client) -> None:

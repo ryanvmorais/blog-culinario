@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import re
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 
@@ -38,13 +39,60 @@ pytestmark = pytest.mark.django_db
 # Pasta da configuração do Lighthouse CI: fica na raiz do repositório, fora do app.
 _LIGHTHOUSE = Path(__file__).resolve().parents[1] / ".github" / "lighthouse"
 
-# Recurso de fora: <img src>, <script src> ou <link rel=stylesheet href> absolutos.
-# Os <a href> e as meta tags não carregam nada no navegador.
-_RECURSO_EXTERNO = re.compile(
-    r'<(?:img|script)\b[^>]*\bsrc="https?://'
-    r'|<link\b[^>]*\brel="stylesheet"[^>]*\bhref="https?://',
-    re.IGNORECASE,
-)
+# Os <link> que o navegador baixa; o canonical e os <a href> não carregam nada.
+_LINK_QUE_CARREGA = {"stylesheet", "preload", "modulepreload", "icon", "prefetch"}
+
+
+class _Recursos(HTMLParser):
+    """
+    Junta os endereços que a página manda o navegador baixar.
+
+    Attributes:
+        enderecos (list[str]): ``src`` e ``srcset`` de ``img``, ``script`` e
+            ``source``, e o ``href`` dos ``<link>`` de ``_LINK_QUE_CARREGA``.
+    """
+
+    def __init__(self) -> None:
+        """Começa sem nenhum endereço lido."""
+        super().__init__()
+        self.enderecos: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        """
+        Registra os endereços de carga da tag aberta, em qualquer ordem de atributos.
+
+        Args:
+            tag (str): nome da tag aberta.
+            attrs (list[tuple[str, str | None]]): atributos da tag.
+        """
+        atributos = {nome: valor or "" for nome, valor in attrs}
+        if tag in ("img", "script", "source"):
+            if "src" in atributos:
+                self.enderecos.append(atributos["src"])
+            for item in atributos.get("srcset", "").split(","):
+                if item.strip():
+                    self.enderecos.append(item.split()[0])
+        elif (
+            tag == "link" and set(atributos.get("rel", "").split()) & _LINK_QUE_CARREGA
+        ):
+            self.enderecos.append(atributos.get("href", ""))
+
+
+def _enderecos_de_fora(html: str) -> list[str]:
+    """
+    Os endereços de carga que não são caminhos do próprio site.
+
+    Args:
+        html (str): a página renderizada.
+
+    Returns:
+        list[str]: cada endereço que não começa por uma barra só (``/static/...``);
+        ``https://``, ``//cdn...`` e endereço vazio entram.
+    """
+    leitor = _Recursos()
+    leitor.feed(html)
+    return [e for e in leitor.enderecos if not e.startswith("/") or e.startswith("//")]
+
 
 # Auditorias que têm asserção própria: a nota geral de acessibilidade (limite de 0,95)
 # passaria mesmo com cada uma delas reprovada.
@@ -178,4 +226,40 @@ def test_nenhuma_pagina_carrega_recurso_de_fora(client: Client) -> None:
 
     for caminho in _caminhos("mobile"):
         html = client.get(caminho).content.decode()
-        assert _RECURSO_EXTERNO.search(html) is None, caminho
+        assert '<link rel="stylesheet" href="/static/' in html, caminho
+        assert _enderecos_de_fora(html) == [], caminho
+
+
+def test_leitor_de_recursos_acusa_cada_forma_de_fora() -> None:
+    """Controle positivo: cada forma de carregar de outro host é acusada."""
+    html = (
+        '<img src="https://cdn.exemplo/a.png">'
+        '<img src="/static/b.png" srcset="/static/b2.png 2x, //cdn.exemplo/c.png 3x">'
+        '<script src="http://cdn.exemplo/d.js"></script>'
+        '<link href="https://cdn.exemplo/e.css" rel="stylesheet">'
+        '<link rel="preload" href="//cdn.exemplo/f.woff2" as="font">'
+        '<link rel="icon" href="https://cdn.exemplo/g.svg">'
+        '<source srcset="https://cdn.exemplo/h.webp">'
+    )
+
+    assert _enderecos_de_fora(html) == [
+        "https://cdn.exemplo/a.png",
+        "//cdn.exemplo/c.png",
+        "http://cdn.exemplo/d.js",
+        "https://cdn.exemplo/e.css",
+        "//cdn.exemplo/f.woff2",
+        "https://cdn.exemplo/g.svg",
+        "https://cdn.exemplo/h.webp",
+    ]
+
+
+def test_leitor_de_recursos_aceita_o_que_e_do_site() -> None:
+    """O quase-acerto: caminho local, canonical e link de navegação não são carga."""
+    html = (
+        '<link rel="stylesheet" href="/static/css/base.css">'
+        '<link rel="canonical" href="https://blog.exemplo/receitas/">'
+        '<a href="https://github.com/exemplo">código</a>'
+        '<img src="/media/capa.webp" srcset="/media/capa.webp 1x">'
+    )
+
+    assert _enderecos_de_fora(html) == []

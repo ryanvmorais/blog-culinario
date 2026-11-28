@@ -42,7 +42,32 @@ COMENTARIO_QUEBRADO = re.compile(r"\{#(?:(?!#\})[^\n])*\n")
 
 def test_ha_templates_para_conferir() -> None:
     """Sem templates achados, os testes abaixo passariam sem conferir nada."""
-    assert TEMPLATES
+    # Um template de cada pasta: a busca que só achasse a pasta da raiz deixaria
+    # os dos apps sem conferência, e a lista continuaria não vazia.
+    pastas = {caminho.relative_to(RAIZ).parts[0] for caminho in TEMPLATES}
+    assert pastas == {"templates", "nucleo", "receitas", "usuarios"}
+
+
+@pytest.mark.parametrize(
+    "texto",
+    ["{# nota que\nquebrou #}", "<p>{# começo\n   fim #}</p>", "{##\n#}"],
+)
+def test_padrao_acusa_comentario_quebrado(texto: str) -> None:
+    """Controle positivo: um padrão que nunca casasse aprovaria todo template."""
+    assert COMENTARIO_QUEBRADO.search(texto)
+
+
+@pytest.mark.parametrize(
+    "texto",
+    [
+        "{# nota de uma linha #}\n",
+        "{# a #} {# b #}\n",
+        "{% comment %}\n  várias linhas\n{% endcomment %}\n",
+    ],
+)
+def test_padrao_deixa_passar_comentario_de_uma_linha(texto: str) -> None:
+    """O quase-acerto: comentário fechado na mesma linha não é quebrado."""
+    assert not COMENTARIO_QUEBRADO.search(texto)
 
 
 @pytest.mark.parametrize(

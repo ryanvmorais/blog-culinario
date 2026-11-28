@@ -342,6 +342,8 @@ def test_capa_do_destaque_nao_e_lazy(client: Client) -> None:
     assert "<img" in destaque
     assert 'class="destaque__imagem"' in destaque
     assert 'loading="lazy"' not in destaque
+    # A maior imagem da primeira tela pede prioridade (RNF-05, LCP).
+    assert 'fetchpriority="high"' in destaque
 
 
 # -----------------------------------------------------------------------------

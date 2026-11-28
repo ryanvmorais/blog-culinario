@@ -164,10 +164,16 @@ def test_copyright_centrado_abaixo_das_colunas(client: Client) -> None:
 # -----------------------------------------------------------------------------
 def test_paginas_de_erro_ficam_com_o_rodape_de_uma_linha() -> None:
     """O rodapé de uma linha não chama a tag das categorias nem lê a sessão."""
+    # Com uma categoria publicada, a tag das categorias desenharia a coluna: sem
+    # ela, a coluna some de qualquer jeito, e o teste não teria como falhar.
+    _receita(Categoria.objects.create(nome="Massas"))
+    assert "rodape-categorias" in _rodape(Client())
+
     for template in ("400.html", "403.html", "403_csrf.html", "404.html", "500.html"):
         html = render_to_string(template)
         assert 'class="rodape rodape--linha"' in html
-        assert "Categorias" not in html
+        assert "rodape-categorias" not in html
+        assert "Massas" not in html
 
 
 # -----------------------------------------------------------------------------
@@ -207,6 +213,8 @@ def test_link_da_pagina_atual_fica_marcado(client: Client) -> None:
     assert f'href="{reverse("nucleo:home")}" aria-current="page"' in home
     assert f'href="{reverse("receitas:lista")}" aria-current="page"' not in home
     assert f'href="{reverse("receitas:lista")}" aria-current="page"' in lista
+    # O par: na listagem, o "Início" não fica marcado (uma página atual só).
+    assert f'href="{reverse("nucleo:home")}" aria-current="page"' not in lista
 
 
 def test_grupo_sua_conta_sem_login(client: Client) -> None:

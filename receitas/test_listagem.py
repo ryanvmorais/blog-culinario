@@ -89,6 +89,15 @@ def test_busca_tem_o_desenho_da_home(client: Client) -> None:
     assert '<div class="busca-hero__linha">' in busca
     assert 'name="q"' in busca and 'placeholder="Ex.: cenoura"' in busca
     assert "formulario-busca" not in html
+    # Sem filtro, nenhum oculto: um "categoria=" vazio iria junto da busca.
+    assert 'type="hidden"' not in busca
+
+
+def test_busca_ativa_volta_no_campo(client: Client) -> None:
+    """O termo buscado fica no campo, para refinar sem redigitar (spec 003)."""
+    html = _listagem(client, "q=cenoura")
+    busca = html[html.index('<form class="busca-hero"') : html.index("</form>")]
+    assert 'value="cenoura"' in busca
 
 
 def test_busca_mantem_a_categoria_e_a_tag_ativas(client: Client) -> None:
@@ -182,6 +191,30 @@ def test_total_de_todas_bate_com_a_contagem_do_banco(client: Client) -> None:
 # -----------------------------------------------------------------------------
 # RF-27 e RNF-08 — paginação e consultas
 # -----------------------------------------------------------------------------
+def test_cartao_leva_a_categoria_e_a_capa_tem_o_titulo(client: Client) -> None:
+    """O selo da categoria filtra a listagem; a capa do cartão diz o nome (spec 002)."""
+    receita = _receita(
+        titulo="Pudim",
+        categoria=_categoria(nome="Doces"),
+        publicado=True,
+        imagem_capa="receitas/capas/pudim.webp",
+    )
+    html = _listagem(client)
+    cartao = html[html.index('<article class="cartao-receita">') :]
+    cartao = cartao[: cartao.index("</article>")]
+    lista = reverse("receitas:lista")
+    assert f'href="{lista}?categoria={receita.categoria.slug}"' in cartao
+    assert 'alt="Pudim"' in cartao
+
+
+def test_paginacao_diz_a_pagina_e_o_total(client: Client) -> None:
+    """A navegação anuncia onde se está: "Página 1 de 2" (spec 002, RF-02)."""
+    categoria = _categoria(nome="Doces")
+    for i in range(10):
+        _receita(titulo=f"Receita {i}", categoria=categoria, publicado=True)
+    assert "<span>Página 1 de 2</span>" in _listagem(client)
+
+
 def test_paginacao_continua_com_9_por_pagina(client: Client) -> None:
     """Com 10 publicadas, a primeira página tem 9 e a segunda, 1 (RF-27)."""
     categoria = _categoria(nome="Doces")
