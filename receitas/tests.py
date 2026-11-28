@@ -266,11 +266,9 @@ def test_com_receitas_publicadas_deixa_de_fora_categoria_so_com_rascunho() -> No
 
 def test_com_receitas_publicadas_ordena_pela_contagem_e_pelo_nome() -> None:
     """Mais receitas primeiro; no empate, ordem alfabética."""
-    # Massas nasce antes de Lanches: no empate, a ordem do banco (pk) daria
-    # Massas primeiro, e só o desempate pelo nome põe Lanches na frente.
     sobremesas = _categoria(nome="Sobremesas")
-    massas = _categoria(nome="Massas")
     lanches = _categoria(nome="Lanches")
+    massas = _categoria(nome="Massas")
     for _ in range(2):
         _receita(categoria=sobremesas, publicado=True)
     _receita(categoria=massas, publicado=True)

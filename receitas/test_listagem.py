@@ -188,9 +188,6 @@ def test_total_de_todas_bate_com_a_contagem_do_banco(client: Client) -> None:
     assert resposta.context["total_publicadas"] == total == 3
 
 
-# -----------------------------------------------------------------------------
-# RF-27 e RNF-08 — paginação e consultas
-# -----------------------------------------------------------------------------
 def test_cartao_leva_a_categoria_e_a_capa_tem_o_titulo(client: Client) -> None:
     """O selo da categoria filtra a listagem; a capa do cartão diz o nome (spec 002)."""
     receita = _receita(
@@ -207,6 +204,9 @@ def test_cartao_leva_a_categoria_e_a_capa_tem_o_titulo(client: Client) -> None:
     assert 'alt="Pudim"' in cartao
 
 
+# -----------------------------------------------------------------------------
+# RF-27 e RNF-08 — paginação e consultas
+# -----------------------------------------------------------------------------
 def test_paginacao_diz_a_pagina_e_o_total(client: Client) -> None:
     """A navegação anuncia onde se está: "Página 1 de 2" (spec 002, RF-02)."""
     categoria = _categoria(nome="Doces")
