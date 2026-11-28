@@ -26,7 +26,7 @@ from django.utils import timezone
 from django.views.defaults import permission_denied
 
 from blog_culinario.demonstracao import URL_REPOSITORIO
-from blog_culinario.descoberta import EXPIRACAO_SECURITY_TXT
+from blog_culinario.descoberta import EXPIRACAO_SECURITY_TXT, contexto_descoberta
 from blog_culinario.endereco import normalizar_url_publica, url_absoluta
 from receitas.models import Categoria, Receita
 
@@ -253,6 +253,27 @@ def test_sem_url_publica_nao_ha_canonical_nem_og_url(client: Client) -> None:
 
     assert _canonical(pagina) is None
     assert _meta(pagina, "property", "og:url") is None
+
+
+@pytest.mark.django_db
+@override_settings(URL_PUBLICA="")
+def test_sem_url_publica_a_pagina_2_tambem_fica_sem_canonical(client: Client) -> None:
+    # Sem o endereço, o ?page=2 não pode virar um canonical relativo sozinho.
+    for numero in range(10):  # paginate_by = 9: a décima receita vai à página 2
+        _receita(f"Bolo {numero}")
+
+    pagina = _html(client, "/receitas/?page=2")
+
+    assert _canonical(pagina) is None
+
+
+@override_settings(URL_PUBLICA=URL_PUBLICA_TESTE)
+def test_canonical_sai_com_o_caminho_codificado(rf: RequestFactory) -> None:
+    pedido = rf.get("/receitas/pão de ló/")
+
+    assert contexto_descoberta(pedido) == {
+        "url_canonica": f"{URL_PUBLICA_TESTE}/receitas/p%C3%A3o%20de%20l%C3%B3/"
+    }
 
 
 @pytest.mark.django_db

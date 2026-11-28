@@ -7,6 +7,11 @@ gravaria nela os contadores da limitação de taxa, e um teste herdaria os do
 anterior. A mídia segue a mesma regra: um teste que salva uma receita com capa
 gravaria o arquivo na ``media/`` real, e cada rodada da suíte deixaria lá
 alguns megabytes a mais.
+
+O hash de senha dos testes é o mais barato do Django: o PBKDF2 do projeto leva
+quase um segundo por senha, pago em cada ``create_user`` e em cada login, e
+nenhum teste daqui confere a força do hash. O que produção usa é conferido nas
+configurações reais, num processo à parte (``nucleo/test_hospedagem.py``).
 """
 
 from __future__ import annotations
@@ -104,3 +109,19 @@ def _midia_em_pasta_temporaria(settings: Settings, tmp_path: Path) -> None:
         tmp_path (Path): pasta temporária do teste, criada pelo pytest.
     """
     settings.MEDIA_ROOT = tmp_path / "media"
+
+
+@pytest.fixture(autouse=True)
+def _hash_de_senha_barato(settings: Settings) -> None:
+    """
+    Troca o hash de senha do teste pelo MD5, que custa microssegundos.
+
+    Trocar o ``PASSWORD_HASHERS`` dispara o sinal ``setting_changed``, e o Django
+    esquece a lista de hashers guardada; as senhas criadas no teste saem e são
+    conferidas com o MD5.
+
+    Args:
+        settings (Settings): fixture do pytest-django que troca uma
+            configuração só durante o teste.
+    """
+    settings.PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]

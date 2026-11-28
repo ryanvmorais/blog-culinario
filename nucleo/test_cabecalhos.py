@@ -17,11 +17,11 @@ import re
 
 import pytest
 from django.contrib.auth.models import User
-from django.http import HttpResponseBase
-from django.test import Client
+from django.http import HttpRequest, HttpResponse, HttpResponseBase
+from django.test import Client, RequestFactory
 from django.urls import reverse
 
-from blog_culinario.cabecalhos import PERMISSIONS_POLICY
+from blog_culinario.cabecalhos import PermissionsPolicyMiddleware
 from receitas.models import Categoria, Receita
 
 # Política esperada em toda página pública, diretiva por diretiva.
@@ -37,11 +37,19 @@ POLITICA_PUBLICA = {
     "frame-ancestors": ["'none'"],
 }
 
+# Escrita aqui, e não importada do cabecalhos.py: comparada com a constante do
+# próprio módulo, a política perderia um recurso sem nenhum teste acusar.
+PERMISSIONS_POLICY = (
+    "accelerometer=(), camera=(), geolocation=(), gyroscope=(), "
+    "magnetometer=(), microphone=(), payment=(), usb=()"
+)
+
 # Código que roda sem vir de um arquivo: <script> sem src, <style>, atributo
 # style="" e atributo de evento (onclick="" etc.).
 SCRIPT_INLINE = re.compile(r"<script(?![^>]*\ssrc=)[^>]*>", re.IGNORECASE)
 ESTILO_INLINE = re.compile(r"<style[^>]*>", re.IGNORECASE)
 ATRIBUTO_INLINE = re.compile(r"\s(style|on[a-z]+)\s*=", re.IGNORECASE)
+NONCE = re.compile(r'\snonce="([^"]*)"')
 
 
 # ---------------------------------------------------------------------------
@@ -107,6 +115,34 @@ def _paginas_publicas() -> list[tuple[str, int]]:
 
 
 # ---------------------------------------------------------------------------
+# Os padrões de inline
+# ---------------------------------------------------------------------------
+
+# As páginas do site não têm nada inline, então os testes abaixo esperam zero
+# casamentos; um padrão que nunca casasse também daria zero. Cada padrão acusa
+# o que procura e deixa passar o vizinho parecido.
+
+
+@pytest.mark.parametrize(
+    ("padrao", "acusa", "deixa_passar"),
+    [
+        (SCRIPT_INLINE, "<script>alert(1)</script>", '<script src="/static/a.js">'),
+        (SCRIPT_INLINE, '<SCRIPT type="module">', '<script defer src="/a.js">'),
+        (ESTILO_INLINE, "<style>p{}</style>", '<link rel="stylesheet" href="/a.css">'),
+        (ESTILO_INLINE, '<style media="print">', "<p>style</p>"),
+        (ATRIBUTO_INLINE, '<p style="color: red">', '<p data-style="x">'),
+        (ATRIBUTO_INLINE, '<a onclick="f()">', '<a class="onclick">'),
+        (ATRIBUTO_INLINE, '<img onerror = "f()">', '<img alt="onerror">'),
+    ],
+)
+def test_padrao_de_inline_acusa_o_que_procura(
+    padrao: re.Pattern[str], acusa: str, deixa_passar: str
+) -> None:
+    assert padrao.search(acusa)
+    assert not padrao.search(deixa_passar)
+
+
+# ---------------------------------------------------------------------------
 # Páginas públicas
 # ---------------------------------------------------------------------------
 
@@ -135,7 +171,19 @@ def test_paginas_publicas_enviam_permissions_policy(client: Client) -> None:
     for caminho, _status in _paginas_publicas():
         resposta = client.get(caminho)
         assert resposta["Permissions-Policy"] == PERMISSIONS_POLICY, caminho
-        assert "camera=()" in resposta["Permissions-Policy"]
+
+
+def test_permissions_policy_da_propria_view_e_mantido(rf: RequestFactory) -> None:
+    """Uma view que já defina o cabeçalho fica com o valor dela."""
+
+    def view(request: HttpRequest) -> HttpResponse:
+        resposta = HttpResponse()
+        resposta["Permissions-Policy"] = "camera=(self)"
+        return resposta
+
+    resposta = PermissionsPolicyMiddleware(view)(rf.get("/"))
+
+    assert resposta["Permissions-Policy"] == "camera=(self)"
 
 
 # ---------------------------------------------------------------------------
@@ -148,8 +196,9 @@ def test_login_do_admin_leva_o_nonce_no_estilo_e_nada_mais(client: Client) -> No
     resposta = client.get(reverse("admin:login"))
     politica = _politica(resposta)
     assert politica["script-src"] == ["'self'"]
-    assert politica["style-src"][0] == "'self'"
     nonce = politica["style-src"][1].removeprefix("'nonce-").removesuffix("'")
+    assert nonce
+    assert politica["style-src"] == ["'self'", f"'nonce-{nonce}'"]
     assert f'nonce="{nonce}"' in resposta.content.decode()
     assert resposta["Permissions-Policy"] == PERMISSIONS_POLICY
 
@@ -157,10 +206,11 @@ def test_login_do_admin_leva_o_nonce_no_estilo_e_nada_mais(client: Client) -> No
 @pytest.mark.django_db
 def test_inline_do_admin_sempre_traz_o_nonce_do_pedido(client: Client) -> None:
     """
-    Todo <style> inline do Admin traz o nonce, e script inline não há.
+    Todo nonce do Admin é o do pedido; script inline e ``<style>`` sem ele não há.
 
     Um bloqueado pela CSP quebraria a tela sem erro no servidor: só o console do
-    navegador acusaria.
+    navegador acusaria. O Admin põe o nonce nos ``<link>`` e nos ``<script src>``
+    de cada página; a lista não pode vir vazia, senão a conferência não rodou.
     """
     receita = _receita()
     client.force_login(
@@ -183,6 +233,9 @@ def test_inline_do_admin_sempre_traz_o_nonce_do_pedido(client: Client) -> None:
         valores = _politica(resposta)["style-src"]
         nonce = valores[1].removeprefix("'nonce-").removesuffix("'")
         pagina = resposta.content.decode()
+        nonces = NONCE.findall(pagina)
+        assert nonces, caminho
+        assert set(nonces) == {nonce}, caminho
         # O script-src não aceita nonce: script inline nenhum, nem no Admin.
         assert not SCRIPT_INLINE.search(pagina), caminho
         for tag in ESTILO_INLINE.findall(pagina):

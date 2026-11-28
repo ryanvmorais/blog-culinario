@@ -227,23 +227,28 @@ def test_login_dois_ips_nao_compartilham_o_limite(client: Client) -> None:
     assert resposta.wsgi_request.user.is_authenticated
 
 
-def test_limite_excedido_expira_apos_a_janela(rf: RequestFactory) -> None:
+def test_limite_excedido_expira_apos_a_janela(
+    rf: RequestFactory, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """
     O contador zera sozinho ao fim da janela configurada (RF-03).
 
-    Testa ``limite_excedido`` diretamente (não via view) -- a janela real do
-    login é de 5 minutos, longa demais para esperar num teste.
+    Testa ``limite_excedido`` diretamente (não via view), e o relógio anda sem o
+    teste dormir: o cache em arquivo lê a hora pelo ``time.time()``.
     """
     request = rf.post("/qualquer-url/")
     request.META["REMOTE_ADDR"] = "127.0.0.1"
 
     for _ in range(3):
-        assert limite_excedido(request, "teste-janela", 3, 1) is False
-    assert limite_excedido(request, "teste-janela", 3, 1) is True
+        assert limite_excedido(request, "teste-janela", 3, 60) is False
+    assert limite_excedido(request, "teste-janela", 3, 60) is True
 
-    time.sleep(1.1)
+    agora = time.time()
+    monkeypatch.setattr(time, "time", lambda: agora + 59)
+    assert limite_excedido(request, "teste-janela", 3, 60) is True
 
-    assert limite_excedido(request, "teste-janela", 3, 1) is False
+    monkeypatch.setattr(time, "time", lambda: agora + 61)
+    assert limite_excedido(request, "teste-janela", 3, 60) is False
 
 
 # -----------------------------------------------------------------------------

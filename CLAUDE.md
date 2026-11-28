@@ -83,7 +83,7 @@ docs/design-system.html    # catálogo visual (tokens, tipografia, componentes);
 .github/                   # CI (ci.yml), pip-audit semanal (pip-audit.yml), CodeQL (codeql.yml), Lighthouse CI (lighthouse.yml + lighthouse/), Dependabot (uv + github-actions), formulário de issue (com o atalho para o aviso privado de segurança) e template de PR
 SECURITY.md                # política de segurança: relato privado pelos avisos do GitHub, prazos e escopo
 railpack.json              # build e start na Railway: uv sync --locked, collectstatic, migrate e gunicorn, sempre com settings.prod (spec 011)
-conftest.py                # pytest: cache em pasta temporária, fora da django_cache/ da raiz
+conftest.py                # pytest: cache e mídia em pasta temporária; hash de senha MD5 nos testes (o PBKDF2 real é conferido no test_hospedagem.py)
 ```
 
 Cada app novo do domínio segue o padrão de `nucleo`: `views.py` com funções

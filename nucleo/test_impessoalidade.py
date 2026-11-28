@@ -8,13 +8,15 @@ escreveu. Os testes varrem o texto dos arquivos versionados e falham quando uma
 dessas referências volta.
 
 Estratégia de isolamento: só a lista de arquivos do Git (``git ls-files``) e o
-texto deles são lidos, sem banco nem cliente HTTP. Sem o Git disponível (um
-tarball do código, por exemplo), os testes são pulados.
+texto deles são lidos, sem banco nem cliente HTTP. Sem o Git instalado ou fora
+de um clone (um tarball do código, por exemplo), os testes são pulados; dentro
+de um clone, um ``git ls-files`` que falha derruba o teste.
 """
 
 from __future__ import annotations
 
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -57,15 +59,14 @@ def versionados() -> dict[str, str]:
         dict[str, str]: Caminho com ``/`` como separador e o conteúdo em UTF-8.
             Arquivo binário (fontes, imagens) fica de fora.
     """
-    try:
-        saida = subprocess.run(
-            ["git", "ls-files", "-z"],
-            cwd=RAIZ,
-            check=True,
-            capture_output=True,
-        ).stdout
-    except (FileNotFoundError, subprocess.CalledProcessError):
-        pytest.skip("sem o Git, não há lista de arquivos versionados")
+    if shutil.which("git") is None or not (RAIZ / ".git").exists():
+        pytest.skip("sem o Git ou fora de um clone, não há arquivos versionados")
+    saida = subprocess.run(
+        ["git", "ls-files", "-z"],
+        cwd=RAIZ,
+        check=True,
+        capture_output=True,
+    ).stdout
 
     textos: dict[str, str] = {}
     for bruto in saida.decode("utf-8").split("\0"):
@@ -76,6 +77,59 @@ def versionados() -> dict[str, str]:
         except (UnicodeDecodeError, FileNotFoundError):
             continue
     return textos
+
+
+# -----------------------------------------------------------------------------
+# Os padrões
+# -----------------------------------------------------------------------------
+
+# Os testes da varredura esperam zero casamentos, e um padrão que nunca casa
+# também dá zero. Cada palavra tem aqui um texto que ela acusa, na ordem do
+# PESSOAL, e os quase-acertos ao lado mostram o que fica de fora.
+
+
+@pytest.mark.parametrize(
+    "texto",
+    [
+        "rode a /idioma antes",
+        "veja a /spec",
+        "pela /estilo-arquivos",
+        "feche com /fechar-sessao",
+        "rode /atualizar-docs",
+        "use /revisar-dependabot",
+        "pela /nova-interface",
+        "rode a /stack",
+        "pela /novo-projeto",
+        "rode /qualidade-python",
+        "rode /auditoria-testes",
+        "rode /limpar-branches",
+        "pela /preparar-release",
+        "em ~/.claude/regras",
+    ],
+)
+def test_padrao_pessoal_acusa_cada_skill_e_a_pasta(texto: str) -> None:
+    assert PESSOAL.search(texto)
+
+
+@pytest.mark.parametrize(
+    "texto",
+    [
+        "docs/stack.md",
+        "specs/README.md",
+        "a pasta /specs/",
+        "https://exemplo.com/stack",
+        "./stack",
+        "o arquivo .claude/settings.json",
+    ],
+)
+def test_padrao_pessoal_deixa_passar_caminho_do_projeto(texto: str) -> None:
+    assert not PESSOAL.search(texto)
+
+
+def test_padrao_do_nome_acusa_so_a_palavra_inteira() -> None:
+    assert NOME.search("escrito por Ryan.")
+    assert not NOME.search("github.com/ryanvmorais")
+    assert not NOME.search("Bryan e Ryanzinho")
 
 
 # -----------------------------------------------------------------------------
